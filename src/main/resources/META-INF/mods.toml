@@ -1,0 +1,10 @@
+modLoader="javafml"
+loaderVersion="[40,)"
+license="All rights reserved"
+
+[[mods]]
+	modId="autoleveling"
+	version="${file.jarVersion}"
+	displayName="Auto Leveling"
+	authors="Daripher"
+	description='''Adds auto leveling to Minecraft'''
