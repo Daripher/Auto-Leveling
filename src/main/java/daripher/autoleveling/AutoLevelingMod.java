@@ -14,7 +14,9 @@ import net.minecraft.world.entity.monster.Enemy;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 
 @Mod(AutoLevelingMod.MOD_ID)
 public class AutoLevelingMod
@@ -23,6 +25,7 @@ public class AutoLevelingMod
 	
 	public AutoLevelingMod()
 	{
+		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.COMMON_SPEC);
 		MinecraftForge.EVENT_BUS.register(this);
 	}
 	
