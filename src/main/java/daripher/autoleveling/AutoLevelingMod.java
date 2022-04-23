@@ -3,6 +3,8 @@ package daripher.autoleveling;
 import java.util.UUID;
 
 import daripher.autoleveling.config.Config;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.NeutralMob;
 import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -36,14 +38,20 @@ public class AutoLevelingMod
 		{
 			LivingEntity entity = (LivingEntity) event.getEntity();
 			
-			if (entity instanceof Enemy || entity instanceof NeutralMob)
+			if (!entity.level.isClientSide)
 			{
-				double distance = Math.sqrt(entity.distanceToSqr(0, entity.getY(), 0));
-				applyAttributeBonusIfPossible(entity, Attributes.MOVEMENT_SPEED, Config.COMMON.movementSpeedBonus.get() * distance);
-				applyAttributeBonusIfPossible(entity, Attributes.FLYING_SPEED, Config.COMMON.flyingSpeedBonus.get() * distance);
-				applyAttributeBonusIfPossible(entity, Attributes.ATTACK_DAMAGE, Config.COMMON.attackDamageBonus.get() * distance);
-				applyAttributeBonusIfPossible(entity, Attributes.ARMOR, Config.COMMON.armorBonus.get() * distance);
-				applyAttributeBonusIfPossible(entity, Attributes.MAX_HEALTH, Config.COMMON.healthBonus.get() * distance);
+				ServerLevel level = ((ServerLevel) entity.level);
+				
+				if (entity instanceof Enemy || entity instanceof NeutralMob)
+				{
+					BlockPos spawnPos = level.getSharedSpawnPos();
+					double distance = Math.sqrt(spawnPos.distSqr(entity.blockPosition()));
+					applyAttributeBonusIfPossible(entity, Attributes.MOVEMENT_SPEED, Config.COMMON.movementSpeedBonus.get() * distance);
+					applyAttributeBonusIfPossible(entity, Attributes.FLYING_SPEED, Config.COMMON.flyingSpeedBonus.get() * distance);
+					applyAttributeBonusIfPossible(entity, Attributes.ATTACK_DAMAGE, Config.COMMON.attackDamageBonus.get() * distance);
+					applyAttributeBonusIfPossible(entity, Attributes.ARMOR, Config.COMMON.armorBonus.get() * distance);
+					applyAttributeBonusIfPossible(entity, Attributes.MAX_HEALTH, Config.COMMON.healthBonus.get() * distance);
+				}
 			}
 		}
 	}
