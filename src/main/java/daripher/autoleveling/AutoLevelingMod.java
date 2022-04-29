@@ -32,7 +32,7 @@ public class AutoLevelingMod
 	}
 	
 	@SubscribeEvent
-	public void onBlocksRegistry(EntityJoinWorldEvent event)
+	public void onEntityJoinWorld(EntityJoinWorldEvent event)
 	{
 		if (event.getEntity() instanceof LivingEntity)
 		{
@@ -64,6 +64,11 @@ public class AutoLevelingMod
 		if (attributeInstance != null && attributeInstance.getModifier(modifierId) == null)
 		{
 			attributeInstance.addPermanentModifier(new AttributeModifier(modifierId, "Auto Leveling Bonus", bonus, Operation.MULTIPLY_TOTAL));
+			
+			if (attribute == Attributes.MAX_HEALTH)
+			{
+				entity.heal(entity.getMaxHealth());
+			}
 		}
 	}
 }
