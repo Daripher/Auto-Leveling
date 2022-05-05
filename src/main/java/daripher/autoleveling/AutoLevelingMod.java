@@ -3,16 +3,16 @@ package daripher.autoleveling;
 import java.util.UUID;
 
 import daripher.autoleveling.config.Config;
-import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.NeutralMob;
-import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
-import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.entity.IAngerable;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.attributes.Attribute;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.entity.ai.attributes.AttributeModifier.Operation;
+import net.minecraft.entity.ai.attributes.Attributes;
+import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
+import net.minecraft.entity.monster.IMob;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -40,9 +40,9 @@ public class AutoLevelingMod
 			
 			if (!entity.level.isClientSide)
 			{
-				ServerLevel level = ((ServerLevel) entity.level);
+				ServerWorld level = ((ServerWorld) entity.level);
 				
-				if (entity instanceof Enemy || entity instanceof NeutralMob)
+				if (entity instanceof IMob || entity instanceof IAngerable)
 				{
 					BlockPos spawnPos = level.getSharedSpawnPos();
 					double distance = Math.sqrt(spawnPos.distSqr(entity.blockPosition()));
@@ -58,7 +58,7 @@ public class AutoLevelingMod
 	
 	private static void applyAttributeBonusIfPossible(LivingEntity entity, Attribute attribute, double bonus)
 	{
-		AttributeInstance attributeInstance = entity.getAttribute(attribute);
+		ModifiableAttributeInstance attributeInstance = entity.getAttribute(attribute);
 		UUID modifierId = UUID.fromString("6a102cb4-d735-4cb7-8ab2-3d383219a44e");
 		
 		if (attributeInstance != null && attributeInstance.getModifier(modifierId) == null)
