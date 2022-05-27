@@ -1,5 +1,7 @@
 package daripher.autoleveling.config;
 
+import java.util.function.Predicate;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -22,15 +24,17 @@ public class Config
 		
 		public Common(ForgeConfigSpec.Builder builder)
 		{
+			Predicate<Object> positiveOrZeroDoublePredicate = d -> d instanceof Double && (Double) d >= 0;
 			builder.push("mobs");
-			movementSpeedBonus = builder.defineInRange("movement_speed_per_level", 0.001D, 0.0D, 1.0D);
-			flyingSpeedBonus = builder.defineInRange("flying_speed_per_level", 0.001D, 0.0D, 1.0D);
-			attackDamageBonus = builder.defineInRange("attack_damage_per_level", 0.1D, 0.0D, 1.0D);
-			armorBonus = builder.defineInRange("armor_per_level", 0.1D, 0.0D, 1.0D);
-			healthBonus = builder.defineInRange("health_per_level", 0.1D, 0.0D, 1.0D);
-			levelBonus = builder.defineInRange("levels_per_distance", 0.01D, 0.0D, 1.0D);
+			levelBonus = builder.define("levels_per_distance", 0.01D, positiveOrZeroDoublePredicate);
 			showLevel = builder.define("show_level", true);
-			builder.pop();
+			builder.push("attributes");
+			movementSpeedBonus = builder.define("movement_speed_per_level", 0.001D, positiveOrZeroDoublePredicate);
+			flyingSpeedBonus = builder.define("flying_speed_per_level", 0.001D, positiveOrZeroDoublePredicate);
+			attackDamageBonus = builder.define("attack_damage_per_level", 0.1D, positiveOrZeroDoublePredicate);
+			armorBonus = builder.define("armor_per_level", 0.1D, positiveOrZeroDoublePredicate);
+			healthBonus = builder.define("health_per_level", 0.1D, positiveOrZeroDoublePredicate);
+			builder.pop(2);
 		}
 	}
 	
