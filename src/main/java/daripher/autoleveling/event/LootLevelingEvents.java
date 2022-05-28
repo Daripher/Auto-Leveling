@@ -1,10 +1,10 @@
 package daripher.autoleveling.event;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import com.google.common.collect.Multimap;
+import com.mojang.datafixers.util.Either;
 
 import daripher.autoleveling.AutoLevelingMod;
 import daripher.autoleveling.capability.LevelingDataProvider;
@@ -12,6 +12,7 @@ import daripher.autoleveling.config.Config;
 import daripher.autoleveling.data.AttributeModifierPool;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -23,6 +24,7 @@ import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.ItemStack;
@@ -31,6 +33,7 @@ import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.minecraftforge.client.event.RenderTooltipEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -123,30 +126,68 @@ public class LootLevelingEvents
 						}
 					}
 					
-					ChatFormatting itemStackNameStyle = ChatFormatting.WHITE;
-					
-					switch (modifiersAmount)
-					{
-						case 1:
-							itemStackNameStyle = ChatFormatting.GREEN;
-							break;
-						case 2:
-							itemStackNameStyle = ChatFormatting.YELLOW;
-							break;
-						case 3:
-							itemStackNameStyle = ChatFormatting.LIGHT_PURPLE;
-							break;
-						case 4:
-							itemStackNameStyle = ChatFormatting.GOLD;
-							break;
-					}
-					
-					Component itemStackName = new TextComponent(itemStack.getItem().getName(itemStack).getString() + " " + monsterLevel).withStyle(itemStackNameStyle);
-					itemStack.setHoverName(itemStackName);
+					itemStack.getTag().putInt("itemlevel", monsterLevel);
+					itemStack.getTag().putInt("modifiers", modifiersAmount);
 					entity.spawnAtLocation(itemStack);
 				});
 			}
 		});
+	}
+	
+	@SubscribeEvent
+	public static void onRenderTooltip(RenderTooltipEvent.GatherComponents event)
+	{
+		if (!Config.COMMON.showItemLevel.get() && !Config.COMMON.showItemRarity.get())
+		{
+			return;
+		}
+		
+		if (event.getItemStack().hasTag() && event.getItemStack().getTag().contains("itemlevel"))
+		{
+			event.getTooltipElements().remove(0);
+			Component itemTitleComponent;
+			
+			if (!event.getItemStack().hasCustomHoverName())
+			{
+				String itemTitle = event.getItemStack().getItem().getName(event.getItemStack()).getString();
+				
+				if (Config.COMMON.showItemLevel.get())
+				{
+					itemTitle += " " + event.getItemStack().getTag().getInt("itemlevel");
+				}
+				
+				itemTitleComponent = new TextComponent(itemTitle);
+			}
+			else
+			{
+				itemTitleComponent = event.getItemStack().getHoverName();
+			}
+			
+			if (Config.COMMON.showItemRarity.get())
+			{
+				ChatFormatting rarityStyle = ChatFormatting.WHITE;
+				
+				switch (event.getItemStack().getTag().getInt("modifiers"))
+				{
+					case 1:
+						rarityStyle = ChatFormatting.GREEN;
+						break;
+					case 2:
+						rarityStyle = ChatFormatting.YELLOW;
+						break;
+					case 3:
+						rarityStyle = ChatFormatting.LIGHT_PURPLE;
+						break;
+					case 4:
+						rarityStyle = ChatFormatting.GOLD;
+						break;
+				}
+				
+				itemTitleComponent = new TextComponent(itemTitleComponent.getString()).withStyle(rarityStyle);
+			}
+			
+			event.getTooltipElements().add(0, Either.<FormattedText, TooltipComponent>left(itemTitleComponent));
+		}
 	}
 	
 	private static void addItemModifiers(ItemStack itemStack, ResourceLocation modifiersPoolId, LootContext lootContext, int modifiersAmount, int monsterLevel, EquipmentSlot slot)
@@ -159,19 +200,12 @@ public class LootLevelingEvents
 		{
 			AttributeModifier adjustedModifier = new AttributeModifier(modifier.getName(), modifier.getAmount() * monsterLevel, modifier.getOperation());
 			
-			if (modifiers.get(attribute) != null)
+			for (AttributeModifier modifier_ : modifiers.get(attribute))
 			{
-				Iterator<AttributeModifier> modifiersIterator = modifiers.get(attribute).iterator();
-				
-				while (modifiersIterator.hasNext())
+				if (modifier_.getOperation() == adjustedModifier.getOperation())
 				{
-					AttributeModifier modifier_ = modifiersIterator.next();
-					
-					if (modifier_.getOperation() == adjustedModifier.getOperation())
-					{
-						adjustedModifier = new AttributeModifier(modifier.getName(), modifier.getAmount() * monsterLevel + modifier_.getAmount(), modifier.getOperation());
-						ignoredModifiers.add(modifier_);
-					}
+					adjustedModifier = new AttributeModifier(modifier.getName(), modifier.getAmount() * monsterLevel + modifier_.getAmount(), modifier.getOperation());
+					ignoredModifiers.add(modifier_);
 				}
 			}
 			
