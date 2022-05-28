@@ -1,0 +1,58 @@
+{
+	"entries": [
+		{
+			"attribute": "minecraft:generic.attack_speed",
+			"weight": 10,
+			"quality": 0,
+			"modifier": {
+				"value": 0.01,
+				"operation": 2
+			}
+		},
+		{
+			"attribute": "minecraft:generic.luck",
+			"weight": 1,
+			"quality": 1,
+			"modifier": {
+				"value": 0.2,
+				"operation": 0
+			}
+		},
+		{
+			"attribute": "minecraft:generic.attack_damage",
+			"weight": 10,
+			"quality": 0,
+			"modifier": {
+				"value": 0.5,
+				"operation": 0
+			}
+		},
+		{
+			"attribute": "minecraft:generic.attack_damage",
+			"weight": 1,
+			"quality": 1,
+			"modifier": {
+				"value": 0.01,
+				"operation": 2
+			}
+		},
+		{
+			"attribute": "minecraft:generic.max_health",
+			"weight": 1,
+			"quality": 1,
+			"modifier": {
+				"value": 0.5,
+				"operation": 0
+			}
+		},
+		{
+			"attribute": "minecraft:generic.movement_speed",
+			"weight": 2,
+			"quality": 2,
+			"modifier": {
+				"value": 0.01,
+				"operation": 2
+			}
+		}
+	]
+}
