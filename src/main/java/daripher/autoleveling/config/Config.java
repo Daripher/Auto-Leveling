@@ -23,8 +23,6 @@ public class Config
 		public final ConfigValue<Double> healthBonus;
 		
 		public final ConfigValue<Boolean> lootDropEnabled;
-		public final ConfigValue<Boolean> showItemLevel;
-		public final ConfigValue<Boolean> showItemRarity;
 		public final ConfigValue<Double> lootDropChance;
 		public final ConfigValue<Double> lootDropChancePerLevel;
 		public final ConfigValue<Double> lootDropChancePerLuck;
@@ -52,8 +50,6 @@ public class Config
 			builder.pop(2);
 			builder.push("loot");
 			lootDropEnabled = builder.define("drop_enabled", true);
-			showItemLevel = builder.define("show_item_level", true);
-			showItemRarity = builder.define("show_item_rarity", true);
 			lootDropChance = builder.define("drop_chance", 0.2D, positiveOrZeroDoublePredicate);
 			lootDropChancePerLevel = builder.define("drop_chance_per_level", 0.05D, positiveOrZeroDoublePredicate);
 			lootDropChancePerLuck = builder.define("drop_chance_per_luck", 0.1D, positiveOrZeroDoublePredicate);
