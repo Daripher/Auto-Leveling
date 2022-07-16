@@ -12,7 +12,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.NeutralMob;
@@ -83,7 +82,7 @@ public class MobsLevelingEvents
 						{
 							int level = levelingData.getLevel();
 							Component entityName = event.getContent();
-							Component levelString = new TextComponent("" + level).withStyle(ChatFormatting.GREEN);
+							Component levelString = Component.literal("" + level).withStyle(ChatFormatting.GREEN);
 							float y = entity.getBbHeight() + 0.5F;
 							int yShift = "deadmau5".equals(entityName.getString()) ? -10 : 0;
 							event.getPoseStack().pushPose();
