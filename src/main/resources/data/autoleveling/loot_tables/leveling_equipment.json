@@ -77,25 +77,25 @@
 				},
 				{
 					"type": "minecraft:item",
-					"name": "minecraft:chainmail_helmet",
+					"name": "minecraft:chain_helmet",
 					"weight": 40,
 					"quality": 0
 				},
 				{
 					"type": "minecraft:item",
-					"name": "minecraft:chainmail_chestplate",
+					"name": "minecraft:chain_chestplate",
 					"weight": 40,
 					"quality": 0
 				},
 				{
 					"type": "minecraft:item",
-					"name": "minecraft:chainmail_leggings",
+					"name": "minecraft:chain_leggings",
 					"weight": 40,
 					"quality": 0
 				},
 				{
 					"type": "minecraft:item",
-					"name": "minecraft:chainmail_boots",
+					"name": "minecraft:chain_boots",
 					"weight": 40,
 					"quality": 0
 				},
