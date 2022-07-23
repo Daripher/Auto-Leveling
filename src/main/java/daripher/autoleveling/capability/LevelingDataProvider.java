@@ -9,9 +9,7 @@ import daripher.autoleveling.api.LevelingApi;
 import daripher.autoleveling.network.NetworkDispatcher;
 import daripher.autoleveling.network.message.SyncLevelingData;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.IAngerable;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.Direction;
@@ -33,7 +31,7 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundNBT
 	@SubscribeEvent
 	public static void attachCapability(AttachCapabilitiesEvent<Entity> event)
 	{
-		if (event.getObject() instanceof IMob || event.getObject() instanceof IAngerable)
+		if (event.getObject() instanceof LivingEntity)
 		{
 			event.addCapability(LevelingApi.CAPABILITY_ID, new LevelingDataProvider());
 		}
