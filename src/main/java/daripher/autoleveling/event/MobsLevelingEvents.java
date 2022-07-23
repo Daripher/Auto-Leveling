@@ -5,6 +5,7 @@ import java.util.UUID;
 import com.mojang.math.Matrix4f;
 
 import daripher.autoleveling.AutoLevelingMod;
+import daripher.autoleveling.api.LevelingApi;
 import daripher.autoleveling.capability.LevelingDataProvider;
 import daripher.autoleveling.config.Config;
 import net.minecraft.ChatFormatting;
@@ -15,13 +16,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.NeutralMob;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.monster.Enemy;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.ForgeHooksClient;
@@ -37,26 +36,22 @@ public class MobsLevelingEvents
 	@SubscribeEvent
 	public static void onEntityJoinWorld(EntityJoinWorldEvent event)
 	{
-		if (event.getEntity() instanceof LivingEntity)
+		if (LevelingApi.canHaveLevel(event.getEntity()))
 		{
 			LivingEntity entity = (LivingEntity) event.getEntity();
 			
 			if (!entity.level.isClientSide)
 			{
-				ServerLevel level = ((ServerLevel) entity.level);
-				
-				if (entity instanceof Enemy || entity instanceof NeutralMob)
-				{
-					BlockPos spawnPos = level.getSharedSpawnPos();
-					double distance = Math.sqrt(spawnPos.distSqr(entity.blockPosition()));
-					int monsterLevel = (int) (Config.COMMON.levelBonus.get() * distance);
-					LevelingDataProvider.get(entity).ifPresent(levelingData -> levelingData.setLevel(monsterLevel));
-					applyAttributeBonusIfPossible(entity, Attributes.MOVEMENT_SPEED, Config.COMMON.movementSpeedBonus.get() * monsterLevel);
-					applyAttributeBonusIfPossible(entity, Attributes.FLYING_SPEED, Config.COMMON.flyingSpeedBonus.get() * monsterLevel);
-					applyAttributeBonusIfPossible(entity, Attributes.ATTACK_DAMAGE, Config.COMMON.attackDamageBonus.get() * monsterLevel);
-					applyAttributeBonusIfPossible(entity, Attributes.ARMOR, Config.COMMON.armorBonus.get() * monsterLevel);
-					applyAttributeBonusIfPossible(entity, Attributes.MAX_HEALTH, Config.COMMON.healthBonus.get() * monsterLevel);
-				}
+				ServerLevel level = ((ServerLevel) entity.level);				
+				BlockPos spawnPos = level.getSharedSpawnPos();
+				double distance = Math.sqrt(spawnPos.distSqr(entity.blockPosition()));
+				int monsterLevel = (int) (Config.COMMON.levelBonus.get() * distance);
+				LevelingDataProvider.get(entity).ifPresent(levelingData -> levelingData.setLevel(monsterLevel));
+				applyAttributeBonusIfPossible(entity, Attributes.MOVEMENT_SPEED, Config.COMMON.movementSpeedBonus.get() * monsterLevel);
+				applyAttributeBonusIfPossible(entity, Attributes.FLYING_SPEED, Config.COMMON.flyingSpeedBonus.get() * monsterLevel);
+				applyAttributeBonusIfPossible(entity, Attributes.ATTACK_DAMAGE, Config.COMMON.attackDamageBonus.get() * monsterLevel);
+				applyAttributeBonusIfPossible(entity, Attributes.ARMOR, Config.COMMON.armorBonus.get() * monsterLevel);
+				applyAttributeBonusIfPossible(entity, Attributes.MAX_HEALTH, Config.COMMON.healthBonus.get() * monsterLevel);
 			}
 		}
 	}
@@ -70,46 +65,43 @@ public class MobsLevelingEvents
 			return;
 		}
 		
-		if (event.getEntity() instanceof LivingEntity)
+		if (LevelingApi.canHaveLevel(event.getEntity()))
 		{
 			Minecraft minecraft = Minecraft.getInstance();
 			LivingEntity entity = (LivingEntity) event.getEntity();
 			
-			if (entity instanceof Enemy || entity instanceof NeutralMob)
+			if (shouldShowName(entity))
 			{
-				if (shouldShowName(entity))
+				event.setResult(Event.Result.ALLOW);
+				double distance = minecraft.getEntityRenderDispatcher().distanceToSqr(entity);
+				
+				if (ForgeHooksClient.isNameplateInRenderDistance(entity, distance))
 				{
-					event.setResult(Event.Result.ALLOW);
-					double distance = minecraft.getEntityRenderDispatcher().distanceToSqr(entity);
-					
-					if (ForgeHooksClient.isNameplateInRenderDistance(entity, distance))
+					LevelingDataProvider.get(entity).ifPresent(levelingData ->
 					{
-						LevelingDataProvider.get(entity).ifPresent(levelingData ->
+						int level = levelingData.getLevel() + 1;
+						Component entityName = event.getContent();
+						Component levelString = new TextComponent("" + level).withStyle(ChatFormatting.GREEN);
+						float y = entity.getBbHeight() + 0.5F;
+						int yShift = "deadmau5".equals(entityName.getString()) ? -10 : 0;
+						event.getPoseStack().pushPose();
+						event.getPoseStack().translate(0.0D, y, 0.0D);
+						event.getPoseStack().mulPose(minecraft.getEntityRenderDispatcher().cameraOrientation());
+						event.getPoseStack().scale(-0.025F, -0.025F, 0.025F);
+						Matrix4f matrix4f = event.getPoseStack().last().pose();
+						float backgroundOpacity = minecraft.options.getBackgroundOpacity(0.25F);
+						int alpha = (int) (backgroundOpacity * 255.0F) << 24;
+						Font font = minecraft.font;
+						float x = -font.width(entityName) / 2 - 5 - font.width(levelString);
+						font.drawInBatch(levelString, x, yShift, 553648127, false, matrix4f, event.getMultiBufferSource(), !entity.isDiscrete(), alpha, event.getPackedLight());
+						
+						if (!entity.isDiscrete())
 						{
-							int level = levelingData.getLevel() + 1;
-							Component entityName = event.getContent();
-							Component levelString = new TextComponent("" + level).withStyle(ChatFormatting.GREEN);
-							float y = entity.getBbHeight() + 0.5F;
-							int yShift = "deadmau5".equals(entityName.getString()) ? -10 : 0;
-							event.getPoseStack().pushPose();
-							event.getPoseStack().translate(0.0D, y, 0.0D);
-							event.getPoseStack().mulPose(minecraft.getEntityRenderDispatcher().cameraOrientation());
-							event.getPoseStack().scale(-0.025F, -0.025F, 0.025F);
-							Matrix4f matrix4f = event.getPoseStack().last().pose();
-							float backgroundOpacity = minecraft.options.getBackgroundOpacity(0.25F);
-							int alpha = (int) (backgroundOpacity * 255.0F) << 24;
-							Font font = minecraft.font;
-							float x = -font.width(entityName) / 2 - 5 - font.width(levelString);
-							font.drawInBatch(levelString, x, yShift, 553648127, false, matrix4f, event.getMultiBufferSource(), !entity.isDiscrete(), alpha, event.getPackedLight());
-							
-							if (!entity.isDiscrete())
-							{
-								font.drawInBatch(levelString, x, yShift, -1, false, matrix4f, event.getMultiBufferSource(), false, 0, event.getPackedLight());
-							}
-							
-							event.getPoseStack().popPose();
-						});
-					}
+							font.drawInBatch(levelString, x, yShift, -1, false, matrix4f, event.getMultiBufferSource(), false, 0, event.getPackedLight());
+						}
+						
+						event.getPoseStack().popPose();
+					});
 				}
 			}
 		}
