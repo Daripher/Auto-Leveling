@@ -65,6 +65,11 @@ public class MobsLevelingEvents
 	@SubscribeEvent
 	public static void onRenderNameplate(RenderNameplateEvent event)
 	{
+		if (!Config.COMMON.showLevel.get())
+		{
+			return;
+		}
+		
 		if (event.getEntity() instanceof LivingEntity)
 		{
 			Minecraft minecraft = Minecraft.getInstance();
@@ -81,7 +86,7 @@ public class MobsLevelingEvents
 					{
 						LevelingDataProvider.get(entity).ifPresent(levelingData ->
 						{
-							int level = levelingData.getLevel();
+							int level = levelingData.getLevel() + 1;
 							Component entityName = event.getContent();
 							Component levelString = new TextComponent("" + level).withStyle(ChatFormatting.GREEN);
 							float y = entity.getBbHeight() + 0.5F;
@@ -113,11 +118,6 @@ public class MobsLevelingEvents
 	@OnlyIn(Dist.CLIENT)
 	protected static boolean shouldShowName(LivingEntity entity)
 	{
-		if (!Config.COMMON.showLevel.get())
-		{
-			return false;
-		}
-		
 		Minecraft minecraft = Minecraft.getInstance();
 		return Minecraft.renderNames() && entity != minecraft.getCameraEntity() && !entity.isInvisibleTo(minecraft.player) && !entity.isVehicle() && minecraft.player.hasLineOfSight(entity);
 	}
