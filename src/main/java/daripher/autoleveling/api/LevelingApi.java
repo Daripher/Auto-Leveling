@@ -2,6 +2,7 @@ package daripher.autoleveling.api;
 
 import daripher.autoleveling.AutoLevelingMod;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.util.ResourceLocation;
@@ -16,6 +17,6 @@ public class LevelingApi
 
 	public static boolean canHaveLevel(Entity entity)
 	{
-		return entity instanceof LivingEntity && ((LivingEntity) entity).getAttribute(Attributes.ATTACK_DAMAGE) != null;
+		return entity instanceof LivingEntity && ((LivingEntity) entity).getAttribute(Attributes.ATTACK_DAMAGE) != null && entity.getType() != EntityType.PLAYER;
 	}
 }
