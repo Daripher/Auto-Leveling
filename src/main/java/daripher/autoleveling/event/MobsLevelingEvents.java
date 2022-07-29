@@ -44,13 +44,13 @@ public class MobsLevelingEvents
 				ServerWorld serverWorld = ((ServerWorld) entity.level);
 				BlockPos spawnPos = serverWorld.getSharedSpawnPos();
 				double distance = Math.sqrt(spawnPos.distSqr(entity.blockPosition()));
-				int level = (int) (Config.COMMON.levelBonus.get() * distance);
-				LevelingDataProvider.get(entity).ifPresent(levelingData -> levelingData.setLevel(level));
-				applyAttributeBonusIfPossible(entity, Attributes.MOVEMENT_SPEED, Config.COMMON.movementSpeedBonus.get() * level);
-				applyAttributeBonusIfPossible(entity, Attributes.FLYING_SPEED, Config.COMMON.flyingSpeedBonus.get() * level);
-				applyAttributeBonusIfPossible(entity, Attributes.ATTACK_DAMAGE, Config.COMMON.attackDamageBonus.get() * level);
-				applyAttributeBonusIfPossible(entity, Attributes.ARMOR, Config.COMMON.armorBonus.get() * level);
-				applyAttributeBonusIfPossible(entity, Attributes.MAX_HEALTH, Config.COMMON.healthBonus.get() * level);
+				int monsterLevel = getLevelForEntity(distance);
+				LevelingDataProvider.get(entity).ifPresent(levelingData -> levelingData.setLevel(monsterLevel));
+				applyAttributeBonusIfPossible(entity, Attributes.MOVEMENT_SPEED, Config.COMMON.movementSpeedBonus.get() * monsterLevel);
+				applyAttributeBonusIfPossible(entity, Attributes.FLYING_SPEED, Config.COMMON.flyingSpeedBonus.get() * monsterLevel);
+				applyAttributeBonusIfPossible(entity, Attributes.ATTACK_DAMAGE, Config.COMMON.attackDamageBonus.get() * monsterLevel);
+				applyAttributeBonusIfPossible(entity, Attributes.ARMOR, Config.COMMON.armorBonus.get() * monsterLevel);
+				applyAttributeBonusIfPossible(entity, Attributes.MAX_HEALTH, Config.COMMON.healthBonus.get() * monsterLevel);
 			}
 		}
 	}
@@ -119,6 +119,19 @@ public class MobsLevelingEvents
 				}
 			}
 		}
+	}
+	
+	private static int getLevelForEntity(double distanceFromSpawn)
+	{
+		int monsterLevel = (int) (Config.COMMON.levelBonus.get() * distanceFromSpawn);
+		int maxLevel = Config.COMMON.maxLevel.get();
+		
+		if (maxLevel > 0)
+		{
+			monsterLevel = Math.min(monsterLevel, maxLevel - 1);
+		}
+		
+		return monsterLevel;
 	}
 	
 	@OnlyIn(Dist.CLIENT)
