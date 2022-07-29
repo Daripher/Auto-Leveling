@@ -3,7 +3,6 @@ package daripher.autoleveling.event;
 import java.util.UUID;
 
 import daripher.autoleveling.AutoLevelingMod;
-import daripher.autoleveling.api.LevelingApi;
 import daripher.autoleveling.capability.LevelingDataProvider;
 import daripher.autoleveling.config.Config;
 import net.minecraft.client.Minecraft;
@@ -35,7 +34,7 @@ public class MobsLevelingEvents
 	@SubscribeEvent
 	public static void onEntityJoinWorld(EntityJoinWorldEvent event)
 	{
-		if (LevelingApi.canHaveLevel(event.getEntity()))
+		if (LevelingDataProvider.canHaveLevel(event.getEntity()))
 		{
 			LivingEntity entity = (LivingEntity) event.getEntity();
 			
@@ -64,7 +63,7 @@ public class MobsLevelingEvents
 			return;
 		}
 		
-		if (LevelingApi.canHaveLevel(event.getEntity()))
+		if (LevelingDataProvider.canHaveLevel(event.getEntity()))
 		{
 			Minecraft minecraft = Minecraft.getInstance();
 			LivingEntity entity = (LivingEntity) event.getEntity();

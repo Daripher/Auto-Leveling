@@ -8,7 +8,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 
 import daripher.autoleveling.api.ILevelingData;
-import daripher.autoleveling.api.LevelingApi;
 import daripher.autoleveling.capability.LevelingDataProvider;
 import daripher.autoleveling.init.AutoLevelingLootConditions;
 import net.minecraft.entity.Entity;
@@ -51,7 +50,7 @@ public class LevelCheck implements ILootCondition
 		
 		Entity entity = context.getParamOrNull(LootParameters.THIS_ENTITY);
 		
-		if (!LevelingApi.canHaveLevel(entity))
+		if (!LevelingDataProvider.canHaveLevel(entity))
 		{
 			return false;
 		}
