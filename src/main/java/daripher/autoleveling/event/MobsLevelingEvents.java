@@ -20,6 +20,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.ForgeHooksClient;
@@ -45,7 +46,7 @@ public class MobsLevelingEvents
 				ServerLevel level = ((ServerLevel) entity.level);				
 				BlockPos spawnPos = level.getSharedSpawnPos();
 				double distance = Math.sqrt(spawnPos.distSqr(entity.blockPosition()));
-				int monsterLevel = getLevelForEntity(distance);
+				int monsterLevel = getLevelForEntity(entity, distance);
 				LevelingDataProvider.get(entity).ifPresent(levelingData -> levelingData.setLevel(monsterLevel));
 				applyAttributeBonusIfPossible(entity, Attributes.MOVEMENT_SPEED, Config.COMMON.movementSpeedBonus.get() * monsterLevel);
 				applyAttributeBonusIfPossible(entity, Attributes.FLYING_SPEED, Config.COMMON.flyingSpeedBonus.get() * monsterLevel);
@@ -122,10 +123,33 @@ public class MobsLevelingEvents
 		}
 	}
 	
-	private static int getLevelForEntity(double distanceFromSpawn)
+	private static int getLevelForEntity(LivingEntity entity, double distanceFromSpawn)
 	{
 		int monsterLevel = (int) (Config.COMMON.levelBonus.get() * distanceFromSpawn);
 		int maxLevel = Config.COMMON.maxLevel.get();
+		int levelBonus = Config.COMMON.randomLevelBonus.get() + 1;
+		
+		if (entity.level.dimension() == Level.OVERWORLD)
+		{
+			monsterLevel += Config.COMMON.overworldStartingLevel.get() - 1;
+		}
+		
+		if (entity.level.dimension() == Level.NETHER)
+		{
+			monsterLevel += Config.COMMON.theNetherStartingLevel.get() - 1;
+		}
+		
+		if (entity.level.dimension() == Level.END)
+		{
+			monsterLevel += Config.COMMON.theEndStartingLevel.get() - 1;
+		}
+		
+		if (levelBonus > 0)
+		{
+			monsterLevel += entity.getRandom().nextInt(levelBonus);
+		}
+		
+		monsterLevel = Math.abs(monsterLevel);
 		
 		if (maxLevel > 0)
 		{
