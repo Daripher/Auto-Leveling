@@ -22,6 +22,7 @@ public class Config
 		public final ConfigValue<Double> armorBonus;
 		public final ConfigValue<Double> healthBonus;
 		public final ConfigValue<Double> levelBonus;
+		public final ConfigValue<Double> expBonus;
 		public final ConfigValue<Boolean> showLevel;
 		public final ConfigValue<List<String>> blacklistedMobs;
 		
@@ -38,6 +39,7 @@ public class Config
 			attackDamageBonus = builder.define("attack_damage_per_level", 0.1D, positiveOrZeroDoublePredicate);
 			armorBonus = builder.define("armor_per_level", 0.1D, positiveOrZeroDoublePredicate);
 			healthBonus = builder.define("health_per_level", 0.1D, positiveOrZeroDoublePredicate);
+			expBonus = builder.define("exp_bonus_per_level", 0.1D);
 			builder.pop(2);
 		}
 	}
