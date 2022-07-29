@@ -24,21 +24,24 @@ public class Config
 		public final ConfigValue<Double> levelBonus;
 		public final ConfigValue<Double> expBonus;
 		public final ConfigValue<Boolean> showLevel;
+		public final ConfigValue<Integer> maxLevel;
 		public final ConfigValue<List<String>> blacklistedMobs;
 		
 		public Common(ForgeConfigSpec.Builder builder)
 		{
-			Predicate<Object> positiveOrZeroDoublePredicate = d -> d instanceof Double && (Double) d >= 0;
+			Predicate<Object> positiveOrZeroDouble = o -> o instanceof Double && (Double) o >= 0;
+			Predicate<Object> positiveOrZeroInteger = o -> o instanceof Integer && (Integer) o >= 0;
 			builder.push("mobs");
-			levelBonus = builder.define("levels_per_distance", 0.01D, positiveOrZeroDoublePredicate);
+			levelBonus = builder.define("levels_per_distance", 0.01D, positiveOrZeroDouble);
 			showLevel = builder.define("show_level", true);
 			blacklistedMobs = builder.define("blacklist", new ArrayList<String>());
+			maxLevel = builder.define("max_level", 0, positiveOrZeroInteger);
 			builder.push("attributes");
-			movementSpeedBonus = builder.define("movement_speed_per_level", 0.001D, positiveOrZeroDoublePredicate);
-			flyingSpeedBonus = builder.define("flying_speed_per_level", 0.001D, positiveOrZeroDoublePredicate);
-			attackDamageBonus = builder.define("attack_damage_per_level", 0.1D, positiveOrZeroDoublePredicate);
-			armorBonus = builder.define("armor_per_level", 0.1D, positiveOrZeroDoublePredicate);
-			healthBonus = builder.define("health_per_level", 0.1D, positiveOrZeroDoublePredicate);
+			movementSpeedBonus = builder.define("movement_speed_per_level", 0.001D, positiveOrZeroDouble);
+			flyingSpeedBonus = builder.define("flying_speed_per_level", 0.001D, positiveOrZeroDouble);
+			attackDamageBonus = builder.define("attack_damage_per_level", 0.1D, positiveOrZeroDouble);
+			armorBonus = builder.define("armor_per_level", 0.1D, positiveOrZeroDouble);
+			healthBonus = builder.define("health_per_level", 0.1D, positiveOrZeroDouble);
 			expBonus = builder.define("exp_bonus_per_level", 0.1D);
 			builder.pop(2);
 		}
