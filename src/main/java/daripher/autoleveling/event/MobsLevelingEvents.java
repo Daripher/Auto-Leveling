@@ -45,7 +45,7 @@ public class MobsLevelingEvents
 				ServerLevel level = ((ServerLevel) entity.level);				
 				BlockPos spawnPos = level.getSharedSpawnPos();
 				double distance = Math.sqrt(spawnPos.distSqr(entity.blockPosition()));
-				int monsterLevel = (int) (Config.COMMON.levelBonus.get() * distance);
+				int monsterLevel = getLevelForEntity(distance);
 				LevelingDataProvider.get(entity).ifPresent(levelingData -> levelingData.setLevel(monsterLevel));
 				applyAttributeBonusIfPossible(entity, Attributes.MOVEMENT_SPEED, Config.COMMON.movementSpeedBonus.get() * monsterLevel);
 				applyAttributeBonusIfPossible(entity, Attributes.FLYING_SPEED, Config.COMMON.flyingSpeedBonus.get() * monsterLevel);
@@ -120,6 +120,19 @@ public class MobsLevelingEvents
 				}
 			}
 		}
+	}
+	
+	private static int getLevelForEntity(double distanceFromSpawn)
+	{
+		int monsterLevel = (int) (Config.COMMON.levelBonus.get() * distanceFromSpawn);
+		int maxLevel = Config.COMMON.maxLevel.get();
+		
+		if (maxLevel > 0)
+		{
+			monsterLevel = Math.min(monsterLevel, maxLevel - 1);
+		}
+		
+		return monsterLevel;
 	}
 	
 	@OnlyIn(Dist.CLIENT)
