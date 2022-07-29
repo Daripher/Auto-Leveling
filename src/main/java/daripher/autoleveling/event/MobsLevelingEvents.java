@@ -25,6 +25,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.RenderNameplateEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.living.LivingExperienceDropEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -52,6 +53,21 @@ public class MobsLevelingEvents
 				applyAttributeBonusIfPossible(entity, Attributes.ARMOR, Config.COMMON.armorBonus.get() * monsterLevel);
 				applyAttributeBonusIfPossible(entity, Attributes.MAX_HEALTH, Config.COMMON.healthBonus.get() * monsterLevel);
 			}
+		}
+	}
+	
+	@SubscribeEvent
+	public static void onLivingExperienceDrop(LivingExperienceDropEvent event)
+	{
+		if (LevelingDataProvider.canHaveLevel(event.getEntity()))
+		{
+			LevelingDataProvider.get(event.getEntityLiving()).ifPresent(levelingData ->
+			{
+				int level = levelingData.getLevel() + 1;
+				int exp = event.getOriginalExperience();
+				double expBonus = Config.COMMON.expBonus.get() * level;
+				event.setDroppedExperience((int) (exp + exp * expBonus));
+			});
 		}
 	}
 	
