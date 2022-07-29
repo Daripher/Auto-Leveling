@@ -18,6 +18,7 @@ import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -44,7 +45,7 @@ public class MobsLevelingEvents
 				ServerWorld serverWorld = ((ServerWorld) entity.level);
 				BlockPos spawnPos = serverWorld.getSharedSpawnPos();
 				double distance = Math.sqrt(spawnPos.distSqr(entity.blockPosition()));
-				int monsterLevel = getLevelForEntity(distance);
+				int monsterLevel = getLevelForEntity(entity, distance);
 				LevelingDataProvider.get(entity).ifPresent(levelingData -> levelingData.setLevel(monsterLevel));
 				applyAttributeBonusIfPossible(entity, Attributes.MOVEMENT_SPEED, Config.COMMON.movementSpeedBonus.get() * monsterLevel);
 				applyAttributeBonusIfPossible(entity, Attributes.FLYING_SPEED, Config.COMMON.flyingSpeedBonus.get() * monsterLevel);
@@ -121,10 +122,33 @@ public class MobsLevelingEvents
 		}
 	}
 	
-	private static int getLevelForEntity(double distanceFromSpawn)
+	private static int getLevelForEntity(LivingEntity entity, double distanceFromSpawn)
 	{
 		int monsterLevel = (int) (Config.COMMON.levelBonus.get() * distanceFromSpawn);
 		int maxLevel = Config.COMMON.maxLevel.get();
+		int levelBonus = Config.COMMON.randomLevelBonus.get() + 1;
+		
+		if (entity.level.dimension() == World.OVERWORLD)
+		{
+			monsterLevel += Config.COMMON.overworldStartingLevel.get() - 1;
+		}
+		
+		if (entity.level.dimension() == World.NETHER)
+		{
+			monsterLevel += Config.COMMON.theNetherStartingLevel.get() - 1;
+		}
+		
+		if (entity.level.dimension() == World.END)
+		{
+			monsterLevel += Config.COMMON.theEndStartingLevel.get() - 1;
+		}
+		
+		if (levelBonus > 0)
+		{
+			monsterLevel += entity.getRandom().nextInt(levelBonus);
+		}
+		
+		monsterLevel = Math.abs(monsterLevel);
 		
 		if (maxLevel > 0)
 		{
