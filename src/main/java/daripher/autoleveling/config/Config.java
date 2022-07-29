@@ -1,5 +1,7 @@
 package daripher.autoleveling.config;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Predicate;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -21,6 +23,7 @@ public class Config
 		public final ConfigValue<Double> healthBonus;
 		public final ConfigValue<Double> levelBonus;
 		public final ConfigValue<Boolean> showLevel;
+		public final ConfigValue<List<String>> blacklistedMobs;
 		
 		public Common(ForgeConfigSpec.Builder builder)
 		{
@@ -28,6 +31,7 @@ public class Config
 			builder.push("mobs");
 			levelBonus = builder.define("levels_per_distance", 0.01D, positiveOrZeroDoublePredicate);
 			showLevel = builder.define("show_level", true);
+			blacklistedMobs = builder.define("blacklist", new ArrayList<String>());
 			builder.push("attributes");
 			movementSpeedBonus = builder.define("movement_speed_per_level", 0.001D, positiveOrZeroDoublePredicate);
 			flyingSpeedBonus = builder.define("flying_speed_per_level", 0.001D, positiveOrZeroDoublePredicate);

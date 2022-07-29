@@ -5,7 +5,6 @@ import java.util.UUID;
 import com.mojang.math.Matrix4f;
 
 import daripher.autoleveling.AutoLevelingMod;
-import daripher.autoleveling.api.LevelingApi;
 import daripher.autoleveling.capability.LevelingDataProvider;
 import daripher.autoleveling.config.Config;
 import net.minecraft.ChatFormatting;
@@ -35,13 +34,13 @@ public class MobsLevelingEvents
 	@SubscribeEvent
 	public static void onEntityJoinWorld(EntityJoinWorldEvent event)
 	{
-		if (LevelingApi.canHaveLevel(event.getEntity()))
+		if (LevelingDataProvider.canHaveLevel(event.getEntity()))
 		{
 			LivingEntity entity = (LivingEntity) event.getEntity();
 			
 			if (!entity.level.isClientSide)
 			{
-				ServerLevel level = ((ServerLevel) entity.level);				
+				ServerLevel level = ((ServerLevel) entity.level);
 				BlockPos spawnPos = level.getSharedSpawnPos();
 				double distance = Math.sqrt(spawnPos.distSqr(entity.blockPosition()));
 				int monsterLevel = (int) (Config.COMMON.levelBonus.get() * distance);
@@ -64,7 +63,7 @@ public class MobsLevelingEvents
 			return;
 		}
 		
-		if (LevelingApi.canHaveLevel(event.getEntity()))
+		if (LevelingDataProvider.canHaveLevel(event.getEntity()))
 		{
 			Minecraft minecraft = Minecraft.getInstance();
 			LivingEntity entity = (LivingEntity) event.getEntity();
