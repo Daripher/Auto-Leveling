@@ -51,7 +51,7 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag
 			
 			LevelingDataProvider.get(livingEntity).ifPresent(levelingData ->
 			{
-				LevelingDataProvider.syncWith((ServerPlayer) event.getPlayer(), livingEntity, levelingData);
+				LevelingDataProvider.syncWith((ServerPlayer) event.getEntity(), livingEntity, levelingData);
 			});
 		}
 	}
@@ -98,7 +98,7 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag
 			return false;
 		}
 		
-		ResourceLocation entityId = ForgeRegistries.ENTITIES.getKey(entity.getType());
+		ResourceLocation entityId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType());
 		
 		if (Config.COMMON.blacklistedMobs.get().contains(entityId.toString()))
 		{

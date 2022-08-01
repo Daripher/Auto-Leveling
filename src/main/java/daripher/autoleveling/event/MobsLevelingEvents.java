@@ -23,8 +23,8 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.ForgeHooksClient;
-import net.minecraftforge.client.event.RenderNameplateEvent;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.client.event.RenderNameTagEvent;
+import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.LivingExperienceDropEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -34,7 +34,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 public class MobsLevelingEvents
 {
 	@SubscribeEvent
-	public static void onEntityJoinWorld(EntityJoinWorldEvent event)
+	public static void onEntityJoinWorld(EntityJoinLevelEvent event)
 	{
 		if (LevelingDataProvider.canHaveLevel(event.getEntity()))
 		{
@@ -61,7 +61,7 @@ public class MobsLevelingEvents
 	{
 		if (LevelingDataProvider.canHaveLevel(event.getEntity()))
 		{
-			LevelingDataProvider.get(event.getEntityLiving()).ifPresent(levelingData ->
+			LevelingDataProvider.get(event.getEntity()).ifPresent(levelingData ->
 			{
 				int level = levelingData.getLevel() + 1;
 				int exp = event.getOriginalExperience();
@@ -73,7 +73,7 @@ public class MobsLevelingEvents
 	
 	@OnlyIn(Dist.CLIENT)
 	@SubscribeEvent
-	public static void onRenderNameplate(RenderNameplateEvent event)
+	public static void onRenderNameplate(RenderNameTagEvent event)
 	{
 		if (!Config.COMMON.showLevel.get())
 		{
