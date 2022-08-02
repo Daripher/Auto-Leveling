@@ -5,6 +5,8 @@ import java.util.UUID;
 import daripher.autoleveling.AutoLevelingMod;
 import daripher.autoleveling.capability.LevelingDataProvider;
 import daripher.autoleveling.config.Config;
+import daripher.autoleveling.data.LevelingSettings;
+import daripher.autoleveling.data.LevelingSettingsReloader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.entity.LivingEntity;
@@ -13,6 +15,7 @@ import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.text.ITextComponent;
@@ -124,24 +127,12 @@ public class MobsLevelingEvents
 	
 	private static int getLevelForEntity(LivingEntity entity, double distanceFromSpawn)
 	{
-		int monsterLevel = (int) (Config.COMMON.levelBonus.get() * distanceFromSpawn);
-		int maxLevel = Config.COMMON.maxLevel.get();
-		int levelBonus = Config.COMMON.randomLevelBonus.get() + 1;
-		
-		if (entity.level.dimension() == World.OVERWORLD)
-		{
-			monsterLevel += Config.COMMON.overworldStartingLevel.get() - 1;
-		}
-		
-		if (entity.level.dimension() == World.NETHER)
-		{
-			monsterLevel += Config.COMMON.theNetherStartingLevel.get() - 1;
-		}
-		
-		if (entity.level.dimension() == World.END)
-		{
-			monsterLevel += Config.COMMON.theEndStartingLevel.get() - 1;
-		}
+		RegistryKey<World> dimension = entity.level.dimension();
+		LevelingSettings levelingSettings = LevelingSettingsReloader.getSettingsForDimension(dimension);
+		int monsterLevel = (int) (levelingSettings.levelsPerDistance * distanceFromSpawn);
+		int maxLevel = levelingSettings.maxLevel;
+		int levelBonus = levelingSettings.randomLevelBonus + 1;
+		monsterLevel += levelingSettings.startingLevel - 1;
 		
 		if (levelBonus > 0)
 		{
