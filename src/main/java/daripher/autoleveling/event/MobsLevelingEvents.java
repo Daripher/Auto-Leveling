@@ -1,5 +1,7 @@
 package daripher.autoleveling.event;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.UUID;
 
 import com.mojang.math.Matrix4f;
@@ -15,7 +17,9 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -23,15 +27,20 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.RenderNameTagEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
+import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.living.LivingExperienceDropEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 
 @EventBusSubscriber(modid = AutoLevelingMod.MOD_ID)
 public class MobsLevelingEvents
@@ -71,6 +80,32 @@ public class MobsLevelingEvents
 				double expBonus = Config.COMMON.expBonus.get() * level;
 				event.setDroppedExperience((int) (exp + exp * expBonus));
 			});
+		}
+	}
+	
+	@SubscribeEvent
+	public static void onLivingDrops(LivingDropsEvent event)
+	{
+		if (LevelingDataProvider.canHaveLevel(event.getEntity()))
+		{
+			ResourceLocation resourcelocation = new ResourceLocation(AutoLevelingMod.MOD_ID, "gameplay/leveled_mobs");
+			LootTable loottable = event.getEntity().level.getServer().getLootTables().get(resourcelocation);
+			int lastHurtByPlayerTime = ObfuscationReflectionHelper.getPrivateValue(LivingEntity.class, event.getEntity(), "f_20889_");
+			Method createLootContext = ObfuscationReflectionHelper.findMethod(LivingEntity.class, "m_7771_", boolean.class, DamageSource.class);
+			LootContext.Builder lootcontext$builder;
+			
+			try
+			{
+				lootcontext$builder = (LootContext.Builder) createLootContext.invoke(event.getEntity(), lastHurtByPlayerTime > 0, event.getSource());
+			}
+			catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
+			{
+				e.printStackTrace();
+				return;
+			}
+			
+			LootContext ctx = lootcontext$builder.create(LootContextParamSets.ENTITY);
+			loottable.getRandomItems(ctx).forEach(event.getEntity()::spawnAtLocation);
 		}
 	}
 	
