@@ -7,11 +7,14 @@ import com.mojang.math.Matrix4f;
 import daripher.autoleveling.AutoLevelingMod;
 import daripher.autoleveling.capability.LevelingDataProvider;
 import daripher.autoleveling.config.Config;
+import daripher.autoleveling.data.LevelingSettings;
+import daripher.autoleveling.data.LevelingSettingsReloader;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -124,24 +127,12 @@ public class MobsLevelingEvents
 	
 	private static int getLevelForEntity(LivingEntity entity, double distanceFromSpawn)
 	{
-		int monsterLevel = (int) (Config.COMMON.levelBonus.get() * distanceFromSpawn);
-		int maxLevel = Config.COMMON.maxLevel.get();
-		int levelBonus = Config.COMMON.randomLevelBonus.get() + 1;
-		
-		if (entity.level.dimension() == Level.OVERWORLD)
-		{
-			monsterLevel += Config.COMMON.overworldStartingLevel.get() - 1;
-		}
-		
-		if (entity.level.dimension() == Level.NETHER)
-		{
-			monsterLevel += Config.COMMON.theNetherStartingLevel.get() - 1;
-		}
-		
-		if (entity.level.dimension() == Level.END)
-		{
-			monsterLevel += Config.COMMON.theEndStartingLevel.get() - 1;
-		}
+		ResourceKey<Level> dimension = entity.level.dimension();
+		LevelingSettings levelingSettings = LevelingSettingsReloader.getSettingsForDimension(dimension);
+		int monsterLevel = (int) (levelingSettings.levelsPerDistance() * distanceFromSpawn);
+		int maxLevel = levelingSettings.maxLevel();
+		int levelBonus = levelingSettings.randomLevelBonus() + 1;
+		monsterLevel += levelingSettings.startingLevel() - 1;
 		
 		if (levelBonus > 0)
 		{
