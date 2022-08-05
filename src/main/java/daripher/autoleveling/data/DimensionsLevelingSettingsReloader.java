@@ -2,6 +2,8 @@ package daripher.autoleveling.data;
 
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+
 import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableMap;
@@ -17,15 +19,15 @@ import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.loot.Deserializers;
 
-public class LevelingSettingsReloader extends SimpleJsonResourceReloadListener
+public class DimensionsLevelingSettingsReloader extends SimpleJsonResourceReloadListener
 {
 	private static final Logger LOGGER = LogUtils.getLogger();
 	private static final Gson GSON = Deserializers.createLootTableSerializer().create();
 	private static Map<ResourceLocation, LevelingSettings> settings = ImmutableMap.of();
 	
-	public LevelingSettingsReloader()
+	public DimensionsLevelingSettingsReloader()
 	{
-		super(GSON, "leveling_settings");
+		super(GSON, "leveling_settings/dimensions");
 	}
 	
 	@Override
@@ -37,7 +39,7 @@ public class LevelingSettingsReloader extends SimpleJsonResourceReloadListener
 		{
 			try
 			{
-				LevelingSettings levelingSettings = LevelingSettings.load(GSON, id, json, this);
+				LevelingSettings levelingSettings = LevelingSettings.load(json.getAsJsonObject());
 				builder.put(id, levelingSettings);
 				LOGGER.info("Loading leveling settings {}", id);
 			}
@@ -51,6 +53,7 @@ public class LevelingSettingsReloader extends SimpleJsonResourceReloadListener
 		settings = immutableMap;
 	}
 	
+	@Nonnull
 	public static LevelingSettings getSettingsForDimension(ResourceKey<Level> dimension)
 	{
 		return settings.getOrDefault(dimension.location(), LevelingSettings.DEFAULT);
