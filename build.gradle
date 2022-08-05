@@ -12,7 +12,7 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
-version = '1.7'
+version = '1.8'
 group = 'daripher.autoleveling'
 archivesBaseName = 'AutoLeveling-1.16.5'
 
