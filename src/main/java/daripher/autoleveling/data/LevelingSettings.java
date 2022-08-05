@@ -1,10 +1,6 @@
 package daripher.autoleveling.data;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
-import net.minecraft.util.ResourceLocation;
 
 public class LevelingSettings
 {
@@ -23,9 +19,8 @@ public class LevelingSettings
 		this.randomLevelBonus = randomLevelBonus;
 	}
 	
-	public static LevelingSettings load(Gson gson, ResourceLocation id, JsonElement json, LevelingSettingsReloader levelingSettingsReloader)
+	public static LevelingSettings load(JsonObject jsonObject)
 	{
-		JsonObject jsonObject = json.getAsJsonObject();
 		int startingLevel = jsonObject.get("starting_level").getAsInt();
 		int maxLevel = jsonObject.get("max_level").getAsInt();
 		float levelsPerDistance = jsonObject.get("levels_per_distance").getAsFloat();

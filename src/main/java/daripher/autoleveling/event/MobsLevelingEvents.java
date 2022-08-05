@@ -7,8 +7,9 @@ import java.util.UUID;
 import daripher.autoleveling.AutoLevelingMod;
 import daripher.autoleveling.capability.LevelingDataProvider;
 import daripher.autoleveling.config.Config;
+import daripher.autoleveling.data.DimensionsLevelingSettingsReloader;
+import daripher.autoleveling.data.EntitiesLevelingSettingsReloader;
 import daripher.autoleveling.data.LevelingSettings;
-import daripher.autoleveling.data.LevelingSettingsReloader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.entity.LivingEntity;
@@ -162,8 +163,14 @@ public class MobsLevelingEvents
 	
 	private static int getLevelForEntity(LivingEntity entity, double distanceFromSpawn)
 	{
-		RegistryKey<World> dimension = entity.level.dimension();
-		LevelingSettings levelingSettings = LevelingSettingsReloader.getSettingsForDimension(dimension);
+		LevelingSettings levelingSettings = EntitiesLevelingSettingsReloader.getSettingsForEntity(entity.getType());
+		
+		if (levelingSettings == null)
+		{
+			RegistryKey<World> dimension = entity.level.dimension();
+			levelingSettings = DimensionsLevelingSettingsReloader.getSettingsForDimension(dimension);
+		}
+		
 		int monsterLevel = (int) (levelingSettings.levelsPerDistance * distanceFromSpawn);
 		int maxLevel = levelingSettings.maxLevel;
 		int levelBonus = levelingSettings.randomLevelBonus + 1;
