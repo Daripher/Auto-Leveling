@@ -98,9 +98,14 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundNBT
 		{
 			return false;
 		}
-
+		
 		ResourceLocation entityId = ForgeRegistries.ENTITIES.getKey(entity.getType());
-
+		
+		if (!Config.COMMON.whitelistedMobs.get().isEmpty())
+		{
+			return Config.COMMON.whitelistedMobs.get().contains(entityId.toString());
+		}
+		
 		if (Config.COMMON.blacklistedMobs.get().contains(entityId.toString()))
 		{
 			return false;
