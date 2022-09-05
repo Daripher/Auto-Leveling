@@ -56,6 +56,6 @@ public class EntitiesLevelingSettingsReloader extends SimpleJsonResourceReloadLi
 	@Nullable
 	public static LevelingSettings getSettingsForEntity(EntityType<?> entityType)
 	{
-		return settings.getOrDefault(ForgeRegistries.ENTITY_TYPES.getKey(entityType), LevelingSettings.DEFAULT);
+		return settings.get(ForgeRegistries.ENTITY_TYPES.getKey(entityType));
 	}
 }
