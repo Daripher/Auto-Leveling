@@ -24,12 +24,14 @@ public class Config
 		public final ConfigValue<Double> expBonus;
 		public final ConfigValue<Boolean> showLevel;
 		public final ConfigValue<List<String>> blacklistedMobs;
+		public final ConfigValue<List<String>> whitelistedMobs;
 		
 		public Common(ForgeConfigSpec.Builder builder)
 		{
 			Predicate<Object> positiveOrZeroDouble = o -> o instanceof Double && (Double) o >= 0;
 			builder.push("mobs");
 			blacklistedMobs = builder.define("blacklist", new ArrayList<String>());
+			whitelistedMobs = builder.define("whitelist", new ArrayList<String>());
 			showLevel = builder.define("show_level", true);
 			expBonus = builder.define("exp_bonus_per_level", 0.1D);
 			builder.pop();
