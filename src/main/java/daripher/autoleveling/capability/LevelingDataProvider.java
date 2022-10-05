@@ -1,5 +1,8 @@
 package daripher.autoleveling.capability;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -31,6 +34,9 @@ import net.minecraftforge.registries.ForgeRegistries;
 @EventBusSubscriber(bus = Bus.FORGE, modid = AutoLevelingMod.MOD_ID)
 public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag>
 {
+	private static List<String> blacklisted_namespaces = new ArrayList<>();
+	private static List<String> whitelisted_namespaces = new ArrayList<>();
+	private static boolean initialized;
 	private LazyOptional<ILevelingData> lazyOptional = LazyOptional.of(LevelingData::new);
 	
 	@SubscribeEvent
@@ -81,6 +87,23 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag
 	
 	public static boolean canHaveLevel(Entity entity)
 	{
+		if (!initialized)
+		{
+			if (!Config.COMMON.whitelistedMobs.get().isEmpty())
+			{
+				whitelisted_namespaces.addAll(Config.COMMON.whitelistedMobs.get().stream().filter(s -> s.split(":").length == 2 && s.split(":")[1].equals("*")).collect(ArrayList::new,
+						(list, string) -> list.add(string.split(":")[0]), (list1, list2) -> list1.addAll(list2)));
+			}
+			
+			if (!Config.COMMON.blacklistedMobs.get().isEmpty())
+			{
+				blacklisted_namespaces.addAll(Config.COMMON.blacklistedMobs.get().stream().filter(s -> s.split(":").length == 2 && s.split(":")[1].equals("*")).collect(ArrayList::new,
+						(list, string) -> list.add(string.split(":")[0]), (list1, list2) -> list1.addAll(list2)));
+			}
+			
+			initialized = true;
+		}
+		
 		if (!(entity instanceof LivingEntity))
 		{
 			return false;
@@ -99,6 +122,16 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag
 		}
 		
 		ResourceLocation entityId = ForgeRegistries.ENTITIES.getKey(entity.getType());
+		
+		if (!whitelisted_namespaces.isEmpty())
+		{
+			return whitelisted_namespaces.contains(entityId.getNamespace());
+		}
+		
+		if (blacklisted_namespaces.contains(entityId.getNamespace()))
+		{
+			return false;
+		}
 		
 		if (!Config.COMMON.whitelistedMobs.get().isEmpty())
 		{
