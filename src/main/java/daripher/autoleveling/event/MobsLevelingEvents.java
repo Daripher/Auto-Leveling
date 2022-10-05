@@ -11,6 +11,7 @@ import daripher.autoleveling.capability.LevelingDataProvider;
 import daripher.autoleveling.config.Config;
 import daripher.autoleveling.data.DimensionsLevelingSettingsReloader;
 import daripher.autoleveling.data.EntitiesLevelingSettingsReloader;
+import daripher.autoleveling.data.GlobalLevelingData;
 import daripher.autoleveling.data.LevelingSettings;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -20,6 +21,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
@@ -189,6 +191,9 @@ public class MobsLevelingEvents
 			monsterLevel = Math.min(monsterLevel, maxLevel - 1);
 		}
 		
+		MinecraftServer server = entity.getServer();
+		GlobalLevelingData data = GlobalLevelingData.get(server);
+		monsterLevel += data.getLevelBonus();		
 		return monsterLevel;
 	}
 	
