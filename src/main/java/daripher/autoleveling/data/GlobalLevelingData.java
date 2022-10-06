@@ -2,6 +2,7 @@ package daripher.autoleveling.data;
 
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.storage.DimensionSavedDataManager;
 import net.minecraft.world.storage.WorldSavedData;
 
 public class GlobalLevelingData extends WorldSavedData
@@ -44,6 +45,14 @@ public class GlobalLevelingData extends WorldSavedData
 	
 	public static GlobalLevelingData get(MinecraftServer server)
 	{
-		return server.overworld().getDataStorage().get(GlobalLevelingData::create, "global_leveling");
+		DimensionSavedDataManager dataStorage = server.overworld().getDataStorage();
+		GlobalLevelingData data = dataStorage.get(GlobalLevelingData::create, "global_leveling");
+		
+		if (data == null)
+		{
+			dataStorage.set(data = GlobalLevelingData.create());
+		}
+		
+		return data;
 	}
 }
