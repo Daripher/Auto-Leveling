@@ -4,9 +4,9 @@ plugins {
     id 'net.minecraftforge.gradle' version '5.1.+'
 }
 
-version = '1.9'
+version = '1.10'
 group = 'daripher.autoleveling'
-archivesBaseName = 'AutoLeveling-1.19'
+archivesBaseName = 'AutoLeveling-1.19.2'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
