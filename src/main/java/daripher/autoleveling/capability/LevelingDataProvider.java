@@ -122,13 +122,18 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag
 		}
 		
 		ResourceLocation entityId = ForgeRegistries.ENTITIES.getKey(entity.getType());
+
+		if (blacklisted_namespaces.contains(entityId.getNamespace()))
+		{
+			return false;
+		}
 		
 		if (!whitelisted_namespaces.isEmpty())
 		{
 			return whitelisted_namespaces.contains(entityId.getNamespace());
 		}
 		
-		if (blacklisted_namespaces.contains(entityId.getNamespace()))
+		if (Config.COMMON.blacklistedMobs.get().contains(entityId.toString()))
 		{
 			return false;
 		}
@@ -136,11 +141,6 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag
 		if (!Config.COMMON.whitelistedMobs.get().isEmpty())
 		{
 			return Config.COMMON.whitelistedMobs.get().contains(entityId.toString());
-		}
-		
-		if (Config.COMMON.blacklistedMobs.get().contains(entityId.toString()))
-		{
-			return false;
 		}
 
 		return true;
