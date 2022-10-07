@@ -130,7 +130,10 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag
 		
 		if (!whitelisted_namespaces.isEmpty())
 		{
-			return whitelisted_namespaces.contains(entityId.getNamespace());
+			if (whitelisted_namespaces.contains(entityId.getNamespace()))
+			{
+				return true;
+			}
 		}
 		
 		if (Config.COMMON.blacklistedMobs.get().contains(entityId.toString()))
