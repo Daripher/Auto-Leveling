@@ -108,14 +108,14 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag
 		{
 			return false;
 		}
-
+		
 		LivingEntity livingEntity = (LivingEntity) entity;
-
+		
 		if (livingEntity.getAttribute(Attributes.ATTACK_DAMAGE) == null)
 		{
 			return false;
 		}
-
+		
 		if (entity.getType() == EntityType.PLAYER)
 		{
 			return false;
@@ -130,7 +130,10 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag
 		
 		if (!whitelisted_namespaces.isEmpty())
 		{
-			return whitelisted_namespaces.contains(entityId.getNamespace());
+			if (whitelisted_namespaces.contains(entityId.getNamespace()))
+			{
+				return true;
+			}
 		}
 		
 		if (Config.COMMON.blacklistedMobs.get().contains(entityId.toString()))
@@ -142,7 +145,7 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag
 		{
 			return Config.COMMON.whitelistedMobs.get().contains(entityId.toString());
 		}
-
+		
 		return true;
 	}
 	
