@@ -1,3 +1,5 @@
+1.10a
+  Fixed whitelist config doesn't work as intended
 1.10
   Added addlevel command
   Added the ability to whitelist or blacklist entire namespaces
