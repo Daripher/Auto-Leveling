@@ -2,7 +2,7 @@ package daripher.autoleveling;
 
 import daripher.autoleveling.api.ILevelingData;
 import daripher.autoleveling.config.Config;
-import daripher.autoleveling.init.AutoLevelingLootItemConditions;
+import daripher.autoleveling.init.*;
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -24,6 +24,7 @@ public class AutoLevelingMod
 		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.COMMON_SPEC);
 		IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 		AutoLevelingLootItemConditions.REGISTRY.register(modEventBus);
+		AutoLevelingItems.REGISTRY.register(modEventBus);
 	}
 	
 	@SubscribeEvent
