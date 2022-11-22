@@ -3,8 +3,8 @@ package daripher.autoleveling;
 import daripher.autoleveling.api.ILevelingData;
 import daripher.autoleveling.capability.LevelingData;
 import daripher.autoleveling.config.Config;
-import daripher.autoleveling.init.AutoLevelingLootConditions;
 import net.minecraftforge.common.capabilities.CapabilityManager;
+import daripher.autoleveling.init.*;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
@@ -24,6 +24,7 @@ public class AutoLevelingMod
 		modEventBus.addListener(this::onCommonSetup);
 		// just to call initialization
 		AutoLevelingLootConditions.LEVEL_CHECK.getClass();
+		AutoLevelingItems.REGISTRY.register(modEventBus);
 	}
 	
 	private void onCommonSetup(FMLCommonSetupEvent event)
