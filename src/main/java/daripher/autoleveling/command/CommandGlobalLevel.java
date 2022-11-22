@@ -3,7 +3,7 @@ package daripher.autoleveling.command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 
-import daripher.autoleveling.data.GlobalLevelingData;
+import daripher.autoleveling.saveddata.GlobalLevelingData;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 
