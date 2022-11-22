@@ -1,4 +1,4 @@
-package daripher.autoleveling.data;
+package daripher.autoleveling.saveddata;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
