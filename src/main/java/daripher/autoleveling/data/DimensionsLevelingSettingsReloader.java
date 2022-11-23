@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 
+import daripher.autoleveling.config.Config;
 import net.minecraft.client.resources.JsonReloadListener;
 import net.minecraft.loot.LootSerializers;
 import net.minecraft.profiler.IProfiler;
@@ -53,6 +54,15 @@ public class DimensionsLevelingSettingsReloader extends JsonReloadListener
 	
 	public static LevelingSettings getSettingsForDimension(RegistryKey<World> dimension)
 	{
-		return settings.getOrDefault(dimension.location(), LevelingSettings.DEFAULT);
+		return settings.getOrDefault(dimension.location(), defaultSettings());
+	}
+	
+	private static LevelingSettings defaultSettings()
+	{
+		int startingLevel = Config.COMMON.defaultStartingLevel.get();
+		int maxLevel = Config.COMMON.defaultMaxLevel.get();
+		float levelPerDistance = Config.COMMON.defaultLevelsPerDistance.get().floatValue();
+		int randomLevelBonus = Config.COMMON.defaultRandomLevelBonus.get();
+		return new LevelingSettings(startingLevel, maxLevel, levelPerDistance, randomLevelBonus);
 	}
 }

@@ -4,8 +4,6 @@ import com.google.gson.JsonObject;
 
 public class LevelingSettings
 {
-	public static final LevelingSettings DEFAULT = new LevelingSettings(1, 0, 0.01F, 0);
-	
 	public final int startingLevel;
 	public final int maxLevel;
 	public final float levelsPerDistance;
