@@ -11,6 +11,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.mojang.logging.LogUtils;
 
+import daripher.autoleveling.config.Config;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -56,6 +57,15 @@ public class DimensionsLevelingSettingsReloader extends SimpleJsonResourceReload
 	@Nonnull
 	public static LevelingSettings getSettingsForDimension(ResourceKey<Level> dimension)
 	{
-		return settings.getOrDefault(dimension.location(), LevelingSettings.DEFAULT);
+		return settings.getOrDefault(dimension.location(), defaultSettings());
+	}
+	
+	private static LevelingSettings defaultSettings()
+	{
+		int startingLevel = Config.COMMON.defaultStartingLevel.get();
+		int maxLevel = Config.COMMON.defaultMaxLevel.get();
+		float levelPerDistance = Config.COMMON.defaultLevelsPerDistance.get().floatValue();
+		int randomLevelBonus = Config.COMMON.defaultRandomLevelBonus.get();
+		return new LevelingSettings(startingLevel, maxLevel, levelPerDistance, randomLevelBonus);
 	}
 }
