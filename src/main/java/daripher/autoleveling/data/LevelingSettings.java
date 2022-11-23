@@ -4,8 +4,6 @@ import com.google.gson.JsonObject;
 
 public record LevelingSettings(int startingLevel, int maxLevel, float levelsPerDistance, int randomLevelBonus)
 {	
-	public static final LevelingSettings DEFAULT = new LevelingSettings(1, 0, 0.01F, 0);
-	
 	public static LevelingSettings load(JsonObject jsonObject)
 	{
 		int startingLevel = jsonObject.get("starting_level").getAsInt();
