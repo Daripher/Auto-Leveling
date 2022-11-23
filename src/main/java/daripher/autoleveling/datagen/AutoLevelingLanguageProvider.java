@@ -27,6 +27,8 @@ public class AutoLevelingLanguageProvider extends LanguageProvider
 		specialText(AutoLevelingItems.WHITELIST_TOOL.get(), "tooltip", YELLOW + "Adds or removes entity from whitelist");
 		specialText(AutoLevelingItems.WHITELIST_TOOL.get(), "removed", "%s was removed from whitelist");
 		specialText(AutoLevelingItems.WHITELIST_TOOL.get(), "added", "%s was added to whitelist");
+		add("jade.autoleveling.tooltip", "Level: %d");
+		add("config.jade.plugin_autoleveling.level", "Level");
 	}
 	
 	public void specialText(Item key, String type, String translation)
