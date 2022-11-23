@@ -16,7 +16,7 @@ plugins {
 apply plugin: 'net.minecraftforge.gradle'
 
 
-version = '1.10a'
+version = '1.11'
 group = 'daripher.autoleveling'
 archivesBaseName = 'AutoLeveling-1.18.2'
 
