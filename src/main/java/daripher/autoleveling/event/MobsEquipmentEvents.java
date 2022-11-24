@@ -56,8 +56,8 @@ public class MobsEquipmentEvents
 	
 	private static LootTable getEquipmentLootTableForSlot(MinecraftServer server, LivingEntity entity, EquipmentSlot equipmentSlot)
 	{
-		String entityId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType()).getPath();
-		return server.getLootTables().get(new ResourceLocation(AutoLevelingMod.MOD_ID, "equipment/" + entityId + "_" + equipmentSlot.getName()));
+		ResourceLocation entityId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType());
+		return server.getLootTables().get(new ResourceLocation(entityId.getNamespace(), "equipment/" + entityId.getPath() + "_" + equipmentSlot.getName()));
 	}
 	
 	private static LootContext createEquipmentLootContext(LivingEntity entity)
