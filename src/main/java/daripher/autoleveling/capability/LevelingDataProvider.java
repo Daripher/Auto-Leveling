@@ -2,6 +2,8 @@ package daripher.autoleveling.capability;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -15,11 +17,23 @@ import daripher.autoleveling.network.message.SyncLevelingData;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.attributes.Attribute;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.entity.ai.attributes.Attributes;
+import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.loot.LootContext;
+import net.minecraft.loot.LootContext.Builder;
+import net.minecraft.loot.LootParameterSets;
+import net.minecraft.loot.LootParameters;
+import net.minecraft.loot.LootTable;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
@@ -158,5 +172,67 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundNBT
 	public static void syncWith(ServerPlayerEntity player, LivingEntity entity, ILevelingData levelingData)
 	{
 		NetworkDispatcher.networkChannel.send(PacketDistributor.PLAYER.with(() -> player), new SyncLevelingData(entity, levelingData));
+	}
+	
+	public static void applyAttributeBonuses(LivingEntity entity, int level)
+	{
+		applyAttributeBonusIfPossible(entity, Attributes.MOVEMENT_SPEED, Config.COMMON.movementSpeedBonus.get() * level);
+		applyAttributeBonusIfPossible(entity, Attributes.FLYING_SPEED, Config.COMMON.flyingSpeedBonus.get() * level);
+		applyAttributeBonusIfPossible(entity, Attributes.ATTACK_DAMAGE, Config.COMMON.attackDamageBonus.get() * level);
+		applyAttributeBonusIfPossible(entity, Attributes.ARMOR, Config.COMMON.armorBonus.get() * level);
+		applyAttributeBonusIfPossible(entity, Attributes.MAX_HEALTH, Config.COMMON.healthBonus.get() * level);
+	}
+	
+	private static void applyAttributeBonusIfPossible(LivingEntity entity, Attribute attribute, double bonus)
+	{
+		ModifiableAttributeInstance attributeInstance = entity.getAttribute(attribute);
+		UUID modifierId = UUID.fromString("6a102cb4-d735-4cb7-8ab2-3d383219a44e");
+		
+		if (attributeInstance == null)
+		{
+			return;
+		}
+		
+		AttributeModifier modifier = attributeInstance.getModifier(modifierId);
+		
+		if (modifier == null || modifier.getAmount() != bonus)
+		{
+			if (modifier != null)
+			{
+				attributeInstance.removeModifier(modifier);
+			}
+			
+			attributeInstance.addPermanentModifier(new AttributeModifier(modifierId, "Auto Leveling Bonus", bonus, Operation.MULTIPLY_TOTAL));
+			
+			if (attribute == Attributes.MAX_HEALTH)
+			{
+				entity.heal(entity.getMaxHealth());
+			}
+		}
+	}
+	
+	public static void addEquipment(LivingEntity entity)
+	{
+		MinecraftServer server = entity.getServer();
+		LootContext lootContext = createEquipmentLootContext(entity);
+		
+		Stream.of(EquipmentSlotType.values()).forEach(slot ->
+		{
+			LootTable equipmentTable = getEquipmentLootTableForSlot(server, entity, slot);
+			equipmentTable.getRandomItems(lootContext).forEach(itemStack -> entity.setItemSlot(slot, itemStack));
+		});
+	}
+	
+	private static LootTable getEquipmentLootTableForSlot(MinecraftServer server, LivingEntity entity, EquipmentSlotType equipmentSlot)
+	{
+		ResourceLocation entityId = ForgeRegistries.ENTITIES.getKey(entity.getType());
+		return server.getLootTables().get(new ResourceLocation(entityId.getNamespace(), "equipment/" + entityId.getPath() + "_" + equipmentSlot.getName()));
+	}
+	
+	private static LootContext createEquipmentLootContext(LivingEntity entity)
+	{
+		ServerWorld serverLevel = (ServerWorld) entity.level;
+		Builder builder = new Builder(serverLevel).withRandom(entity.getRandom()).withParameter(LootParameters.THIS_ENTITY, entity).withParameter(LootParameters.ORIGIN, entity.position());
+		return builder.create(LootParameterSets.SELECTOR);
 	}
 }

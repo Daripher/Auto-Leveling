@@ -2,7 +2,6 @@ package daripher.autoleveling.event;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.UUID;
 
 import daripher.autoleveling.AutoLevelingMod;
 import daripher.autoleveling.capability.LevelingDataProvider;
@@ -14,11 +13,6 @@ import daripher.autoleveling.saveddata.GlobalLevelingData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.Attribute;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.ai.attributes.AttributeModifier.Operation;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.entity.ai.attributes.ModifiableAttributeInstance;
 import net.minecraft.loot.LootContext;
 import net.minecraft.loot.LootParameterSets;
 import net.minecraft.loot.LootTable;
@@ -51,24 +45,24 @@ public class MobsLevelingEvents
 	@SubscribeEvent
 	public static void onEntityJoinWorld(EntityJoinWorldEvent event)
 	{
-		if (LevelingDataProvider.canHaveLevel(event.getEntity()))
-		{
-			LivingEntity entity = (LivingEntity) event.getEntity();
-			
-			if (!entity.level.isClientSide)
-			{
-				ServerWorld serverWorld = ((ServerWorld) entity.level);
-				BlockPos spawnPos = serverWorld.getSharedSpawnPos();
-				double distance = Math.sqrt(spawnPos.distSqr(entity.blockPosition()));
-				int monsterLevel = getLevelForEntity(entity, distance);
-				LevelingDataProvider.get(entity).ifPresent(levelingData -> levelingData.setLevel(monsterLevel));
-				applyAttributeBonusIfPossible(entity, Attributes.MOVEMENT_SPEED, Config.COMMON.movementSpeedBonus.get() * monsterLevel);
-				applyAttributeBonusIfPossible(entity, Attributes.FLYING_SPEED, Config.COMMON.flyingSpeedBonus.get() * monsterLevel);
-				applyAttributeBonusIfPossible(entity, Attributes.ATTACK_DAMAGE, Config.COMMON.attackDamageBonus.get() * monsterLevel);
-				applyAttributeBonusIfPossible(entity, Attributes.ARMOR, Config.COMMON.armorBonus.get() * monsterLevel);
-				applyAttributeBonusIfPossible(entity, Attributes.MAX_HEALTH, Config.COMMON.healthBonus.get() * monsterLevel);
-			}
-		}
+		if (!LevelingDataProvider.canHaveLevel(event.getEntity()))
+			return;
+		
+		if (event.getEntity().level.isClientSide)
+			return;
+		
+		if (event.getEntity().getTags().contains("autoleveling_spawn"))
+			return;
+		
+		LivingEntity entity = (LivingEntity) event.getEntity();
+		ServerWorld level = ((ServerWorld) entity.level);
+		BlockPos spawnPos = level.getSharedSpawnPos();
+		double distance = Math.sqrt(spawnPos.distSqr(entity.blockPosition()));
+		int monsterLevel = getLevelForEntity(entity, distance);
+		entity.addTag("autoleveling_spawn");
+		LevelingDataProvider.get(entity).ifPresent(levelingData -> levelingData.setLevel(monsterLevel));
+		LevelingDataProvider.applyAttributeBonuses(entity, monsterLevel);
+		LevelingDataProvider.addEquipment(entity);
 	}
 	
 	@SubscribeEvent
@@ -192,7 +186,7 @@ public class MobsLevelingEvents
 		
 		MinecraftServer server = entity.getServer();
 		GlobalLevelingData data = GlobalLevelingData.get(server);
-		monsterLevel += data.getLevelBonus();		
+		monsterLevel += data.getLevelBonus();
 		return monsterLevel;
 	}
 	
@@ -201,21 +195,5 @@ public class MobsLevelingEvents
 	{
 		Minecraft minecraft = Minecraft.getInstance();
 		return Minecraft.renderNames() && entity != minecraft.getCameraEntity() && !entity.isInvisibleTo(minecraft.player) && !entity.isVehicle() && minecraft.player.canSee(entity);
-	}
-	
-	private static void applyAttributeBonusIfPossible(LivingEntity entity, Attribute attribute, double bonus)
-	{
-		ModifiableAttributeInstance attributeInstance = entity.getAttribute(attribute);
-		UUID modifierId = UUID.fromString("6a102cb4-d735-4cb7-8ab2-3d383219a44e");
-		
-		if (attributeInstance != null && attributeInstance.getModifier(modifierId) == null)
-		{
-			attributeInstance.addPermanentModifier(new AttributeModifier(modifierId, "Auto Leveling Bonus", bonus, Operation.MULTIPLY_TOTAL));
-			
-			if (attribute == Attributes.MAX_HEALTH)
-			{
-				entity.heal(entity.getMaxHealth());
-			}
-		}
 	}
 }
