@@ -1,22 +1,33 @@
 buildscript {
     repositories {
         maven { url = 'https://files.minecraftforge.net/maven' }
+		maven {
+            url = 'https://repo.spongepowered.org/repository/maven-public/'
+            content { includeGroup "org.spongepowered" }
+        }
         mavenCentral()
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '4.1.+', changing: true
+		classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 }
 
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
+apply plugin: 'org.spongepowered.mixin'
 
 version = '1.12'
 group = 'daripher.autoleveling'
 archivesBaseName = 'AutoLeveling-1.16.5'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+
+mixin {
+    add sourceSets.main, "autoleveling.refmap.json"
+    config "autoleveling.mixins.json"
+}
 
 minecraft {
     mappings channel: 'official', version: '1.16.5'
@@ -55,6 +66,7 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
 
             args '--mod', 'autoleveling', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+            args "-mixin.config=autoleveling.mixins.json"
 
             mods {
                 autoleveling {
@@ -79,6 +91,7 @@ repositories {
 dependencies {
     minecraft 'net.minecraftforge:forge:1.16.5-36.1.0'
     implementation fg.deobf("curse.maven:jade-324717:3910873")
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
 
 jar {
