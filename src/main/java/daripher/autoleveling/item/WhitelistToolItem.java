@@ -3,9 +3,11 @@ package daripher.autoleveling.item;
 import java.util.List;
 
 import daripher.autoleveling.config.Config;
+import daripher.autoleveling.init.AutoLevelingCreativeTabs;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
@@ -15,8 +17,13 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.registries.ForgeRegistries;
 
-public class WhitelistToolItem extends AutoLevelingToolItem
+public class WhitelistToolItem extends Item
 {
+	public WhitelistToolItem()
+	{
+		super(new Properties().tab(AutoLevelingCreativeTabs.AUTO_LEVELING).stacksTo(1));
+	}
+	
 	@Override
 	public ActionResultType interactLivingEntity(ItemStack itemStack, PlayerEntity player, LivingEntity entity, Hand hand)
 	{
