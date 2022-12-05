@@ -1,13 +1,12 @@
 package daripher.autoleveling.client;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Predicate;
 
 import javax.annotation.Nullable;
 
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.world.entity.EntityType;
@@ -28,31 +27,37 @@ public class LeveledMobsTextures implements ResourceManagerReloadListener
 	public void onResourceManagerReload(ResourceManager resourceManager)
 	{
 		TEXTURES.clear();
+		Collection<ResourceLocation> entityTextures = resourceManager.listResources("textures/leveled_mobs", l -> l.getPath().endsWith(".png")).keySet();
 		
-		ForgeRegistries.ENTITY_TYPES.getValues().forEach(entityType ->
+		if (!entityTextures.isEmpty())
 		{
-			ResourceLocation entityId = ForgeRegistries.ENTITY_TYPES.getKey(entityType);
-			String textureNameStart = "textures/leveled_mobs/" + entityId.getPath() + "_";
-			Predicate<ResourceLocation> textureFilter = l -> l.getPath().startsWith(textureNameStart) && l.getPath().endsWith(".png") && l.getNamespace().equals(entityId.getNamespace());
-			Map<ResourceLocation, Resource> entityTextures = resourceManager.listResources("textures/leveled_mobs", textureFilter);
-			
-			if (!entityTextures.isEmpty())
+			for (ResourceLocation location : entityTextures)
 			{
-				TEXTURES.put(entityType, new HashMap<>());
+				String fileName = location.getPath().replace("textures/leveled_mobs/", "").replace(".png", "");
 				
-				entityTextures.forEach((location, resource) ->
+				if (!fileName.contains("_"))
+					continue;
+				
+				String entityId = fileName.split("_")[0];
+				EntityType<?> entityType = ForgeRegistries.ENTITY_TYPES.getValue(new ResourceLocation(location.getNamespace(), entityId));
+				
+				if (entityType == null)
+					continue;
+				
+				if (TEXTURES.get(entityType) == null)
+					TEXTURES.put(entityType, new HashMap<>());
+				
+				try
 				{
-					try
-					{
-						int level = Integer.parseInt(location.getPath().replace(textureNameStart, "").replace(".png", ""));
-						TEXTURES.get(entityType).put(level, location);
-					}
-					catch (NumberFormatException e)
-					{
-					}
-				});
+					int level = Integer.parseInt(fileName.split("_")[1]);
+					TEXTURES.get(entityType).put(level, location);
+				}
+				catch (NumberFormatException exception)
+				{
+					exception.printStackTrace();
+				}
 			}
-		});
+		}
 	}
 	
 	@Nullable
