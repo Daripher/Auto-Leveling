@@ -36,36 +36,37 @@ public class LeveledMobsTextures implements ISelectiveResourceReloadListener
 			return;
 		
 		TEXTURES.clear();
+		Collection<ResourceLocation> entityTextures = resourceManager.listResources("textures/leveled_mobs", s -> s.endsWith(".png"));
 		
-		ForgeRegistries.ENTITIES.getValues().forEach(entityType ->
+		if (!entityTextures.isEmpty())
 		{
-			ResourceLocation entityId = ForgeRegistries.ENTITIES.getKey(entityType);
-			Predicate<String> textureFilter = s ->
+			for (ResourceLocation location : entityTextures)
 			{
-				ResourceLocation l = new ResourceLocation(s);
-				return l.getPath().startsWith(entityId.getPath() + "_") && l.getPath().endsWith(".png") && l.getNamespace().equals(entityId.getNamespace());
-			};
-			Collection<ResourceLocation> entityTextures = resourceManager.listResources("textures/leveled_mobs", textureFilter);
-			
-			if (!entityTextures.isEmpty())
-			{
-				TEXTURES.put(entityType, new HashMap<>());
+				String fileName = location.getPath().replace("textures/leveled_mobs/", "").replace(".png", "");
 				
-				entityTextures.forEach(location ->
+				if (!fileName.contains("_"))
+					continue;
+				
+				String entityId = fileName.split("_")[0];
+				EntityType<?> entityType = ForgeRegistries.ENTITIES.getValue(new ResourceLocation(location.getNamespace(), entityId));
+				
+				if (entityType == null)
+					continue;
+				
+				if (TEXTURES.get(entityType) == null)
+					TEXTURES.put(entityType, new HashMap<>());
+				
+				try
 				{
-					try
-					{
-						String textureNameStart = "textures/leveled_mobs/" + entityId.getPath() + "_";
-						int level = Integer.parseInt(location.getPath().replace(textureNameStart, "").replace(".png", ""));
-						TEXTURES.get(entityType).put(level, location);
-					}
-					catch (NumberFormatException e)
-					{
-					}
-				});
+					int level = Integer.parseInt(fileName.split("_")[1]);
+					TEXTURES.get(entityType).put(level, location);
+				}
+				catch (NumberFormatException exception)
+				{
+					exception.printStackTrace();
+				}
 			}
-		});
-		
+		}
 	}
 	
 	@Nullable
