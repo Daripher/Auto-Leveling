@@ -1,7 +1,7 @@
 package daripher.autoleveling.init;
 
 import daripher.autoleveling.AutoLevelingMod;
-import daripher.autoleveling.loot.LevelCheck;
+import daripher.autoleveling.loot.condition.LevelCheck;
 import net.minecraft.core.Registry;
 import net.minecraft.world.level.storage.loot.predicates.LootItemConditionType;
 import net.minecraftforge.registries.DeferredRegister;

@@ -1,4 +1,4 @@
-package daripher.autoleveling.loot;
+package daripher.autoleveling.loot.condition;
 
 import java.util.Set;
 
