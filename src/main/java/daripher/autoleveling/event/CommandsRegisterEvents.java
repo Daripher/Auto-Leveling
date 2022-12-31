@@ -6,11 +6,9 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 
 @EventBusSubscriber
-public class CommandsRegisterEvents
-{	
+public class CommandsRegisterEvents {
 	@SubscribeEvent
-	public static void onRegisterCommands(RegisterCommandsEvent event)
-	{
+	public static void onRegisterCommands(RegisterCommandsEvent event) {
 		CommandGlobalLevel.register(event.getDispatcher());
 	}
 }

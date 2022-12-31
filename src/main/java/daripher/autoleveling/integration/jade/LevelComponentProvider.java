@@ -11,22 +11,18 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
-public enum LevelComponentProvider implements IEntityComponentProvider
-{
+public enum LevelComponentProvider implements IEntityComponentProvider {
 	INSTANCE;
-	
+
 	@Override
-	public void appendBody(List<ITextComponent> tooltip, IEntityAccessor entityAccessor, IPluginConfig config)
-	{
+	public void appendBody(List<ITextComponent> tooltip, IEntityAccessor entityAccessor, IPluginConfig config) {
 		Entity entity = entityAccessor.getEntity();
-		
-		if (!LevelingDataProvider.canHaveLevel(entity))
-		{
+
+		if (!LevelingDataProvider.canHaveLevel(entity)) {
 			return;
 		}
-		
-		LevelingDataProvider.get((LivingEntity) entity).ifPresent(levelingData ->
-		{
+
+		LevelingDataProvider.getLevelingData((LivingEntity) entity).ifPresent(levelingData -> {
 			int level = levelingData.getLevel() + 1;
 			tooltip.add(new TranslationTextComponent("jade.autoleveling.tooltip", level));
 		});

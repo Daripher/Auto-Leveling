@@ -15,30 +15,21 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.ResourceLocation;
 
 @Mixin(LivingRenderer.class)
-public class MixinLivingEntityRenderer<T extends LivingEntity, M extends EntityModel<T>>
-{
+public class MixinLivingEntityRenderer<T extends LivingEntity, M extends EntityModel<T>> {
 	@Shadow
 	protected M model;
-	
+
 	@Inject(method = "getRenderType", at = @At("HEAD"), cancellable = true)
-	protected void injectGetRenderType(T entity, boolean visible, boolean invisibleToPlayer, boolean glowing, CallbackInfoReturnable<RenderType> callbackInfo)
-	{
-		LevelingDataProvider.get(entity).ifPresent(levelingData ->
-		{
+	protected void injectGetRenderType(T entity, boolean visible, boolean invisibleToPlayer, boolean glowing, CallbackInfoReturnable<RenderType> callbackInfo) {
+		LevelingDataProvider.getLevelingData(entity).ifPresent(levelingData -> {
 			ResourceLocation texture = LeveledMobsTextures.get(entity.getType(), levelingData.getLevel() + 1);
-			
-			if (texture != null)
-			{
-				if (invisibleToPlayer)
-				{
+
+			if (texture != null) {
+				if (invisibleToPlayer) {
 					callbackInfo.setReturnValue(RenderType.itemEntityTranslucentCull(texture));
-				}
-				else if (visible)
-				{
+				} else if (visible) {
 					callbackInfo.setReturnValue(model.renderType(texture));
-				}
-				else
-				{
+				} else {
 					callbackInfo.setReturnValue(glowing ? RenderType.outline(texture) : null);
 				}
 			}

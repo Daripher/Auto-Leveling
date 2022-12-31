@@ -19,43 +19,35 @@ import net.minecraft.resources.IResourceManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.registries.ForgeRegistries;
 
-public class EntitiesLevelingSettingsReloader extends JsonReloadListener
-{
+public class EntitiesLevelingSettingsReloader extends JsonReloadListener {
 	private static final Logger LOGGER = LogManager.getLogger();
 	private static final Gson GSON = LootSerializers.createLootTableSerializer().create();
 	private static Map<ResourceLocation, LevelingSettings> settings = ImmutableMap.of();
-	
-	public EntitiesLevelingSettingsReloader()
-	{
+
+	public EntitiesLevelingSettingsReloader() {
 		super(GSON, "leveling_settings/entities");
 	}
-	
+
 	@Override
-	protected void apply(Map<ResourceLocation, JsonElement> map, IResourceManager resourceManager, IProfiler profiler)
-	{
+	protected void apply(Map<ResourceLocation, JsonElement> map, IResourceManager resourceManager, IProfiler profiler) {
 		ImmutableMap.Builder<ResourceLocation, LevelingSettings> builder = ImmutableMap.builder();
-		
-		map.forEach((id, json) ->
-		{
-			try
-			{
+
+		map.forEach((id, json) -> {
+			try {
 				LevelingSettings levelingSettings = LevelingSettings.load(json.getAsJsonObject());
 				builder.put(id, levelingSettings);
 				LOGGER.info("Loading leveling settings {}", id);
-			}
-			catch (Exception exception)
-			{
+			} catch (Exception exception) {
 				LOGGER.error("Couldn't parse leveling settings {}", id, exception);
 			}
 		});
-		
+
 		ImmutableMap<ResourceLocation, LevelingSettings> immutableMap = builder.build();
 		settings = immutableMap;
 	}
-	
+
 	@Nullable
-	public static LevelingSettings getSettingsForEntity(EntityType<?> entityType)
-	{
+	public static LevelingSettings getSettingsForEntity(EntityType<?> entityType) {
 		return settings.get(ForgeRegistries.ENTITIES.getKey(entityType));
 	}
 }

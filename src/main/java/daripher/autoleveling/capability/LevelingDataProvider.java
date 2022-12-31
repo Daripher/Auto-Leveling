@@ -3,6 +3,8 @@ package daripher.autoleveling.capability;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
@@ -46,193 +48,164 @@ import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
 
 @EventBusSubscriber(bus = Bus.FORGE, modid = AutoLevelingMod.MOD_ID)
-public class LevelingDataProvider implements ICapabilitySerializable<CompoundNBT>
-{
-	private static List<String> blacklisted_namespaces = new ArrayList<>();
-	private static List<String> whitelisted_namespaces = new ArrayList<>();
-	private static boolean initialized;
+public class LevelingDataProvider implements ICapabilitySerializable<CompoundNBT> {
+	private static final List<String> BLACKLISTED_NAMESPACES = new ArrayList<>();
+	private static final List<String> WHITELISTED_NAMESPACES = new ArrayList<>();
+	private static boolean blacklist_and_whitelist_initialized;
 	private ILevelingData instance = LevelingApi.CAPABILITY.getDefaultInstance();
-	
+
 	@SubscribeEvent
-	public static void attachCapability(AttachCapabilitiesEvent<Entity> event)
-	{
-		if (event.getObject() instanceof LivingEntity)
-		{
+	public static void attachCapability(AttachCapabilitiesEvent<Entity> event) {
+		if (event.getObject() instanceof LivingEntity) {
 			event.addCapability(LevelingApi.CAPABILITY_ID, new LevelingDataProvider());
 		}
 	}
-	
+
 	@SubscribeEvent
-	public static void onPlayerStartTracking(PlayerEvent.StartTracking event)
-	{
-		if (event.getTarget() instanceof LivingEntity)
-		{
+	public static void onPlayerStartTracking(PlayerEvent.StartTracking event) {
+		if (event.getTarget() instanceof LivingEntity) {
 			LivingEntity livingEntity = (LivingEntity) event.getTarget();
-			
-			LevelingDataProvider.get(livingEntity).ifPresent(levelingData ->
-			{
+
+			LevelingDataProvider.getLevelingData(livingEntity).ifPresent(levelingData -> {
 				LevelingDataProvider.syncWith((ServerPlayerEntity) event.getPlayer(), livingEntity, levelingData);
 			});
 		}
 	}
-	
+
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, @Nullable Direction facing)
-	{
-		if (LevelingApi.CAPABILITY == capability)
-		{
+	public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, @Nullable Direction facing) {
+		if (LevelingApi.CAPABILITY == capability) {
 			return (LazyOptional<T>) LazyOptional.of(() -> instance);
 		}
-		
+
 		return LazyOptional.empty();
 	}
-	
+
 	@Override
-	public CompoundNBT serializeNBT()
-	{
+	public CompoundNBT serializeNBT() {
 		return (CompoundNBT) LevelingApi.CAPABILITY.writeNBT(instance, null);
 	}
-	
+
 	@Override
-	public void deserializeNBT(CompoundNBT nbt)
-	{
+	public void deserializeNBT(CompoundNBT nbt) {
 		LevelingApi.CAPABILITY.readNBT(instance, null, nbt);
 	}
-	
-	public static boolean canHaveLevel(Entity entity)
-	{
-		if (!initialized)
-		{
-			if (!Config.COMMON.whitelistedMobs.get().isEmpty())
-			{
-				whitelisted_namespaces.addAll(Config.COMMON.whitelistedMobs.get().stream().filter(s -> s.split(":").length == 2 && s.split(":")[1].equals("*")).collect(ArrayList::new,
-						(list, string) -> list.add(string.split(":")[0]), (list1, list2) -> list1.addAll(list2)));
-			}
-			
-			if (!Config.COMMON.blacklistedMobs.get().isEmpty())
-			{
-				blacklisted_namespaces.addAll(Config.COMMON.blacklistedMobs.get().stream().filter(s -> s.split(":").length == 2 && s.split(":")[1].equals("*")).collect(ArrayList::new,
-						(list, string) -> list.add(string.split(":")[0]), (list1, list2) -> list1.addAll(list2)));
-			}
-			
-			initialized = true;
+
+	public static boolean canHaveLevel(Entity entity) {
+		if (!blacklist_and_whitelist_initialized) {
+			initializeBlacklistAndWhitelist();
+			blacklist_and_whitelist_initialized = true;
 		}
-		
-		if (!(entity instanceof LivingEntity))
-		{
+
+		if (!(entity instanceof LivingEntity)) {
 			return false;
 		}
-		
+
 		LivingEntity livingEntity = (LivingEntity) entity;
-		
-		if (livingEntity.getAttribute(Attributes.ATTACK_DAMAGE) == null)
-		{
+
+		if (livingEntity.getAttribute(Attributes.ATTACK_DAMAGE) == null) {
 			return false;
 		}
-		
-		if (entity.getType() == EntityType.PLAYER)
-		{
+
+		if (entity.getType() == EntityType.PLAYER) {
 			return false;
 		}
-		
+
 		ResourceLocation entityId = ForgeRegistries.ENTITIES.getKey(entity.getType());
-		
-		if (blacklisted_namespaces.contains(entityId.getNamespace()))
-		{
+
+		if (BLACKLISTED_NAMESPACES.contains(entityId.getNamespace())) {
 			return false;
 		}
-		
-		if (!whitelisted_namespaces.isEmpty())
-		{
-			if (whitelisted_namespaces.contains(entityId.getNamespace()))
-			{
-				return true;
-			}
+
+		if (!WHITELISTED_NAMESPACES.isEmpty() && WHITELISTED_NAMESPACES.contains(entityId.getNamespace())) {
+			return true;
 		}
-		
-		if (Config.COMMON.blacklistedMobs.get().contains(entityId.toString()))
-		{
+
+		if (Config.COMMON.blacklistedMobs.get().contains(entityId.toString())) {
 			return false;
 		}
-		
-		if (!Config.COMMON.whitelistedMobs.get().isEmpty())
-		{
+
+		if (!Config.COMMON.whitelistedMobs.get().isEmpty()) {
 			return Config.COMMON.whitelistedMobs.get().contains(entityId.toString());
 		}
-		
+
 		return true;
 	}
-	
-	public static LazyOptional<ILevelingData> get(LivingEntity entity)
-	{
+
+	private static void initializeBlacklistAndWhitelist() {
+		initializeList(Config.COMMON.whitelistedMobs.get(), WHITELISTED_NAMESPACES);
+		initializeList(Config.COMMON.blacklistedMobs.get(), BLACKLISTED_NAMESPACES);
+	}
+
+	private static void initializeList(List<String> configList, List<String> namespacesList) {
+		if (configList.isEmpty()) {
+			return;
+		}
+
+		Predicate<? super String> namespaceFilter = s -> s.split(":").length == 2 && s.split(":")[1].equals("*");
+		List<String> foundNamespaces = configList.stream().filter(namespaceFilter).collect(Collectors.toList());
+		namespacesList.addAll(foundNamespaces);
+	}
+
+	public static LazyOptional<ILevelingData> getLevelingData(LivingEntity entity) {
 		return entity.getCapability(LevelingApi.CAPABILITY);
 	}
-	
-	public static void syncWith(ServerPlayerEntity player, LivingEntity entity, ILevelingData levelingData)
-	{
+
+	public static void syncWith(ServerPlayerEntity player, LivingEntity entity, ILevelingData levelingData) {
 		NetworkDispatcher.networkChannel.send(PacketDistributor.PLAYER.with(() -> player), new SyncLevelingData(entity, levelingData));
 	}
-	
-	public static void applyAttributeBonuses(LivingEntity entity, int level)
-	{
+
+	public static void applyAttributeBonuses(LivingEntity entity, int level) {
 		applyAttributeBonusIfPossible(entity, Attributes.MOVEMENT_SPEED, Config.COMMON.movementSpeedBonus.get() * level);
 		applyAttributeBonusIfPossible(entity, Attributes.FLYING_SPEED, Config.COMMON.flyingSpeedBonus.get() * level);
 		applyAttributeBonusIfPossible(entity, Attributes.ATTACK_DAMAGE, Config.COMMON.attackDamageBonus.get() * level);
 		applyAttributeBonusIfPossible(entity, Attributes.ARMOR, Config.COMMON.armorBonus.get() * level);
 		applyAttributeBonusIfPossible(entity, Attributes.MAX_HEALTH, Config.COMMON.healthBonus.get() * level);
 	}
-	
-	private static void applyAttributeBonusIfPossible(LivingEntity entity, Attribute attribute, double bonus)
-	{
+
+	private static void applyAttributeBonusIfPossible(LivingEntity entity, Attribute attribute, double bonus) {
 		ModifiableAttributeInstance attributeInstance = entity.getAttribute(attribute);
 		UUID modifierId = UUID.fromString("6a102cb4-d735-4cb7-8ab2-3d383219a44e");
-		
-		if (attributeInstance == null)
-		{
+
+		if (attributeInstance == null) {
 			return;
 		}
-		
+
 		AttributeModifier modifier = attributeInstance.getModifier(modifierId);
-		
-		if (modifier == null || modifier.getAmount() != bonus)
-		{
-			if (modifier != null)
-			{
+
+		if (modifier == null || modifier.getAmount() != bonus) {
+			if (modifier != null) {
 				attributeInstance.removeModifier(modifier);
 			}
-			
+
 			attributeInstance.addPermanentModifier(new AttributeModifier(modifierId, "Auto Leveling Bonus", bonus, Operation.MULTIPLY_TOTAL));
-			
-			if (attribute == Attributes.MAX_HEALTH)
-			{
+
+			if (attribute == Attributes.MAX_HEALTH) {
 				entity.heal(entity.getMaxHealth());
 			}
 		}
 	}
-	
-	public static void addEquipment(LivingEntity entity)
-	{
+
+	public static void addEquipment(LivingEntity entity) {
 		MinecraftServer server = entity.getServer();
 		LootContext lootContext = createEquipmentLootContext(entity);
-		
-		Stream.of(EquipmentSlotType.values()).forEach(slot ->
-		{
+
+		Stream.of(EquipmentSlotType.values()).forEach(slot -> {
 			LootTable equipmentTable = getEquipmentLootTableForSlot(server, entity, slot);
 			equipmentTable.getRandomItems(lootContext).forEach(itemStack -> entity.setItemSlot(slot, itemStack));
 		});
 	}
-	
-	private static LootTable getEquipmentLootTableForSlot(MinecraftServer server, LivingEntity entity, EquipmentSlotType equipmentSlot)
-	{
+
+	private static LootTable getEquipmentLootTableForSlot(MinecraftServer server, LivingEntity entity, EquipmentSlotType equipmentSlot) {
 		ResourceLocation entityId = ForgeRegistries.ENTITIES.getKey(entity.getType());
 		return server.getLootTables().get(new ResourceLocation(entityId.getNamespace(), "equipment/" + entityId.getPath() + "_" + equipmentSlot.getName()));
 	}
-	
-	private static LootContext createEquipmentLootContext(LivingEntity entity)
-	{
+
+	private static LootContext createEquipmentLootContext(LivingEntity entity) {
 		ServerWorld serverLevel = (ServerWorld) entity.level;
-		Builder builder = new Builder(serverLevel).withRandom(entity.getRandom()).withParameter(LootParameters.THIS_ENTITY, entity).withParameter(LootParameters.ORIGIN, entity.position());
-		return builder.create(LootParameterSets.SELECTOR);
+		Builder lootContextBuilder = new Builder(serverLevel).withRandom(entity.getRandom()).withParameter(LootParameters.THIS_ENTITY, entity)
+				.withParameter(LootParameters.ORIGIN, entity.position());
+		return lootContextBuilder.create(LootParameterSets.SELECTOR);
 	}
 }

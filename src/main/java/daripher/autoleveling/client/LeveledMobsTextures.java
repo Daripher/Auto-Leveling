@@ -7,6 +7,8 @@ import java.util.function.Predicate;
 
 import javax.annotation.Nullable;
 
+import org.codehaus.plexus.util.StringUtils;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityType;
 import net.minecraft.resources.IReloadableResourceManager;
@@ -24,86 +26,78 @@ import net.minecraftforge.resource.ISelectiveResourceReloadListener;
 import net.minecraftforge.resource.VanillaResourceType;
 
 @EventBusSubscriber(bus = Bus.MOD, value = Dist.CLIENT)
-public class LeveledMobsTextures implements ISelectiveResourceReloadListener
-{
+public class LeveledMobsTextures implements ISelectiveResourceReloadListener {
 	private static final LeveledMobsTextures INSTANCE = new LeveledMobsTextures();
 	private static final Map<EntityType<?>, Map<Integer, ResourceLocation>> TEXTURES = new HashMap<>();
-	
+
 	@Override
-	public void onResourceManagerReload(IResourceManager resourceManager, Predicate<IResourceType> resourcePredicate)
-	{
+	public void onResourceManagerReload(IResourceManager resourceManager, Predicate<IResourceType> resourcePredicate) {
 		if (!resourcePredicate.test(VanillaResourceType.TEXTURES))
 			return;
-		
+
 		TEXTURES.clear();
-		Collection<ResourceLocation> entityTextures = resourceManager.listResources("textures/leveled_mobs", s -> s.endsWith(".png"));
-		
-		if (!entityTextures.isEmpty())
-		{
-			for (ResourceLocation location : entityTextures)
-			{
-				String fileName = location.getPath().replace("textures/leveled_mobs/", "").replace(".png", "");
-				
-				if (!fileName.contains("_"))
-					continue;
-				
-				String entityId = fileName.split("_")[0];
-				EntityType<?> entityType = ForgeRegistries.ENTITIES.getValue(new ResourceLocation(location.getNamespace(), entityId));
-				
-				if (entityType == null)
-					continue;
-				
-				if (TEXTURES.get(entityType) == null)
-					TEXTURES.put(entityType, new HashMap<>());
-				
-				try
-				{
-					int level = Integer.parseInt(fileName.split("_")[1]);
-					TEXTURES.get(entityType).put(level, location);
-				}
-				catch (NumberFormatException exception)
-				{
-					exception.printStackTrace();
-				}
-			}
+		Collection<ResourceLocation> leveledMobsTextures = resourceManager.listResources("textures/leveled_mobs", s -> s.endsWith(".png"));
+
+		if (!leveledMobsTextures.isEmpty()) {
+			reloadLeveledMobsTextures(leveledMobsTextures);
 		}
 	}
-	
+
+	private void reloadLeveledMobsTextures(Collection<ResourceLocation> leveledMobsTextures) {
+		for (ResourceLocation textureLocation : leveledMobsTextures) {
+			String fileName = textureLocation.getPath().replace("textures/leveled_mobs/", "").replace(".png", "");
+
+			if (!fileName.contains("_"))
+				continue;
+
+			String entityId = fileName.split("_")[0];
+			EntityType<?> entityType = ForgeRegistries.ENTITIES.getValue(new ResourceLocation(textureLocation.getNamespace(), entityId));
+
+			if (entityType == null)
+				continue;
+
+			if (TEXTURES.get(entityType) == null)
+				TEXTURES.put(entityType, new HashMap<>());
+
+			String levelString = fileName.split("_")[1];
+
+			if (levelString.isEmpty() || !StringUtils.isNumeric(levelString))
+				return;
+
+			int level = Integer.parseInt(levelString);
+			TEXTURES.get(entityType).put(level, textureLocation);
+		}
+	}
+
 	@Nullable
-	public static ResourceLocation get(EntityType<?> entityType, int level)
-	{
-		if (!hasTextures(entityType))
-		{
+	public static ResourceLocation get(EntityType<?> entityType, int level) {
+		if (!hasTextures(entityType)) {
 			return null;
 		}
-		
-		for (int i = level; i > 0; i--)
-		{
+
+		for (int i = level; i > 0; i--) {
 			ResourceLocation texture = TEXTURES.get(entityType).get(i);
-			
-			if (texture != null)
-			{
+
+			if (texture != null) {
 				return texture;
 			}
 		}
-		
+
 		return null;
 	}
-	
-	private static boolean hasTextures(EntityType<?> entityType)
-	{
+
+	private static boolean hasTextures(EntityType<?> entityType) {
 		return TEXTURES.containsKey(entityType) && !TEXTURES.get(entityType).isEmpty();
 	}
-	
+
 	@SubscribeEvent
-	public static void onModelRegistry(ModelRegistryEvent event)
-	{
-		((IReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener(INSTANCE);
+	public static void onModelRegistry(ModelRegistryEvent event) {
+		IReloadableResourceManager resourceManager = (IReloadableResourceManager) Minecraft.getInstance().getResourceManager();
+		resourceManager.registerReloadListener(INSTANCE);
 	}
-	
+
 	@SubscribeEvent
-	public static void onClientSetup(FMLClientSetupEvent event)
-	{
+	public static void onClientSetup(FMLClientSetupEvent event) {
 		INSTANCE.onResourceManagerReload(Minecraft.getInstance().getResourceManager());
 	}
 }

@@ -9,19 +9,17 @@ import org.apache.commons.lang3.tuple.Pair;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
 
-public class Config
-{
+public class Config {
 	public static final Common COMMON;
 	public static final ForgeConfigSpec COMMON_SPEC;
-	
-	public static class Common
-	{
+
+	public static class Common {
 		public final ConfigValue<Double> movementSpeedBonus;
 		public final ConfigValue<Double> flyingSpeedBonus;
 		public final ConfigValue<Double> attackDamageBonus;
 		public final ConfigValue<Double> armorBonus;
 		public final ConfigValue<Double> healthBonus;
-		public final ConfigValue<Double> expBonus;
+		public final ConfigValue<Double> expMultiplier;
 		public final ConfigValue<Boolean> showLevel;
 		public final ConfigValue<List<String>> blacklistedMobs;
 		public final ConfigValue<List<String>> whitelistedMobs;
@@ -29,9 +27,8 @@ public class Config
 		public final ConfigValue<Integer> defaultMaxLevel;
 		public final ConfigValue<Double> defaultLevelsPerDistance;
 		public final ConfigValue<Integer> defaultRandomLevelBonus;
-		
-		public Common(ForgeConfigSpec.Builder builder)
-		{
+
+		public Common(ForgeConfigSpec.Builder builder) {
 			Predicate<Object> positiveOrZeroDouble = o -> o instanceof Double && (Double) o >= 0;
 			Predicate<Object> positiveDouble = o -> o instanceof Double && (Double) o > 0;
 			Predicate<Object> positiveOrZeroInteger = o -> o instanceof Integer && (Integer) o >= 0;
@@ -40,7 +37,7 @@ public class Config
 			blacklistedMobs = builder.define("blacklist", new ArrayList<String>());
 			whitelistedMobs = builder.define("whitelist", new ArrayList<String>());
 			showLevel = builder.define("show_level", true);
-			expBonus = builder.define("exp_bonus_per_level", 0.1D);
+			expMultiplier = builder.define("exp_bonus_per_level", 0.1D);
 			builder.pop();
 			builder.push("attributes");
 			movementSpeedBonus = builder.define("movement_speed_per_level", 0.001D, positiveOrZeroDouble);
@@ -57,9 +54,8 @@ public class Config
 			builder.pop();
 		}
 	}
-	
-	static
-	{
+
+	static {
 		Pair<Common, ForgeConfigSpec> specPair = new ForgeConfigSpec.Builder().configure(Common::new);
 		COMMON_SPEC = specPair.getRight();
 		COMMON = specPair.getLeft();

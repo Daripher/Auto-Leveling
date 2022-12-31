@@ -7,11 +7,9 @@ import mcp.mobius.waila.api.WailaPlugin;
 import net.minecraft.entity.LivingEntity;
 
 @WailaPlugin
-public class AutoLevelingWailaPlugin implements IWailaPlugin
-{
+public class AutoLevelingWailaPlugin implements IWailaPlugin {
 	@Override
-	public void register(IRegistrar registration)
-	{
+	public void register(IRegistrar registration) {
 		registration.registerComponentProvider(LevelComponentProvider.INSTANCE, TooltipPosition.BODY, LivingEntity.class);
 	}
 }

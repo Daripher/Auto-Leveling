@@ -8,11 +8,9 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 
 @EventBusSubscriber(modid = AutoLevelingMod.MOD_ID)
-public class ResourceLoadingEvents
-{
+public class ResourceLoadingEvents {
 	@SubscribeEvent
-	public static void onAddReloadListener(AddReloadListenerEvent event)
-	{
+	public static void onAddReloadListener(AddReloadListenerEvent event) {
 		event.addListener(new DimensionsLevelingSettingsReloader());
 		event.addListener(new EntitiesLevelingSettingsReloader());
 	}
