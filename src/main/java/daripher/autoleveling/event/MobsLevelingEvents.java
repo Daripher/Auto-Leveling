@@ -1,31 +1,22 @@
 package daripher.autoleveling.event;
 
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
-import com.mojang.math.Matrix4f;
 
 import daripher.autoleveling.AutoLevelingMod;
 import daripher.autoleveling.capability.LevelingDataProvider;
 import daripher.autoleveling.config.Config;
 import daripher.autoleveling.data.DimensionsLevelingSettingsReloader;
 import daripher.autoleveling.data.EntitiesLevelingSettingsReloader;
-import daripher.autoleveling.data.LevelingSettings;
 import daripher.autoleveling.saveddata.GlobalLevelingData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.loot.LootContext;
-import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -40,160 +31,159 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 
 @EventBusSubscriber(modid = AutoLevelingMod.MOD_ID)
-public class MobsLevelingEvents
-{
+public class MobsLevelingEvents {
 	@SubscribeEvent
-	public static void onEntityJoinWorld(EntityJoinLevelEvent event)
-	{
-		if (!LevelingDataProvider.canHaveLevel(event.getEntity()))
+	public static void applyLevelBonuses(EntityJoinLevelEvent event) {
+		if (!shouldApplyLevelBonuses(event.getEntity())) {
 			return;
-		
-		if (event.getEntity().level.isClientSide)
-			return;
-		
-		if (event.getEntity().getTags().contains("autoleveling_spawn"))
-			return;
-		
-		LivingEntity entity = (LivingEntity) event.getEntity();
-		ServerLevel level = ((ServerLevel) entity.level);
-		BlockPos spawnPos = level.getSharedSpawnPos();
-		double distance = Math.sqrt(spawnPos.distSqr(entity.blockPosition()));
-		int monsterLevel = getLevelForEntity(entity, distance);
-		entity.addTag("autoleveling_spawn");
-		LevelingDataProvider.get(entity).ifPresent(levelingData -> levelingData.setLevel(monsterLevel));
-		LevelingDataProvider.applyAttributeBonuses(entity, monsterLevel);
-		LevelingDataProvider.addEquipment(entity);
+		}
+
+		var livingEntity = (LivingEntity) event.getEntity();
+		var world = ((ServerLevel) livingEntity.level);
+		var worldSpawnPos = world.getSharedSpawnPos();
+		var distanceToWorldSpawn = Math.sqrt(worldSpawnPos.distSqr(livingEntity.blockPosition()));
+		var monsterLevel = getLevelForEntity(livingEntity, distanceToWorldSpawn);
+		livingEntity.addTag("autoleveling_spawn");
+		LevelingDataProvider.get(livingEntity).ifPresent(levelingData -> levelingData.setLevel(monsterLevel));
+		LevelingDataProvider.applyAttributeBonuses(livingEntity, monsterLevel);
+		LevelingDataProvider.addEquipment(livingEntity);
 	}
-	
+
+	private static boolean shouldApplyLevelBonuses(Entity entity) {
+		if (!LevelingDataProvider.canHaveLevel(entity)) {
+			return false;
+		}
+
+		if (entity.level.isClientSide) {
+			return false;
+		}
+
+		if (entity.getTags().contains("autoleveling_spawn")) {
+			return false;
+		}
+
+		return true;
+	}
+
 	@SubscribeEvent
-	public static void onLivingExperienceDrop(LivingExperienceDropEvent event)
-	{
-		if (LevelingDataProvider.canHaveLevel(event.getEntity()))
-		{
-			LevelingDataProvider.get(event.getEntity()).ifPresent(levelingData ->
-			{
-				int level = levelingData.getLevel() + 1;
-				int exp = event.getOriginalExperience();
-				double expBonus = Config.COMMON.expBonus.get() * level;
-				event.setDroppedExperience((int) (exp + exp * expBonus));
-			});
+	public static void adjustExpirienceDrop(LivingExperienceDropEvent event) {
+		if (!LevelingDataProvider.canHaveLevel(event.getEntity())) {
+			return;
+		}
+
+		LevelingDataProvider.get(event.getEntity()).ifPresent(levelingData -> {
+			var level = levelingData.getLevel() + 1;
+			var originalExp = event.getOriginalExperience();
+			var expBonus = Config.COMMON.expBonus.get() * level;
+			event.setDroppedExperience((int) (originalExp + originalExp * expBonus));
+		});
+	}
+
+	@SubscribeEvent
+	public static void dropAdditionalLoot(LivingDropsEvent event) {
+		if (!LevelingDataProvider.canHaveLevel(event.getEntity())) {
+			return;
+		}
+
+		var leveledMobsLootTableLocation = new ResourceLocation(AutoLevelingMod.MOD_ID, "gameplay/leveled_mobs");
+		var leveledMobsLootTable = event.getEntity().level.getServer().getLootTables().get(leveledMobsLootTableLocation);
+		var lootContextBuilder = createLootContextBuilder(event.getEntity(), event.getSource());
+		var lootContext = lootContextBuilder.create(LootContextParamSets.ENTITY);
+		leveledMobsLootTable.getRandomItems(lootContext).forEach(event.getEntity()::spawnAtLocation);
+	}
+
+	private static LootContext.Builder createLootContextBuilder(LivingEntity livingEntity, DamageSource damageSource) {
+		var lastHurtByPlayerTime = (int) ObfuscationReflectionHelper.getPrivateValue(LivingEntity.class, livingEntity, "f_20889_");
+		var createLootContextMethod = ObfuscationReflectionHelper.findMethod(LivingEntity.class, "m_7771_", boolean.class, DamageSource.class);
+
+		try {
+			return (LootContext.Builder) createLootContextMethod.invoke(livingEntity, lastHurtByPlayerTime > 0, damageSource);
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+			e.printStackTrace();
+			return null;
 		}
 	}
-	
-	@SubscribeEvent
-	public static void onLivingDrops(LivingDropsEvent event)
-	{
-		if (LevelingDataProvider.canHaveLevel(event.getEntity()))
-		{
-			ResourceLocation resourcelocation = new ResourceLocation(AutoLevelingMod.MOD_ID, "gameplay/leveled_mobs");
-			LootTable loottable = event.getEntity().level.getServer().getLootTables().get(resourcelocation);
-			int lastHurtByPlayerTime = ObfuscationReflectionHelper.getPrivateValue(LivingEntity.class, event.getEntity(), "f_20889_");
-			Method createLootContext = ObfuscationReflectionHelper.findMethod(LivingEntity.class, "m_7771_", boolean.class, DamageSource.class);
-			LootContext.Builder lootcontext$builder;
-			
-			try
-			{
-				lootcontext$builder = (LootContext.Builder) createLootContext.invoke(event.getEntity(), lastHurtByPlayerTime > 0, event.getSource());
-			}
-			catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
-			{
-				e.printStackTrace();
-				return;
-			}
-			
-			LootContext ctx = lootcontext$builder.create(LootContextParamSets.ENTITY);
-			loottable.getRandomItems(ctx).forEach(event.getEntity()::spawnAtLocation);
-		}
-	}
-	
+
 	@OnlyIn(Dist.CLIENT)
 	@SubscribeEvent
-	public static void onRenderNameplate(RenderNameTagEvent event)
-	{
-		if (!Config.COMMON.showLevel.get())
-		{
+	public static void renderEntityLevel(RenderNameTagEvent event) {
+		if (!Config.COMMON.showLevel.get() || !LevelingDataProvider.canHaveLevel(event.getEntity())) {
 			return;
 		}
-		
-		if (LevelingDataProvider.canHaveLevel(event.getEntity()))
-		{
-			Minecraft minecraft = Minecraft.getInstance();
-			LivingEntity entity = (LivingEntity) event.getEntity();
-			
-			if (shouldShowName(entity))
-			{
-				event.setResult(Event.Result.ALLOW);
-				double distance = minecraft.getEntityRenderDispatcher().distanceToSqr(entity);
-				
-				if (ForgeHooksClient.isNameplateInRenderDistance(entity, distance))
-				{
-					LevelingDataProvider.get(entity).ifPresent(levelingData ->
-					{
-						int level = levelingData.getLevel() + 1;
-						Component entityName = event.getContent();
-						Component levelString = Component.literal("" + level).withStyle(ChatFormatting.GREEN);
-						float y = entity.getBbHeight() + 0.5F;
-						int yShift = "deadmau5".equals(entityName.getString()) ? -10 : 0;
-						event.getPoseStack().pushPose();
-						event.getPoseStack().translate(0.0D, y, 0.0D);
-						event.getPoseStack().mulPose(minecraft.getEntityRenderDispatcher().cameraOrientation());
-						event.getPoseStack().scale(-0.025F, -0.025F, 0.025F);
-						Matrix4f matrix4f = event.getPoseStack().last().pose();
-						float backgroundOpacity = minecraft.options.getBackgroundOpacity(0.25F);
-						int alpha = (int) (backgroundOpacity * 255.0F) << 24;
-						Font font = minecraft.font;
-						float x = -font.width(entityName) / 2 - 5 - font.width(levelString);
-						font.drawInBatch(levelString, x, yShift, 553648127, false, matrix4f, event.getMultiBufferSource(), !entity.isDiscrete(), alpha, event.getPackedLight());
-						
-						if (!entity.isDiscrete())
-						{
-							font.drawInBatch(levelString, x, yShift, -1, false, matrix4f, event.getMultiBufferSource(), false, 0, event.getPackedLight());
-						}
-						
-						event.getPoseStack().popPose();
-					});
-				}
+
+		var minecraft = Minecraft.getInstance();
+		var entity = (LivingEntity) event.getEntity();
+
+		if (shouldShowName(entity)) {
+			var distance = minecraft.getEntityRenderDispatcher().distanceToSqr(entity);
+
+			if (ForgeHooksClient.isNameplateInRenderDistance(entity, distance)) {
+				LevelingDataProvider.get(entity).ifPresent(levelingData -> {
+					var entityLevel = levelingData.getLevel() + 1;
+					var entityName = event.getContent();
+					var font = minecraft.font;
+					var levelString = Component.literal("" + entityLevel).withStyle(ChatFormatting.GREEN);
+					var textX = -font.width(entityName) / 2 - 5 - font.width(levelString);
+					var textY = entity.getBbHeight() + 0.5F;
+					var textYShift = "deadmau5".equals(entityName.getString()) ? -10 : 0;
+					var matrix4f = event.getPoseStack().last().pose();
+					var backgroundOpacity = minecraft.options.getBackgroundOpacity(0.25F);
+					var textAlpha = (int) (backgroundOpacity * 255.0F) << 24;
+					var textColor = 553648127;
+					var packedLight = event.getPackedLight();
+					var multiBufferSource = event.getMultiBufferSource();
+					event.getPoseStack().pushPose();
+					event.getPoseStack().translate(0.0D, textY, 0.0D);
+					event.getPoseStack().mulPose(minecraft.getEntityRenderDispatcher().cameraOrientation());
+					event.getPoseStack().scale(-0.025F, -0.025F, 0.025F);
+					font.drawInBatch(levelString, textX, textYShift, textColor, false, matrix4f, multiBufferSource, !entity.isDiscrete(), textAlpha, packedLight);
+
+					if (!entity.isDiscrete()) {
+						font.drawInBatch(levelString, textX, textYShift, -1, false, matrix4f, multiBufferSource, false, 0, packedLight);
+					}
+
+					event.getPoseStack().popPose();
+				});
 			}
+
+			event.setResult(Event.Result.ALLOW);
 		}
 	}
-	
-	private static int getLevelForEntity(LivingEntity entity, double distanceFromSpawn)
-	{
-		LevelingSettings levelingSettings = EntitiesLevelingSettingsReloader.getSettingsForEntity(entity.getType());
-		
-		if (levelingSettings == null)
-		{
-			ResourceKey<Level> dimension = entity.level.dimension();
+
+	private static int getLevelForEntity(LivingEntity entity, double distanceFromSpawn) {
+		var levelingSettings = EntitiesLevelingSettingsReloader.getSettingsForEntity(entity.getType());
+
+		if (levelingSettings == null) {
+			var dimension = entity.level.dimension();
 			levelingSettings = DimensionsLevelingSettingsReloader.getSettingsForDimension(dimension);
 		}
-		
-		int monsterLevel = (int) (levelingSettings.levelsPerDistance() * distanceFromSpawn);
-		int maxLevel = levelingSettings.maxLevel();
-		int levelBonus = levelingSettings.randomLevelBonus() + 1;
+
+		var monsterLevel = (int) (levelingSettings.levelsPerDistance() * distanceFromSpawn);
+		var maxLevel = levelingSettings.maxLevel();
+		var levelBonus = levelingSettings.randomLevelBonus() + 1;
 		monsterLevel += levelingSettings.startingLevel() - 1;
-		
-		if (levelBonus > 0)
-		{
+
+		if (levelBonus > 0) {
 			monsterLevel += entity.getRandom().nextInt(levelBonus);
 		}
-		
+
 		monsterLevel = Math.abs(monsterLevel);
-		
-		if (maxLevel > 0)
-		{
+
+		if (maxLevel > 0) {
 			monsterLevel = Math.min(monsterLevel, maxLevel - 1);
 		}
-		
-		MinecraftServer server = entity.getServer();
-		GlobalLevelingData data = GlobalLevelingData.get(server);
-		monsterLevel += data.getLevelBonus();
+
+		var server = entity.getServer();
+		var globalLevelingData = GlobalLevelingData.get(server);
+		monsterLevel += globalLevelingData.getLevelBonus();
 		return monsterLevel;
 	}
-	
+
 	@OnlyIn(Dist.CLIENT)
-	private static boolean shouldShowName(LivingEntity entity)
-	{
-		Minecraft minecraft = Minecraft.getInstance();
-		return Minecraft.renderNames() && entity != minecraft.getCameraEntity() && !entity.isInvisibleTo(minecraft.player) && !entity.isVehicle() && minecraft.player.hasLineOfSight(entity);
+	private static boolean shouldShowName(LivingEntity entity) {
+		var minecraft = Minecraft.getInstance();
+		var clientPlayer = minecraft.player;
+		return Minecraft.renderNames() && entity != minecraft.getCameraEntity() && !entity.isInvisibleTo(clientPlayer) && !entity.isVehicle()
+				&& clientPlayer.hasLineOfSight(entity);
 	}
 }

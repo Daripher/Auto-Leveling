@@ -4,42 +4,35 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.saveddata.SavedData;
 
-public class GlobalLevelingData extends SavedData
-{
+public class GlobalLevelingData extends SavedData {
 	private int levelBonus;
-	
+
 	@Override
-	public CompoundTag save(CompoundTag tag)
-	{
+	public CompoundTag save(CompoundTag tag) {
 		tag.putInt("LevelBonus", levelBonus);
 		return tag;
 	}
-	
-	public void setLevel(int level)
-	{
+
+	public void setLevel(int level) {
 		this.levelBonus = level;
 		setDirty();
 	}
-	
-	public int getLevelBonus()
-	{
+
+	public int getLevelBonus() {
 		return levelBonus;
 	}
-	
-	private static GlobalLevelingData create()
-	{
+
+	private static GlobalLevelingData create() {
 		return new GlobalLevelingData();
 	}
-	
-	private static GlobalLevelingData load(CompoundTag tag)
-	{
-		GlobalLevelingData data = create();
-		data.levelBonus = tag.getInt("LevelBonus");
-		return data;
+
+	private static GlobalLevelingData load(CompoundTag tag) {
+		var globalLevelingData = GlobalLevelingData.create();
+		globalLevelingData.levelBonus = tag.getInt("LevelBonus");
+		return globalLevelingData;
 	}
-	
-	public static GlobalLevelingData get(MinecraftServer server)
-	{
+
+	public static GlobalLevelingData get(MinecraftServer server) {
 		return server.overworld().getDataStorage().computeIfAbsent(GlobalLevelingData::load, GlobalLevelingData::create, "global_leveling");
 	}
 }

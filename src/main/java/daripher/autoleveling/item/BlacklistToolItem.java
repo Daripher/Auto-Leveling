@@ -27,8 +27,8 @@ public class BlacklistToolItem extends Item
 	{
 		if (!player.level.isClientSide)
 		{
-			String entityId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType()).toString();
-			List<String> blacklistedEntities = Config.COMMON.blacklistedMobs.get();
+			var entityId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType()).toString();
+			var blacklistedEntities = Config.COMMON.blacklistedMobs.get();
 			
 			if (blacklistedEntities.contains(entityId))
 			{

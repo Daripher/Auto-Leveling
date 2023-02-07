@@ -20,52 +20,42 @@ import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.loot.Deserializers;
 
-public class DimensionsLevelingSettingsReloader extends SimpleJsonResourceReloadListener
-{
+public class DimensionsLevelingSettingsReloader extends SimpleJsonResourceReloadListener {
 	private static final Logger LOGGER = LogUtils.getLogger();
 	private static final Gson GSON = Deserializers.createLootTableSerializer().create();
 	private static Map<ResourceLocation, LevelingSettings> settings = ImmutableMap.of();
-	
-	public DimensionsLevelingSettingsReloader()
-	{
+
+	public DimensionsLevelingSettingsReloader() {
 		super(GSON, "leveling_settings/dimensions");
 	}
-	
+
 	@Override
-	protected void apply(Map<ResourceLocation, JsonElement> map, ResourceManager resourceManager, ProfilerFiller profilerFiller)
-	{
-		ImmutableMap.Builder<ResourceLocation, LevelingSettings> builder = ImmutableMap.builder();
-		
-		map.forEach((id, json) ->
-		{
-			try
-			{
-				LevelingSettings levelingSettings = LevelingSettings.load(json.getAsJsonObject());
-				builder.put(id, levelingSettings);
+	protected void apply(Map<ResourceLocation, JsonElement> map, ResourceManager resourceManager, ProfilerFiller profilerFiller) {
+		ImmutableMap.Builder<ResourceLocation, LevelingSettings> mapBuilder = ImmutableMap.builder();
+
+		map.forEach((id, json) -> {
+			try {
+				var levelingSettings = LevelingSettings.load(json.getAsJsonObject());
+				mapBuilder.put(id, levelingSettings);
 				LOGGER.info("Loading leveling settings {}", id);
-			}
-			catch (Exception exception)
-			{
+			} catch (Exception exception) {
 				LOGGER.error("Couldn't parse leveling settings {}", id, exception);
 			}
 		});
-		
-		ImmutableMap<ResourceLocation, LevelingSettings> immutableMap = builder.build();
-		settings = immutableMap;
+
+		settings = mapBuilder.build();
 	}
-	
+
 	@Nonnull
-	public static LevelingSettings getSettingsForDimension(ResourceKey<Level> dimension)
-	{
+	public static LevelingSettings getSettingsForDimension(ResourceKey<Level> dimension) {
 		return settings.getOrDefault(dimension.location(), defaultSettings());
 	}
-	
-	private static LevelingSettings defaultSettings()
-	{
-		int startingLevel = Config.COMMON.defaultStartingLevel.get();
-		int maxLevel = Config.COMMON.defaultMaxLevel.get();
-		float levelPerDistance = Config.COMMON.defaultLevelsPerDistance.get().floatValue();
-		int randomLevelBonus = Config.COMMON.defaultRandomLevelBonus.get();
+
+	private static LevelingSettings defaultSettings() {
+		var startingLevel = Config.COMMON.defaultStartingLevel.get();
+		var maxLevel = Config.COMMON.defaultMaxLevel.get();
+		var levelPerDistance = Config.COMMON.defaultLevelsPerDistance.get().floatValue();
+		var randomLevelBonus = Config.COMMON.defaultRandomLevelBonus.get();
 		return new LevelingSettings(startingLevel, maxLevel, levelPerDistance, randomLevelBonus);
 	}
 }

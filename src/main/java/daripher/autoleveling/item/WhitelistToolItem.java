@@ -27,8 +27,8 @@ public class WhitelistToolItem extends Item
 	{
 		if (!player.level.isClientSide)
 		{
-			String entityId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType()).toString();
-			List<String> whitelistedEntities = Config.COMMON.whitelistedMobs.get();
+			var entityId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType()).toString();
+			var whitelistedEntities = Config.COMMON.whitelistedMobs.get();
 			
 			if (whitelistedEntities.contains(entityId))
 			{

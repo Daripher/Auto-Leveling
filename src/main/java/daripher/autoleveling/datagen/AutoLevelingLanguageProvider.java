@@ -8,16 +8,13 @@ import net.minecraft.data.DataGenerator;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.common.data.LanguageProvider;
 
-public class AutoLevelingLanguageProvider extends LanguageProvider
-{
-	public AutoLevelingLanguageProvider(DataGenerator gen)
-	{
+public class AutoLevelingLanguageProvider extends LanguageProvider {
+	public AutoLevelingLanguageProvider(DataGenerator gen) {
 		super(gen, AutoLevelingMod.MOD_ID, "en_us");
 	}
-	
+
 	@Override
-	protected void addTranslations()
-	{
+	protected void addTranslations() {
 		add("itemGroup.autoleveling", "Auto Leveling Tools");
 		add(AutoLevelingItems.BLACKLIST_TOOL.get(), "Blacklist Tool");
 		specialText(AutoLevelingItems.BLACKLIST_TOOL.get(), "tooltip", YELLOW + "Adds or removes entity from blacklist");
@@ -30,9 +27,8 @@ public class AutoLevelingLanguageProvider extends LanguageProvider
 		add("jade.autoleveling.tooltip", "Level: %d");
 		add("config.jade.plugin_autoleveling.level", "Level");
 	}
-	
-	public void specialText(Item key, String type, String translation)
-	{
+
+	public void specialText(Item key, String type, String translation) {
 		add(key.getDescriptionId() + "." + type, translation);
 	}
 }
