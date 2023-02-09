@@ -55,7 +55,8 @@ public class DimensionsLevelingSettingsReloader extends SimpleJsonResourceReload
 		var startingLevel = Config.COMMON.defaultStartingLevel.get();
 		var maxLevel = Config.COMMON.defaultMaxLevel.get();
 		var levelPerDistance = Config.COMMON.defaultLevelsPerDistance.get().floatValue();
+		var levelPerDeepness = Config.COMMON.defaultLevelsPerDeepness.get().floatValue();
 		var randomLevelBonus = Config.COMMON.defaultRandomLevelBonus.get();
-		return new LevelingSettings(startingLevel, maxLevel, levelPerDistance, randomLevelBonus);
+		return new LevelingSettings(startingLevel, maxLevel, levelPerDistance, levelPerDeepness, randomLevelBonus);
 	}
 }

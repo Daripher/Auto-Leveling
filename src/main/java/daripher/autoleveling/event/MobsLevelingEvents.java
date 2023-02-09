@@ -38,14 +38,14 @@ public class MobsLevelingEvents {
 			return;
 		}
 
-		var entity = (LivingEntity) event.getEntity();
-		var level = ((ServerLevel) entity.level);
-		var worldSpawnPosition = level.getSharedSpawnPos();
-		var worldSpawnDistance = Math.sqrt(worldSpawnPosition.distSqr(entity.blockPosition()));
-		var entityLevel = getLevelForEntity(entity, worldSpawnDistance);
-		LevelingDataProvider.get(entity).ifPresent(levelingData -> levelingData.setLevel(entityLevel));
-		LevelingDataProvider.applyAttributeBonuses(entity, entityLevel);
-		LevelingDataProvider.addEquipment(entity);
+		var livingEntity = (LivingEntity) event.getEntity();
+		var world = ((ServerLevel) livingEntity.level);
+		var worldSpawnPos = world.getSharedSpawnPos();
+		var distanceToWorldSpawn = Math.sqrt(worldSpawnPos.distSqr(livingEntity.blockPosition()));
+		var entityLevel = getLevelForEntity(livingEntity, distanceToWorldSpawn);
+		LevelingDataProvider.get(livingEntity).ifPresent(levelingData -> levelingData.setLevel(entityLevel));
+		LevelingDataProvider.applyAttributeBonuses(livingEntity, entityLevel);
+		LevelingDataProvider.addEquipment(livingEntity);
 	}
 
 	private static boolean shouldApplyLevelBonuses(Entity entity) {
