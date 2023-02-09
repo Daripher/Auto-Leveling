@@ -42,9 +42,9 @@ public class MobsLevelingEvents {
 		var world = ((ServerLevel) livingEntity.level);
 		var worldSpawnPos = world.getSharedSpawnPos();
 		var distanceToWorldSpawn = Math.sqrt(worldSpawnPos.distSqr(livingEntity.blockPosition()));
-		var monsterLevel = getLevelForEntity(livingEntity, distanceToWorldSpawn);
-		LevelingDataProvider.get(livingEntity).ifPresent(levelingData -> levelingData.setLevel(monsterLevel));
-		LevelingDataProvider.applyAttributeBonuses(livingEntity, monsterLevel);
+		var entityLevel = getLevelForEntity(livingEntity, distanceToWorldSpawn);
+		LevelingDataProvider.get(livingEntity).ifPresent(levelingData -> levelingData.setLevel(entityLevel));
+		LevelingDataProvider.applyAttributeBonuses(livingEntity, entityLevel);
 		LevelingDataProvider.addEquipment(livingEntity);
 	}
 
