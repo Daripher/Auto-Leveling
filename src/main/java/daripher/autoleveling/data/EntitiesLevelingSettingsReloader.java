@@ -19,43 +19,34 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.storage.loot.Deserializers;
 import net.minecraftforge.registries.ForgeRegistries;
 
-public class EntitiesLevelingSettingsReloader extends SimpleJsonResourceReloadListener
-{
+public class EntitiesLevelingSettingsReloader extends SimpleJsonResourceReloadListener {
 	private static final Logger LOGGER = LogUtils.getLogger();
 	private static final Gson GSON = Deserializers.createLootTableSerializer().create();
 	private static Map<ResourceLocation, LevelingSettings> settings = ImmutableMap.of();
-	
-	public EntitiesLevelingSettingsReloader()
-	{
+
+	public EntitiesLevelingSettingsReloader() {
 		super(GSON, "leveling_settings/entities");
 	}
-	
+
 	@Override
-	protected void apply(Map<ResourceLocation, JsonElement> map, ResourceManager resourceManager, ProfilerFiller profilerFiller)
-	{
+	protected void apply(Map<ResourceLocation, JsonElement> map, ResourceManager resourceManager, ProfilerFiller profilerFiller) {
 		ImmutableMap.Builder<ResourceLocation, LevelingSettings> builder = ImmutableMap.builder();
-		
-		map.forEach((id, json) ->
-		{
-			try
-			{
-				LevelingSettings levelingSettings = LevelingSettings.load(json.getAsJsonObject());
+
+		map.forEach((id, json) -> {
+			try {
+				var levelingSettings = LevelingSettings.load(json.getAsJsonObject());
 				builder.put(id, levelingSettings);
 				LOGGER.info("Loading leveling settings {}", id);
-			}
-			catch (Exception exception)
-			{
+			} catch (Exception exception) {
 				LOGGER.error("Couldn't parse leveling settings {}", id, exception);
 			}
 		});
-		
-		ImmutableMap<ResourceLocation, LevelingSettings> immutableMap = builder.build();
-		settings = immutableMap;
+
+		settings = builder.build();
 	}
-	
+
 	@Nullable
-	public static LevelingSettings getSettingsForEntity(EntityType<?> entityType)
-	{
+	public static LevelingSettings getSettingsForEntity(EntityType<?> entityType) {
 		return settings.get(ForgeRegistries.ENTITIES.getKey(entityType));
 	}
 }

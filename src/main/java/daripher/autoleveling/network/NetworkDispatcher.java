@@ -14,14 +14,13 @@ import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 @EventBusSubscriber(bus = Bus.MOD, modid = AutoLevelingMod.MOD_ID)
-public class NetworkDispatcher
-{
+public class NetworkDispatcher {
 	public static SimpleChannel networkChannel;
-	
+
 	@SubscribeEvent
-	public static void onCommonSetupEvent(FMLCommonSetupEvent event)
-	{
+	public static void onCommonSetupEvent(FMLCommonSetupEvent event) {
 		networkChannel = NetworkRegistry.newSimpleChannel(new ResourceLocation(AutoLevelingMod.MOD_ID, "channel"), () -> "1.0", s -> true, s -> true);
-		networkChannel.registerMessage(1, SyncLevelingData.class, SyncLevelingData::encode, SyncLevelingData::decode, SyncLevelingData::receive, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+		var toClient = Optional.of(NetworkDirection.PLAY_TO_CLIENT);
+		networkChannel.registerMessage(1, SyncLevelingData.class, SyncLevelingData::encode, SyncLevelingData::decode, SyncLevelingData::receive, toClient);
 	}
 }
