@@ -26,6 +26,7 @@ public class Config {
 		public final ConfigValue<Integer> defaultStartingLevel;
 		public final ConfigValue<Integer> defaultMaxLevel;
 		public final ConfigValue<Double> defaultLevelsPerDistance;
+		public final ConfigValue<Double> defaultLevelsPerDeepness;
 		public final ConfigValue<Integer> defaultRandomLevelBonus;
 
 		public Common(ForgeConfigSpec.Builder builder) {
@@ -50,6 +51,7 @@ public class Config {
 			defaultStartingLevel = builder.define("starting_level", 1, positiveInteger);
 			defaultMaxLevel = builder.define("max_level", 0, positiveOrZeroInteger);
 			defaultLevelsPerDistance = builder.define("levels_per_distance", 0.01D, positiveDouble);
+			defaultLevelsPerDeepness = builder.define("levels_per_deepness", 0D, positiveOrZeroDouble);
 			defaultRandomLevelBonus = builder.define("random_level_bonus", 0, positiveOrZeroInteger);
 			builder.pop();
 		}

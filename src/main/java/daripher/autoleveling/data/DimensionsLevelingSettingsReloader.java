@@ -53,7 +53,8 @@ public class DimensionsLevelingSettingsReloader extends JsonReloadListener {
 		int startingLevel = Config.COMMON.defaultStartingLevel.get();
 		int maxLevel = Config.COMMON.defaultMaxLevel.get();
 		float levelPerDistance = Config.COMMON.defaultLevelsPerDistance.get().floatValue();
+		float levelPerDeepness = Config.COMMON.defaultLevelsPerDeepness.get().floatValue();
 		int randomLevelBonus = Config.COMMON.defaultRandomLevelBonus.get();
-		return new LevelingSettings(startingLevel, maxLevel, levelPerDistance, randomLevelBonus);
+		return new LevelingSettings(startingLevel, maxLevel, levelPerDistance, levelPerDeepness, randomLevelBonus);
 	}
 }
