@@ -34,7 +34,7 @@ import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 public class MobsLevelingEvents {
 	@SubscribeEvent
 	public static void applyLevelBonuses(EntityJoinLevelEvent event) {
-		if (!shouldApplyLevelBonuses(event.getEntity())) {
+		if (!shouldApplyLevelBonuses(event.getEntity()) && !event.loadedFromDisk()) {
 			return;
 		}
 
@@ -43,7 +43,6 @@ public class MobsLevelingEvents {
 		var worldSpawnPos = world.getSharedSpawnPos();
 		var distanceToWorldSpawn = Math.sqrt(worldSpawnPos.distSqr(livingEntity.blockPosition()));
 		var monsterLevel = getLevelForEntity(livingEntity, distanceToWorldSpawn);
-		livingEntity.addTag("autoleveling_spawn");
 		LevelingDataProvider.get(livingEntity).ifPresent(levelingData -> levelingData.setLevel(monsterLevel));
 		LevelingDataProvider.applyAttributeBonuses(livingEntity, monsterLevel);
 		LevelingDataProvider.addEquipment(livingEntity);
@@ -55,10 +54,6 @@ public class MobsLevelingEvents {
 		}
 
 		if (entity.level.isClientSide) {
-			return false;
-		}
-
-		if (entity.getTags().contains("autoleveling_spawn")) {
 			return false;
 		}
 
