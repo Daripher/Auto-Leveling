@@ -6,6 +6,8 @@ import java.util.function.Predicate;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.google.common.collect.ImmutableList;
+
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
 
@@ -14,11 +16,7 @@ public class Config {
 	public static final ForgeConfigSpec COMMON_SPEC;
 
 	public static class Common {
-		public final ConfigValue<Double> movementSpeedBonus;
-		public final ConfigValue<Double> flyingSpeedBonus;
-		public final ConfigValue<Double> attackDamageBonus;
-		public final ConfigValue<Double> armorBonus;
-		public final ConfigValue<Double> healthBonus;
+		public final ConfigValue<List<List<Object>>> attributesBonuses;
 		public final ConfigValue<Double> expBonus;
 		public final ConfigValue<Boolean> showLevel;
 		public final ConfigValue<List<String>> blacklistedMobs;
@@ -41,11 +39,16 @@ public class Config {
 			expBonus = builder.define("exp_bonus_per_level", 0.1D);
 			builder.pop();
 			builder.push("attributes");
-			movementSpeedBonus = builder.define("movement_speed_per_level", 0.001D, positiveOrZeroDouble);
-			flyingSpeedBonus = builder.define("flying_speed_per_level", 0.001D, positiveOrZeroDouble);
-			attackDamageBonus = builder.define("attack_damage_per_level", 0.1D, positiveOrZeroDouble);
-			armorBonus = builder.define("armor_per_level", 0.1D, positiveOrZeroDouble);
-			healthBonus = builder.define("health_per_level", 0.1D, positiveOrZeroDouble);
+			attributesBonuses = builder.define("attribute_bonuses",
+					ImmutableList.of(
+							ImmutableList.of("minecraft:generic.movement_speed", 0.001),
+							ImmutableList.of("minecraft:generic.flying_speed", 0.001),
+							ImmutableList.of("minecraft:generic.attack_damage", 0.1),
+							ImmutableList.of("minecraft:generic.armor", 0.1),
+							ImmutableList.of("minecraft:generic.max_health", 0.1),
+							ImmutableList.of("autoleveling:monster.projectile_damage_bonus", 0.1),
+							ImmutableList.of("autoleveling:monster.explosion_damage_bonus", 0.1)),
+					Config::isValidAttributeBonusConfig);
 			builder.pop();
 			builder.push("default_leveling_settings");
 			defaultStartingLevel = builder.define("starting_level", 1, positiveInteger);
@@ -55,6 +58,40 @@ public class Config {
 			defaultRandomLevelBonus = builder.define("random_level_bonus", 0, positiveOrZeroInteger);
 			builder.pop();
 		}
+	}
+
+	private static boolean isValidAttributeBonusConfig(Object object) {
+		if (object == null) {
+			return false;
+		}
+
+		if (!(object instanceof List)) {
+			return false;
+		}
+		
+		var list = (List<?>) object;
+
+		for (var listObject : list) {
+			if (!(listObject instanceof List)) {
+				return false;
+			}
+			
+			var innerList = (List<?>) listObject;
+
+			if (innerList.size() != 2) {
+				return false;
+			}
+
+			if (!(innerList.get(0) instanceof String)) {
+				return false;
+			}
+
+			if (innerList.get(1) instanceof Double) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	static {

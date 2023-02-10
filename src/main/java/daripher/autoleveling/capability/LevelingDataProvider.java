@@ -1,7 +1,9 @@
 package daripher.autoleveling.capability;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -48,9 +50,11 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 @EventBusSubscriber(bus = Bus.FORGE, modid = AutoLevelingMod.MOD_ID)
 public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag> {
-	private static List<String> blacklisted_namespaces = new ArrayList<>();
-	private static List<String> whitelisted_namespaces = new ArrayList<>();
+	private static final List<String> BLACKLISTED_NAMESPACES = new ArrayList<>();
+	private static final List<String> WHITELISTED_NAMESPACES = new ArrayList<>();
+	private static final Map<Attribute, Float> ATTRIBUTE_BONUSES = new HashMap<>();
 	private static boolean whitelist_and_blacklist_initialized;
+	private static boolean attribute_bonuses_initialized;
 	private LazyOptional<ILevelingData> lazyOptional = LazyOptional.of(LevelingData::new);
 
 	@SubscribeEvent
@@ -98,14 +102,14 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag
 				var whitelistedNamespaces = Config.COMMON.whitelistedMobs.get().stream()
 						.filter(namespacePredicate)
 						.collect(Collectors.toList());
-				whitelisted_namespaces.addAll(whitelistedNamespaces);
+				WHITELISTED_NAMESPACES.addAll(whitelistedNamespaces);
 			}
 
 			if (!Config.COMMON.blacklistedMobs.get().isEmpty()) {
 				var blacklistedNamespaces = Config.COMMON.blacklistedMobs.get().stream()
 						.filter(namespacePredicate)
 						.collect(Collectors.toList());
-				blacklisted_namespaces.addAll(blacklistedNamespaces);
+				BLACKLISTED_NAMESPACES.addAll(blacklistedNamespaces);
 			}
 
 			whitelist_and_blacklist_initialized = true;
@@ -127,12 +131,12 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag
 
 		var entityId = ForgeRegistries.ENTITIES.getKey(entity.getType());
 
-		if (blacklisted_namespaces.contains(entityId.getNamespace())) {
+		if (BLACKLISTED_NAMESPACES.contains(entityId.getNamespace())) {
 			return false;
 		}
 
-		if (!whitelisted_namespaces.isEmpty()) {
-			if (whitelisted_namespaces.contains(entityId.getNamespace())) {
+		if (!WHITELISTED_NAMESPACES.isEmpty()) {
+			if (WHITELISTED_NAMESPACES.contains(entityId.getNamespace())) {
 				return true;
 			}
 		}
@@ -157,11 +161,20 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag
 	}
 
 	public static void applyAttributeBonuses(LivingEntity entity, int level) {
-		applyAttributeBonusIfPossible(entity, Attributes.MOVEMENT_SPEED, Config.COMMON.movementSpeedBonus.get() * level);
-		applyAttributeBonusIfPossible(entity, Attributes.FLYING_SPEED, Config.COMMON.flyingSpeedBonus.get() * level);
-		applyAttributeBonusIfPossible(entity, Attributes.ATTACK_DAMAGE, Config.COMMON.attackDamageBonus.get() * level);
-		applyAttributeBonusIfPossible(entity, Attributes.ARMOR, Config.COMMON.armorBonus.get() * level);
-		applyAttributeBonusIfPossible(entity, Attributes.MAX_HEALTH, Config.COMMON.healthBonus.get() * level);
+		if (!attribute_bonuses_initialized) {
+			Config.COMMON.attributesBonuses.get().forEach(attributeBonusConfig -> {
+				var attributeId = new ResourceLocation((String) attributeBonusConfig.get(0));
+				var attribute = ForgeRegistries.ATTRIBUTES.getValue(attributeId);
+				var attributeBonus = (float) attributeBonusConfig.get(1);
+				ATTRIBUTE_BONUSES.put(attribute, attributeBonus);
+			});
+
+			attribute_bonuses_initialized = true;
+		}
+
+		ATTRIBUTE_BONUSES.forEach((attribute, bonus) -> {
+			applyAttributeBonusIfPossible(entity, attribute, bonus * level);
+		});
 	}
 
 	private static void applyAttributeBonusIfPossible(LivingEntity entity, Attribute attribute, double bonus) {
