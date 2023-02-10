@@ -196,6 +196,7 @@ public class MobsLevelingEvents {
 	@OnlyIn(Dist.CLIENT)
 	protected static boolean shouldShowName(LivingEntity entity) {
 		Minecraft minecraft = Minecraft.getInstance();
-		return Minecraft.renderNames() && entity != minecraft.getCameraEntity() && !entity.isInvisibleTo(minecraft.player) && !entity.isVehicle() && minecraft.player.canSee(entity);
+		return Minecraft.renderNames() && entity != minecraft.getCameraEntity() && !entity.isInvisibleTo(minecraft.player) && !entity.isVehicle()
+				&& minecraft.player.canSee(entity);
 	}
 }

@@ -165,8 +165,13 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundNBT
 			Config.COMMON.attributesBonuses.get().forEach(attributeBonusConfig -> {
 				var attributeId = new ResourceLocation((String) attributeBonusConfig.get(0));
 				var attribute = ForgeRegistries.ATTRIBUTES.getValue(attributeId);
-				var attributeBonus = (float) attributeBonusConfig.get(1);
-				ATTRIBUTE_BONUSES.put(attribute, attributeBonus);
+				var attributeBonus = ((Double) attributeBonusConfig.get(1)).floatValue();
+
+				if (attribute == null) {
+					AutoLevelingMod.LOGGER.error("Attribute '" + attributeId + "' can not be found!");
+				} else {
+					ATTRIBUTE_BONUSES.put(attribute, attributeBonus);
+				}
 			});
 
 			attribute_bonuses_initialized = true;
