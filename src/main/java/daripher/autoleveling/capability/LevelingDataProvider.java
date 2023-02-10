@@ -163,9 +163,9 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundNBT
 	public static void applyAttributeBonuses(LivingEntity entity, int level) {
 		if (!attribute_bonuses_initialized) {
 			Config.COMMON.attributesBonuses.get().forEach(attributeBonusConfig -> {
-				var attributeId = new ResourceLocation((String) attributeBonusConfig.get(0));
-				var attribute = ForgeRegistries.ATTRIBUTES.getValue(attributeId);
-				var attributeBonus = ((Double) attributeBonusConfig.get(1)).floatValue();
+				ResourceLocation attributeId = new ResourceLocation((String) attributeBonusConfig.get(0));
+				Attribute attribute = ForgeRegistries.ATTRIBUTES.getValue(attributeId);
+				float attributeBonus = ((Double) attributeBonusConfig.get(1)).floatValue();
 
 				if (attribute == null) {
 					AutoLevelingMod.LOGGER.error("Attribute '" + attributeId + "' can not be found!");

@@ -16,16 +16,17 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
-@EventBusSubscriber(modid = AutoLevelingMod.MOD_ID)
+@EventBusSubscriber(modid = AutoLevelingMod.MOD_ID, bus = Bus.MOD)
 @Mod(AutoLevelingMod.MOD_ID)
 public class AutoLevelingMod {
 	public static final String MOD_ID = "autoleveling";
 	public static final Logger LOGGER = LogManager.getLogger(AutoLevelingMod.MOD_ID);
-	
+
 	public AutoLevelingMod() {
 		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.COMMON_SPEC);
 		IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
@@ -36,7 +37,7 @@ public class AutoLevelingMod {
 	}
 
 	@SubscribeEvent
-	private void onCommonSetup(FMLCommonSetupEvent event) {
+	public static void setupMod(FMLCommonSetupEvent event) {
 		CapabilityManager.INSTANCE.register(ILevelingData.class, new LevelingDataStorage(), LevelingData::new);
 	}
 }

@@ -69,14 +69,14 @@ public class Config {
 			return false;
 		}
 		
-		var list = (List<?>) object;
+		List<?> list = (List<?>) object;
 
-		for (var listObject : list) {
+		for (Object listObject : list) {
 			if (!(listObject instanceof List)) {
 				return false;
 			}
 			
-			var innerList = (List<?>) listObject;
+			List<?> innerList = (List<?>) listObject;
 
 			if (innerList.size() != 2) {
 				return false;
