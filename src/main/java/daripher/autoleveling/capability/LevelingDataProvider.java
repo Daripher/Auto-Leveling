@@ -1,7 +1,9 @@
 package daripher.autoleveling.capability;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -51,7 +53,9 @@ import net.minecraftforge.registries.ForgeRegistries;
 public class LevelingDataProvider implements ICapabilitySerializable<CompoundNBT> {
 	private static final List<String> BLACKLISTED_NAMESPACES = new ArrayList<>();
 	private static final List<String> WHITELISTED_NAMESPACES = new ArrayList<>();
-	private static boolean blacklist_and_whitelist_initialized;
+	private static final Map<Attribute, Float> ATTRIBUTE_BONUSES = new HashMap<>();
+	private static boolean whitelist_and_blacklist_initialized;
+	private static boolean attribute_bonuses_initialized;
 	private ILevelingData instance = LevelingApi.CAPABILITY.getDefaultInstance();
 
 	@SubscribeEvent
@@ -93,9 +97,9 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundNBT
 	}
 
 	public static boolean canHaveLevel(Entity entity) {
-		if (!blacklist_and_whitelist_initialized) {
+		if (!whitelist_and_blacklist_initialized) {
 			initializeBlacklistAndWhitelist();
-			blacklist_and_whitelist_initialized = true;
+			whitelist_and_blacklist_initialized = true;
 		}
 
 		if (!(entity instanceof LivingEntity)) {
@@ -157,11 +161,20 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundNBT
 	}
 
 	public static void applyAttributeBonuses(LivingEntity entity, int level) {
-		applyAttributeBonusIfPossible(entity, Attributes.MOVEMENT_SPEED, Config.COMMON.movementSpeedBonus.get() * level);
-		applyAttributeBonusIfPossible(entity, Attributes.FLYING_SPEED, Config.COMMON.flyingSpeedBonus.get() * level);
-		applyAttributeBonusIfPossible(entity, Attributes.ATTACK_DAMAGE, Config.COMMON.attackDamageBonus.get() * level);
-		applyAttributeBonusIfPossible(entity, Attributes.ARMOR, Config.COMMON.armorBonus.get() * level);
-		applyAttributeBonusIfPossible(entity, Attributes.MAX_HEALTH, Config.COMMON.healthBonus.get() * level);
+		if (!attribute_bonuses_initialized) {
+			Config.COMMON.attributesBonuses.get().forEach(attributeBonusConfig -> {
+				var attributeId = new ResourceLocation((String) attributeBonusConfig.get(0));
+				var attribute = ForgeRegistries.ATTRIBUTES.getValue(attributeId);
+				var attributeBonus = (float) attributeBonusConfig.get(1);
+				ATTRIBUTE_BONUSES.put(attribute, attributeBonus);
+			});
+
+			attribute_bonuses_initialized = true;
+		}
+
+		ATTRIBUTE_BONUSES.forEach((attribute, bonus) -> {
+			applyAttributeBonusIfPossible(entity, attribute, bonus * level);
+		});
 	}
 
 	private static void applyAttributeBonusIfPossible(LivingEntity entity, Attribute attribute, double bonus) {
