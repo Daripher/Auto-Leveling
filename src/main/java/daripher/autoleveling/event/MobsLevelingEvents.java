@@ -190,6 +190,12 @@ public class MobsLevelingEvents {
 		MinecraftServer server = entity.getServer();
 		GlobalLevelingData data = GlobalLevelingData.get(server);
 		monsterLevel += data.getLevelBonus();
+		
+		if(entity.getY() < 64) {
+			double deepness = 64 - entity.getY();
+			monsterLevel += levelingSettings.levelsPerDeepness * deepness;
+		}
+		
 		return monsterLevel;
 	}
 
