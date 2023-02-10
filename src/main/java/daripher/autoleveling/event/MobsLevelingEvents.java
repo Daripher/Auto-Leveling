@@ -169,6 +169,12 @@ public class MobsLevelingEvents {
 		var server = entity.getServer();
 		var globalLevelingData = GlobalLevelingData.get(server);
 		monsterLevel += globalLevelingData.getLevelBonus();
+		
+		if(entity.getY() < 64) {
+			var deepness = 64 - entity.getY();
+			monsterLevel += levelingSettings.levelsPerDeepness() * deepness;
+		}
+		
 		return monsterLevel;
 	}
 
