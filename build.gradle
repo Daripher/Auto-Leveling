@@ -18,7 +18,7 @@ apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 apply plugin: 'org.spongepowered.mixin'
 
-version = '1.13a'
+version = '1.14'
 group = 'daripher.autoleveling'
 archivesBaseName = 'AutoLeveling-1.16.5'
 
