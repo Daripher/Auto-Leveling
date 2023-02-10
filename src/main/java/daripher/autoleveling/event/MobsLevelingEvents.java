@@ -110,7 +110,8 @@ public class MobsLevelingEvents {
 		var entity = (LivingEntity) event.getEntity();
 
 		if (shouldShowName(entity)) {
-			var distance = minecraft.getEntityRenderDispatcher().distanceToSqr(entity);
+			event.setResult(Event.Result.ALLOW);
+			double distance = minecraft.getEntityRenderDispatcher().distanceToSqr(entity);
 
 			if (ForgeHooksClient.isNameplateInRenderDistance(entity, distance)) {
 				LevelingDataProvider.get(entity).ifPresent(levelingData -> {
@@ -140,8 +141,6 @@ public class MobsLevelingEvents {
 					event.getPoseStack().popPose();
 				});
 			}
-
-			event.setResult(Event.Result.ALLOW);
 		}
 	}
 

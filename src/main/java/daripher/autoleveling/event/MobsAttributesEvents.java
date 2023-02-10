@@ -7,19 +7,12 @@ import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 
 @EventBusSubscriber(modid = AutoLevelingMod.MOD_ID)
 public class MobsAttributesEvents {
 	@SubscribeEvent
-	public static void attachMobsAttributes(EntityAttributeModificationEvent event) {
-		event.getTypes().forEach(entityType -> {
-			event.add(entityType, AutoLevelingAttributes.PROJECTILE_DAMAGE_BONUS.get());
-			event.add(entityType, AutoLevelingAttributes.EXPLOSION_DAMAGE_BONUS.get());
-		});
-	}
-
-	@SubscribeEvent
-	public static void applyRangedDamageBonus(LivingHurtEvent event) {
+	public static void applyAttributesDamageBonus(LivingHurtEvent event) {
 		var damageSource = event.getSource();
 		var attackingEntity = damageSource.getEntity();
 
@@ -30,7 +23,7 @@ public class MobsAttributesEvents {
 
 			if (isProjectileDamage && canApplyProjectileDamageBonus) {
 				var damageBonus = (float) attackingLivingEntity.getAttributeValue(AutoLevelingAttributes.PROJECTILE_DAMAGE_BONUS.get());
-				event.setAmount(event.getAmount() + event.getAmount() * damageBonus);
+				event.setAmount(event.getAmount() * damageBonus);
 			}
 
 			var isExplosionDamage = damageSource.isExplosion();
@@ -38,8 +31,19 @@ public class MobsAttributesEvents {
 
 			if (isExplosionDamage && canApplyExplosionDamageBonus) {
 				var damageBonus = (float) attackingLivingEntity.getAttributeValue(AutoLevelingAttributes.EXPLOSION_DAMAGE_BONUS.get());
-				event.setAmount(event.getAmount() + event.getAmount() * damageBonus);
+				event.setAmount(event.getAmount() * damageBonus);
 			}
+		}
+	}
+
+	@EventBusSubscriber(modid = AutoLevelingMod.MOD_ID, bus = Bus.MOD)
+	public static class ModEvents {
+		@SubscribeEvent
+		public static void attachMobsAttributes(EntityAttributeModificationEvent event) {
+			event.getTypes().forEach(entityType -> {
+				event.add(entityType, AutoLevelingAttributes.PROJECTILE_DAMAGE_BONUS.get());
+				event.add(entityType, AutoLevelingAttributes.EXPLOSION_DAMAGE_BONUS.get());
+			});
 		}
 	}
 }
