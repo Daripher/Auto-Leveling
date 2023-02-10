@@ -1,3 +1,18 @@
+1.14
+  Added level bonus per deepnes config
+  Created new attributes for mobs: projectile damage bonus and explosion damage bonus
+  Changed attributes config, now allows changing modded attributes
+1.13a
+  Fixed an issue that caused load time to increase drastically
+1.13
+  Added the ability to change mobs textures based on level
+1.12
+  Added the ability to change equipment of mobs using datapacks
+1.11
+  Added blacklist tool item
+  Added whitelist tool item
+  Added Jade (Waila) mod interaction
+  Default leveling settings are now stored in config
 1.10a
   Fixed whitelist config doesn't work as intended
 1.10
