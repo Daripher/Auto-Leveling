@@ -29,7 +29,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -68,7 +67,7 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag
 	@SubscribeEvent
 	public static void onPlayerStartTracking(PlayerEvent.StartTracking event) {
 		if (event.getTarget() instanceof LivingEntity) {
-			LivingEntity livingEntity = (LivingEntity) event.getTarget();
+			var livingEntity = (LivingEntity) event.getTarget();
 
 			LevelingDataProvider.get(livingEntity).ifPresent(levelingData -> {
 				LevelingDataProvider.syncWith((ServerPlayer) event.getEntity(), livingEntity, levelingData);
@@ -116,7 +115,7 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag
 			return false;
 		}
 
-		LivingEntity livingEntity = (LivingEntity) entity;
+		var livingEntity = (LivingEntity) entity;
 
 		if (livingEntity.getAttribute(Attributes.ATTACK_DAMAGE) == null) {
 			return false;
@@ -126,7 +125,7 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag
 			return false;
 		}
 
-		ResourceLocation entityId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType());
+		var entityId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType());
 
 		if (BLACKLISTED_NAMESPACES.contains(entityId.getNamespace())) {
 			return false;
@@ -162,8 +161,13 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag
 			Config.COMMON.attributesBonuses.get().forEach(attributeBonusConfig -> {
 				var attributeId = new ResourceLocation((String) attributeBonusConfig.get(0));
 				var attribute = ForgeRegistries.ATTRIBUTES.getValue(attributeId);
-				var attributeBonus = (float) attributeBonusConfig.get(1);
-				ATTRIBUTE_BONUSES.put(attribute, attributeBonus);
+				var attributeBonus = ((Double) attributeBonusConfig.get(1)).floatValue();
+
+				if (attribute == null) {
+					AutoLevelingMod.LOGGER.error("Attribute '" + attributeId + "' can not be found!");
+				} else {
+					ATTRIBUTE_BONUSES.put(attribute, attributeBonus);
+				}
 			});
 
 			attribute_bonuses_initialized = true;
@@ -175,14 +179,14 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag
 	}
 
 	private static void applyAttributeBonusIfPossible(LivingEntity entity, Attribute attribute, double bonus) {
-		AttributeInstance attributeInstance = entity.getAttribute(attribute);
-		UUID modifierId = UUID.fromString("6a102cb4-d735-4cb7-8ab2-3d383219a44e");
+		var attributeInstance = entity.getAttribute(attribute);
+		var modifierId = UUID.fromString("6a102cb4-d735-4cb7-8ab2-3d383219a44e");
 
 		if (attributeInstance == null) {
 			return;
 		}
 
-		AttributeModifier modifier = attributeInstance.getModifier(modifierId);
+		var modifier = attributeInstance.getModifier(modifierId);
 
 		if (modifier == null || modifier.getAmount() != bonus) {
 			if (modifier != null) {
@@ -198,26 +202,26 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag
 	}
 
 	public static void addEquipment(LivingEntity entity) {
-		MinecraftServer server = entity.getLevel().getServer();
-		LootContext lootContext = createEquipmentLootContext(entity);
+		var server = entity.getLevel().getServer();
+		var lootContext = createEquipmentLootContext(entity);
 
 		Stream.of(EquipmentSlot.values()).forEach(slot -> {
-			LootTable equipmentTable = getEquipmentLootTableForSlot(server, entity, slot);
+			var equipmentTable = getEquipmentLootTableForSlot(server, entity, slot);
 			equipmentTable.getRandomItems(lootContext).forEach(itemStack -> entity.setItemSlot(slot, itemStack));
 		});
 	}
 
 	private static LootTable getEquipmentLootTableForSlot(MinecraftServer server, LivingEntity entity, EquipmentSlot equipmentSlot) {
-		ResourceLocation entityId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType());
+		var entityId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType());
 		return server.getLootTables().get(new ResourceLocation(entityId.getNamespace(), "equipment/" + entityId.getPath() + "_" + equipmentSlot.getName()));
 	}
 
 	private static LootContext createEquipmentLootContext(LivingEntity entity) {
-		ServerLevel serverLevel = (ServerLevel) entity.level;
-		Builder builder = new Builder(serverLevel)
+		var serverLevel = (ServerLevel) entity.level;
+		var lootContextBuilder = new Builder(serverLevel)
 				.withRandom(entity.getRandom())
 				.withParameter(LootContextParams.THIS_ENTITY, entity)
 				.withParameter(LootContextParams.ORIGIN, entity.position());
-		return builder.create(LootContextParamSets.SELECTOR);
+		return lootContextBuilder.create(LootContextParamSets.SELECTOR);
 	}
 }

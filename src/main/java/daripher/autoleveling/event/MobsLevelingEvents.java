@@ -34,7 +34,7 @@ import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 public class MobsLevelingEvents {
 	@SubscribeEvent
 	public static void applyLevelBonuses(EntityJoinLevelEvent event) {
-		if (!shouldApplyLevelBonuses(event.getEntity()) && !event.loadedFromDisk()) {
+		if (!shouldApplyLevelBonuses(event.getEntity()) || event.loadedFromDisk()) {
 			return;
 		}
 
@@ -110,38 +110,35 @@ public class MobsLevelingEvents {
 		var entity = (LivingEntity) event.getEntity();
 
 		if (shouldShowName(entity)) {
-			var distance = minecraft.getEntityRenderDispatcher().distanceToSqr(entity);
+			event.setResult(Event.Result.ALLOW);
+			double distance = minecraft.getEntityRenderDispatcher().distanceToSqr(entity);
 
 			if (ForgeHooksClient.isNameplateInRenderDistance(entity, distance)) {
 				LevelingDataProvider.get(entity).ifPresent(levelingData -> {
-					var entityLevel = levelingData.getLevel() + 1;
+					var level = levelingData.getLevel() + 1;
 					var entityName = event.getContent();
-					var font = minecraft.font;
-					var levelString = Component.literal("" + entityLevel).withStyle(ChatFormatting.GREEN);
-					var textX = -font.width(entityName) / 2 - 5 - font.width(levelString);
-					var textY = entity.getBbHeight() + 0.5F;
-					var textYShift = "deadmau5".equals(entityName.getString()) ? -10 : 0;
-					var matrix4f = event.getPoseStack().last().pose();
-					var backgroundOpacity = minecraft.options.getBackgroundOpacity(0.25F);
-					var textAlpha = (int) (backgroundOpacity * 255.0F) << 24;
-					var textColor = 553648127;
-					var packedLight = event.getPackedLight();
-					var multiBufferSource = event.getMultiBufferSource();
+					var levelString = Component.literal("" + level).withStyle(ChatFormatting.GREEN);
+					var y = entity.getBbHeight() + 0.5F;
+					var yShift = "deadmau5".equals(entityName.getString()) ? -10 : 0;
 					event.getPoseStack().pushPose();
-					event.getPoseStack().translate(0.0D, textY, 0.0D);
+					event.getPoseStack().translate(0.0D, y, 0.0D);
 					event.getPoseStack().mulPose(minecraft.getEntityRenderDispatcher().cameraOrientation());
 					event.getPoseStack().scale(-0.025F, -0.025F, 0.025F);
-					font.drawInBatch(levelString, textX, textYShift, textColor, false, matrix4f, multiBufferSource, !entity.isDiscrete(), textAlpha, packedLight);
+					var matrix4f = event.getPoseStack().last().pose();
+					var backgroundOpacity = minecraft.options.getBackgroundOpacity(0.25F);
+					var alpha = (int) (backgroundOpacity * 255.0F) << 24;
+					var font = minecraft.font;
+					var x = -font.width(entityName) / 2 - 5 - font.width(levelString);
+					font.drawInBatch(levelString, x, yShift, 553648127, false, matrix4f, event.getMultiBufferSource(), !entity.isDiscrete(), alpha,
+							event.getPackedLight());
 
 					if (!entity.isDiscrete()) {
-						font.drawInBatch(levelString, textX, textYShift, -1, false, matrix4f, multiBufferSource, false, 0, packedLight);
+						font.drawInBatch(levelString, x, yShift, -1, false, matrix4f, event.getMultiBufferSource(), false, 0, event.getPackedLight());
 					}
 
 					event.getPoseStack().popPose();
 				});
 			}
-
-			event.setResult(Event.Result.ALLOW);
 		}
 	}
 
