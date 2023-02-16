@@ -11,6 +11,7 @@ import daripher.autoleveling.data.EntitiesLevelingSettingsReloader;
 import daripher.autoleveling.data.LevelingSettings;
 import daripher.autoleveling.saveddata.GlobalLevelingData;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -81,7 +82,7 @@ public class MobsLevelingEvents {
 			LevelingDataProvider.getLevelingData(event.getEntityLiving()).ifPresent(levelingData -> {
 				int monsterLevel = levelingData.getLevel() + 1;
 				int originalExp = event.getOriginalExperience();
-				double expMultiplier = Config.COMMON.expMultiplier.get() * monsterLevel;
+				double expMultiplier = Config.COMMON.expBonus.get() * monsterLevel;
 				event.setDroppedExperience((int) (originalExp + originalExp * expMultiplier));
 			});
 		}
@@ -114,15 +115,7 @@ public class MobsLevelingEvents {
 
 	@OnlyIn(Dist.CLIENT)
 	@SubscribeEvent
-	public static void onRenderNameplate(RenderNameplateEvent event) {
-		if (!Config.COMMON.showLevel.get()) {
-			return;
-		}
-
-		if (!LevelingDataProvider.canHaveLevel(event.getEntity())) {
-			return;
-		}
-
+	public static void renderEntityLevel(RenderNameplateEvent event) {
 		LivingEntity entity = (LivingEntity) event.getEntity();
 
 		if (!shouldShowName(entity)) {
@@ -190,19 +183,30 @@ public class MobsLevelingEvents {
 		MinecraftServer server = entity.getServer();
 		GlobalLevelingData data = GlobalLevelingData.get(server);
 		monsterLevel += data.getLevelBonus();
-		
-		if(entity.getY() < 64) {
+
+		if (entity.getY() < 64) {
 			double deepness = 64 - entity.getY();
 			monsterLevel += levelingSettings.levelsPerDeepness * deepness;
 		}
-		
+
 		return monsterLevel;
 	}
 
 	@OnlyIn(Dist.CLIENT)
-	protected static boolean shouldShowName(LivingEntity entity) {
+	private static boolean shouldShowName(LivingEntity entity) {
+		if (!LevelingDataProvider.canHaveLevel(entity)) {
+			return false;
+		}
+
 		Minecraft minecraft = Minecraft.getInstance();
-		return Minecraft.renderNames() && entity != minecraft.getCameraEntity() && !entity.isInvisibleTo(minecraft.player) && !entity.isVehicle()
-				&& minecraft.player.canSee(entity);
+		boolean alwaysShowLevel = Config.COMMON.alwaysShowLevel.get();
+		boolean showLevelWhenLookingAt = Config.COMMON.showLevelWhenLookingAt.get();
+
+		if (!alwaysShowLevel && !(showLevelWhenLookingAt && minecraft.crosshairPickEntity == entity)) {
+			return false;
+		}
+
+		ClientPlayerEntity player = minecraft.player;
+		return Minecraft.renderNames() && entity != minecraft.getCameraEntity() && !entity.isInvisibleTo(player) && !entity.isVehicle() && player.canSee(entity);
 	}
 }
