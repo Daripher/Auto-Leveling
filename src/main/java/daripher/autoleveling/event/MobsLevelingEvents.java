@@ -102,14 +102,10 @@ public class MobsLevelingEvents {
 	@OnlyIn(Dist.CLIENT)
 	@SubscribeEvent
 	public static void renderEntityLevel(RenderNameplateEvent event) {
-		if (!Config.COMMON.showLevel.get() || !LevelingDataProvider.canHaveLevel(event.getEntity())) {
-			return;
-		}
-
-		var minecraft = Minecraft.getInstance();
 		var entity = (LivingEntity) event.getEntity();
 
 		if (shouldShowName(entity)) {
+			var minecraft = Minecraft.getInstance();
 			event.setResult(Event.Result.ALLOW);
 			double distance = minecraft.getEntityRenderDispatcher().distanceToSqr(entity);
 
@@ -169,19 +165,30 @@ public class MobsLevelingEvents {
 		var server = entity.getServer();
 		var globalLevelingData = GlobalLevelingData.get(server);
 		monsterLevel += globalLevelingData.getLevelBonus();
-		
-		if(entity.getY() < 64) {
+
+		if (entity.getY() < 64) {
 			var deepness = 64 - entity.getY();
 			monsterLevel += levelingSettings.levelsPerDeepness() * deepness;
 		}
-		
+
 		return monsterLevel;
 	}
 
 	@OnlyIn(Dist.CLIENT)
-	protected static boolean shouldShowName(LivingEntity entity) {
+	private static boolean shouldShowName(LivingEntity entity) {
+		if (!LevelingDataProvider.canHaveLevel(entity)) {
+			return false;
+		}
+
 		var minecraft = Minecraft.getInstance();
-		var clientPlayer = minecraft.player;
-		return Minecraft.renderNames() && entity != minecraft.getCameraEntity() && !entity.isInvisibleTo(clientPlayer) && !entity.isVehicle() && clientPlayer.hasLineOfSight(entity);
+		var alwaysShowLevel = Config.COMMON.alwaysShowLevel.get();
+		var showLevelWhenLookingAt = Config.COMMON.showLevelWhenLookingAt.get();
+
+		if (!alwaysShowLevel && !(showLevelWhenLookingAt && minecraft.crosshairPickEntity == entity)) {
+			return false;
+		}
+
+		var player = minecraft.player;
+		return Minecraft.renderNames() && entity != minecraft.getCameraEntity() && !entity.isInvisibleTo(player) && !entity.isVehicle() && player.hasLineOfSight(entity);
 	}
 }
