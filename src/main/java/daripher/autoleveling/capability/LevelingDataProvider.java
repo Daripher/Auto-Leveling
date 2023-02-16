@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
@@ -98,7 +97,9 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundNBT
 
 	public static boolean canHaveLevel(Entity entity) {
 		if (!whitelist_and_blacklist_initialized) {
-			initializeBlacklistAndWhitelist();
+			Predicate<String> namespacePredicate = s -> s.split(":").length == 2 && s.split(":")[1].equals("*");
+			Config.COMMON.whitelistedMobs.get().stream().filter(namespacePredicate).map(s -> s.split(":")[0]).forEach(WHITELISTED_NAMESPACES::add);
+			Config.COMMON.blacklistedMobs.get().stream().filter(namespacePredicate).map(s -> s.split(":")[0]).forEach(BLACKLISTED_NAMESPACES::add);
 			whitelist_and_blacklist_initialized = true;
 		}
 
@@ -135,21 +136,6 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundNBT
 		}
 
 		return true;
-	}
-
-	private static void initializeBlacklistAndWhitelist() {
-		initializeList(Config.COMMON.whitelistedMobs.get(), WHITELISTED_NAMESPACES);
-		initializeList(Config.COMMON.blacklistedMobs.get(), BLACKLISTED_NAMESPACES);
-	}
-
-	private static void initializeList(List<String> configList, List<String> namespacesList) {
-		if (configList.isEmpty()) {
-			return;
-		}
-
-		Predicate<? super String> namespaceFilter = s -> s.split(":").length == 2 && s.split(":")[1].equals("*");
-		List<String> foundNamespaces = configList.stream().filter(namespaceFilter).collect(Collectors.toList());
-		namespacesList.addAll(foundNamespaces);
 	}
 
 	public static LazyOptional<ILevelingData> getLevelingData(LivingEntity entity) {
