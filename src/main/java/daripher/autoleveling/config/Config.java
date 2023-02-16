@@ -1,12 +1,11 @@
 package daripher.autoleveling.config;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
 
 import org.apache.commons.lang3.tuple.Pair;
-
-import com.google.common.collect.ImmutableList;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
@@ -16,9 +15,10 @@ public class Config {
 	public static final ForgeConfigSpec COMMON_SPEC;
 
 	public static class Common {
-		public final ConfigValue<List<List<Object>>> attributesBonuses;
+		public final ConfigValue<List<? extends List<Object>>> attributesBonuses;
 		public final ConfigValue<Double> expBonus;
-		public final ConfigValue<Boolean> showLevel;
+		public final ConfigValue<Boolean> alwaysShowLevel;
+		public final ConfigValue<Boolean> showLevelWhenLookingAt;
 		public final ConfigValue<List<String>> blacklistedMobs;
 		public final ConfigValue<List<String>> whitelistedMobs;
 		public final ConfigValue<Integer> defaultStartingLevel;
@@ -35,20 +35,12 @@ public class Config {
 			builder.push("mobs");
 			blacklistedMobs = builder.define("blacklist", new ArrayList<String>());
 			whitelistedMobs = builder.define("whitelist", new ArrayList<String>());
-			showLevel = builder.define("show_level", true);
+			alwaysShowLevel = builder.define("always_show_level", false);
+			showLevelWhenLookingAt = builder.define("show_level_when_looking_at", true);
 			expBonus = builder.define("exp_bonus_per_level", 0.1D);
 			builder.pop();
 			builder.push("attributes");
-			attributesBonuses = builder.define("attribute_bonuses",
-					ImmutableList.of(
-							ImmutableList.of("minecraft:generic.movement_speed", 0.001),
-							ImmutableList.of("minecraft:generic.flying_speed", 0.001),
-							ImmutableList.of("minecraft:generic.attack_damage", 0.1),
-							ImmutableList.of("minecraft:generic.armor", 0.1),
-							ImmutableList.of("minecraft:generic.max_health", 0.1),
-							ImmutableList.of("autoleveling:monster.projectile_damage_bonus", 0.1),
-							ImmutableList.of("autoleveling:monster.explosion_damage_bonus", 0.1)),
-					Config::isValidAttributeBonusConfig);
+			attributesBonuses = builder.defineList("attribute_bonuses", Config::getDefaultAttributeBonuses, Config::isValidAttributeBonus);
 			builder.pop();
 			builder.push("default_leveling_settings");
 			defaultStartingLevel = builder.define("starting_level", 1, positiveInteger);
@@ -60,38 +52,24 @@ public class Config {
 		}
 	}
 
-	private static boolean isValidAttributeBonusConfig(Object object) {
-		if (object == null) {
-			return false;
+	private static List<List<Object>> getDefaultAttributeBonuses() {
+		List<List<Object>> attributeBonusesList = new ArrayList<>();
+		attributeBonusesList.add(Arrays.asList("minecraft:generic.movement_speed", 0.001));
+		attributeBonusesList.add(Arrays.asList("minecraft:generic.flying_speed", 0.001));
+		attributeBonusesList.add(Arrays.asList("minecraft:generic.attack_damage", 0.1));
+		attributeBonusesList.add(Arrays.asList("minecraft:generic.armor", 0.1));
+		attributeBonusesList.add(Arrays.asList("minecraft:generic.max_health", 0.1));
+		attributeBonusesList.add(Arrays.asList("autoleveling:monster.projectile_damage_bonus", 0.1));
+		attributeBonusesList.add(Arrays.asList("autoleveling:monster.explosion_damage_bonus", 0.1));
+		return attributeBonusesList;
+	}
+
+	private static <T> boolean isValidAttributeBonus(T object) {
+		if (object instanceof List<?> list) {
+			return list.size() == 2 && list.get(0) instanceof String && list.get(1) instanceof Double;
 		}
 
-		if (!(object instanceof List)) {
-			return false;
-		}
-		
-		var list = (List<?>) object;
-
-		for (var listObject : list) {
-			if (!(listObject instanceof List)) {
-				return false;
-			}
-			
-			var innerList = (List<?>) listObject;
-
-			if (innerList.size() != 2) {
-				return false;
-			}
-
-			if (!(innerList.get(0) instanceof String)) {
-				return false;
-			}
-
-			if (innerList.get(1) instanceof Double) {
-				return false;
-			}
-		}
-
-		return true;
+		return false;
 	}
 
 	static {
