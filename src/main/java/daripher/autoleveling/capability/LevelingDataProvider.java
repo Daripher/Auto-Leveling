@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
@@ -96,18 +95,9 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag
 
 	public static boolean canHaveLevel(Entity entity) {
 		if (!whitelist_and_blacklist_initialized) {
-			Predicate<String> namespaceStringPredicate = s -> s.split(":").length == 2 && s.split(":")[1].equals("*");
-
-			if (!Config.COMMON.whitelistedMobs.get().isEmpty()) {
-				var whitelistedNamespaces = Config.COMMON.whitelistedMobs.get().stream().filter(namespaceStringPredicate).collect(Collectors.toList());
-				WHITELISTED_NAMESPACES.addAll(whitelistedNamespaces);
-			}
-
-			if (!Config.COMMON.blacklistedMobs.get().isEmpty()) {
-				var blacklistedNamespaces = Config.COMMON.blacklistedMobs.get().stream().filter(namespaceStringPredicate).collect(Collectors.toList());
-				BLACKLISTED_NAMESPACES.addAll(blacklistedNamespaces);
-			}
-
+			Predicate<String> namespacePredicate = s -> s.split(":").length == 2 && s.split(":")[1].equals("*");
+			Config.COMMON.whitelistedMobs.get().stream().filter(namespacePredicate).map(s -> s.split(":")[0]).forEach(WHITELISTED_NAMESPACES::add);
+			Config.COMMON.blacklistedMobs.get().stream().filter(namespacePredicate).map(s -> s.split(":")[0]).forEach(BLACKLISTED_NAMESPACES::add);
 			whitelist_and_blacklist_initialized = true;
 		}
 
