@@ -116,6 +116,10 @@ public class MobsLevelingEvents {
 	@OnlyIn(Dist.CLIENT)
 	@SubscribeEvent
 	public static void renderEntityLevel(RenderNameplateEvent event) {
+		if (!(event.getEntity() instanceof LivingEntity)) {
+			return;
+		}
+
 		LivingEntity entity = (LivingEntity) event.getEntity();
 
 		if (!shouldShowName(entity)) {
