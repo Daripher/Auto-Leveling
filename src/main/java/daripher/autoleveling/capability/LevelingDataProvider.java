@@ -51,6 +51,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 @EventBusSubscriber(bus = Bus.FORGE, modid = AutoLevelingMod.MOD_ID)
 public class LevelingDataProvider implements ICapabilitySerializable<CompoundNBT> {
 	private static final List<String> BLACKLISTED_NAMESPACES = new ArrayList<>();
+	private static final List<String> BLACKLISTED_SHOWN_LEVELS_NAMESPACES = new ArrayList<>();
 	private static final List<String> WHITELISTED_NAMESPACES = new ArrayList<>();
 	private static final Map<Attribute, Float> ATTRIBUTE_BONUSES = new HashMap<>();
 	private static boolean whitelist_and_blacklist_initialized;
@@ -100,6 +101,7 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundNBT
 			Predicate<String> namespacePredicate = s -> s.split(":").length == 2 && s.split(":")[1].equals("*");
 			Config.COMMON.whitelistedMobs.get().stream().filter(namespacePredicate).map(s -> s.split(":")[0]).forEach(WHITELISTED_NAMESPACES::add);
 			Config.COMMON.blacklistedMobs.get().stream().filter(namespacePredicate).map(s -> s.split(":")[0]).forEach(BLACKLISTED_NAMESPACES::add);
+			Config.COMMON.blacklistedShownLevels.get().stream().filter(namespacePredicate).map(s -> s.split(":")[0]).forEach(BLACKLISTED_SHOWN_LEVELS_NAMESPACES::add);
 			whitelist_and_blacklist_initialized = true;
 		}
 
@@ -136,6 +138,16 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundNBT
 		}
 
 		return true;
+	}
+
+	public static boolean shouldShowLevel(Entity entity) {
+		ResourceLocation entityId = ForgeRegistries.ENTITIES.getKey(entity.getType());
+
+		if (Config.COMMON.blacklistedShownLevels.get().contains(entityId.toString())) {
+			return false;
+		}
+
+		return !BLACKLISTED_SHOWN_LEVELS_NAMESPACES.contains(entityId.getNamespace());
 	}
 
 	public static LazyOptional<ILevelingData> getLevelingData(LivingEntity entity) {

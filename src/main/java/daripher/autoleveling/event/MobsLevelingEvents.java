@@ -201,6 +201,10 @@ public class MobsLevelingEvents {
 		if (!LevelingDataProvider.canHaveLevel(entity)) {
 			return false;
 		}
+		
+		if (!LevelingDataProvider.shouldShowLevel(entity)) {
+			return false;
+		}
 
 		Minecraft minecraft = Minecraft.getInstance();
 		boolean alwaysShowLevel = Config.COMMON.alwaysShowLevel.get();

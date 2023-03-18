@@ -22,6 +22,10 @@ public enum LevelComponentProvider implements IEntityComponentProvider {
 			return;
 		}
 
+		if (!LevelingDataProvider.shouldShowLevel(entity)) {
+			return;
+		}
+
 		LevelingDataProvider.getLevelingData((LivingEntity) entity).ifPresent(levelingData -> {
 			int level = levelingData.getLevel() + 1;
 			tooltip.add(new TranslationTextComponent("jade.autoleveling.tooltip", level));
