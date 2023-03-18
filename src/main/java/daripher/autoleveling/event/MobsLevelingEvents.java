@@ -129,8 +129,7 @@ public class MobsLevelingEvents {
 					var alpha = (int) (backgroundOpacity * 255.0F) << 24;
 					var font = minecraft.font;
 					var x = -font.width(entityName) / 2 - 5 - font.width(levelString);
-					font.drawInBatch(levelString, x, yShift, 553648127, false, matrix4f, event.getMultiBufferSource(), !entity.isDiscrete(), alpha,
-							event.getPackedLight());
+					font.drawInBatch(levelString, x, yShift, 553648127, false, matrix4f, event.getMultiBufferSource(), !entity.isDiscrete(), alpha, event.getPackedLight());
 
 					if (!entity.isDiscrete()) {
 						font.drawInBatch(levelString, x, yShift, -1, false, matrix4f, event.getMultiBufferSource(), false, 0, event.getPackedLight());
@@ -193,7 +192,6 @@ public class MobsLevelingEvents {
 
 		var clientPlayer = minecraft.player;
 
-		return Minecraft.renderNames() && entity != minecraft.getCameraEntity() && !entity.isInvisibleTo(clientPlayer) && !entity.isVehicle()
-				&& clientPlayer.hasLineOfSight(entity);
+		return Minecraft.renderNames() && entity != minecraft.getCameraEntity() && !entity.isInvisibleTo(clientPlayer) && !entity.isVehicle() && clientPlayer.hasLineOfSight(entity);
 	}
 }

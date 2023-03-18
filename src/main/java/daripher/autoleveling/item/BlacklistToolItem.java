@@ -15,41 +15,33 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.registries.ForgeRegistries;
 
-public class BlacklistToolItem extends Item
-{
-	public BlacklistToolItem()
-	{
+public class BlacklistToolItem extends Item {
+	public BlacklistToolItem() {
 		super(new Properties().tab(AutoLevelingCreativeTabs.AUTO_LEVELING).stacksTo(1));
 	}
-	
+
 	@Override
-	public InteractionResult interactLivingEntity(ItemStack itemStack, Player player, LivingEntity entity, InteractionHand hand)
-	{
-		if (!player.level.isClientSide)
-		{
+	public InteractionResult interactLivingEntity(ItemStack itemStack, Player player, LivingEntity entity, InteractionHand hand) {
+		if (!player.level.isClientSide) {
 			var entityId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType()).toString();
 			var blacklistedEntities = Config.COMMON.blacklistedMobs.get();
-			
-			if (blacklistedEntities.contains(entityId))
-			{
+
+			if (blacklistedEntities.contains(entityId)) {
 				blacklistedEntities.remove(entityId);
 				player.sendSystemMessage(Component.translatable(getDescriptionId() + ".removed", entityId));
-			}
-			else
-			{
+			} else {
 				blacklistedEntities.add(entityId);
 				player.sendSystemMessage(Component.translatable(getDescriptionId() + ".added", entityId));
 			}
-			
+
 			Config.COMMON.blacklistedMobs.set(blacklistedEntities);
 		}
-		
+
 		return InteractionResult.SUCCESS;
 	}
-	
+
 	@Override
-	public void appendHoverText(ItemStack itemStack, Level level, List<Component> components, TooltipFlag tooltipFlag)
-	{
+	public void appendHoverText(ItemStack itemStack, Level level, List<Component> components, TooltipFlag tooltipFlag) {
 		components.add(Component.translatable(getDescriptionId() + ".tooltip"));
 	}
 }

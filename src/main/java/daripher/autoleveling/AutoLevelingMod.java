@@ -22,7 +22,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 public class AutoLevelingMod {
 	public static final String MOD_ID = "autoleveling";
 	public static final Logger LOGGER = LogManager.getLogger(AutoLevelingMod.MOD_ID);
-	
+
 	public AutoLevelingMod() {
 		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.COMMON_SPEC);
 		var modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
