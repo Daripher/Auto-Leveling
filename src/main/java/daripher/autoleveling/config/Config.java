@@ -21,6 +21,7 @@ public class Config {
 		public final ConfigValue<Boolean> showLevelWhenLookingAt;
 		public final ConfigValue<List<String>> blacklistedMobs;
 		public final ConfigValue<List<String>> whitelistedMobs;
+		public final ConfigValue<List<String>> blacklistedShownLevels;
 		public final ConfigValue<Integer> defaultStartingLevel;
 		public final ConfigValue<Integer> defaultMaxLevel;
 		public final ConfigValue<Double> defaultLevelsPerDistance;
@@ -38,6 +39,7 @@ public class Config {
 			alwaysShowLevel = builder.define("always_show_level", false);
 			showLevelWhenLookingAt = builder.define("show_level_when_looking_at", true);
 			expBonus = builder.define("exp_bonus_per_level", 0.1D);
+			blacklistedShownLevels = builder.define("hidden_levels", new ArrayList<String>());
 			builder.pop();
 			builder.push("attributes");
 			attributesBonuses = builder.defineList("attribute_bonuses", Config::getDefaultAttributeBonuses, Config::isValidAttributeBonus);
