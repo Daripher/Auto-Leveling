@@ -1,4 +1,4 @@
-package daripher.autoleveling.data;
+package daripher.autoleveling.settings;
 
 import java.util.Map;
 
@@ -22,31 +22,30 @@ import net.minecraftforge.registries.ForgeRegistries;
 public class EntitiesLevelingSettingsReloader extends SimpleJsonResourceReloadListener {
 	private static final Logger LOGGER = LogUtils.getLogger();
 	private static final Gson GSON = Deserializers.createLootTableSerializer().create();
-	private static Map<ResourceLocation, LevelingSettings> settings = ImmutableMap.of();
+	private static final Map<ResourceLocation, LevelingSettings> SETTINGS = ImmutableMap.of();
 
 	public EntitiesLevelingSettingsReloader() {
 		super(GSON, "leveling_settings/entities");
 	}
 
 	@Override
-	protected void apply(Map<ResourceLocation, JsonElement> map, ResourceManager resourceManager, ProfilerFiller profilerFiller) {
-		ImmutableMap.Builder<ResourceLocation, LevelingSettings> builder = ImmutableMap.builder();
+	protected void apply(Map<ResourceLocation, JsonElement> jsonElements, ResourceManager resourceManager, ProfilerFiller profilerFiller) {
+		SETTINGS.clear();
+		jsonElements.forEach(this::loadSettings);
+	}
 
-		map.forEach((id, json) -> {
-			try {
-				var levelingSettings = LevelingSettings.load(json.getAsJsonObject());
-				builder.put(id, levelingSettings);
-				LOGGER.info("Loading leveling settings {}", id);
-			} catch (Exception exception) {
-				LOGGER.error("Couldn't parse leveling settings {}", id, exception);
-			}
-		});
-
-		settings = builder.build();
+	private void loadSettings(ResourceLocation fileId, JsonElement jsonElement) {
+		try {
+			LOGGER.info("Loading leveling settings {}", fileId);
+			var settings = LevelingSettings.load(jsonElement.getAsJsonObject());
+			SETTINGS.put(fileId, settings);
+		} catch (Exception exception) {
+			LOGGER.error("Couldn't parse leveling settings {}", fileId, exception);
+		}
 	}
 
 	@Nullable
 	public static LevelingSettings getSettingsForEntity(EntityType<?> entityType) {
-		return settings.get(ForgeRegistries.ENTITY_TYPES.getKey(entityType));
+		return SETTINGS.get(ForgeRegistries.ENTITY_TYPES.getKey(entityType));
 	}
 }

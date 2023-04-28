@@ -21,21 +21,19 @@ public class WhitelistToolItem extends Item {
 
 	@Override
 	public InteractionResult interactLivingEntity(ItemStack itemStack, Player player, LivingEntity entity, InteractionHand hand) {
-		if (!player.level.isClientSide) {
-			var entityId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType()).toString();
-			var whitelistedEntities = Config.COMMON.whitelistedMobs.get();
-
-			if (whitelistedEntities.contains(entityId)) {
-				whitelistedEntities.remove(entityId);
-				player.sendSystemMessage(Component.translatable(getDescriptionId() + ".removed", entityId));
-			} else {
-				whitelistedEntities.add(entityId);
-				player.sendSystemMessage(Component.translatable(getDescriptionId() + ".added", entityId));
-			}
-
-			Config.COMMON.whitelistedMobs.set(whitelistedEntities);
+		if (player.level.isClientSide) {
+			return InteractionResult.SUCCESS;
 		}
-
+		var entityId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType()).toString();
+		var whitelistedEntities = Config.COMMON.whitelistedMobs.get();
+		if (whitelistedEntities.contains(entityId)) {
+			whitelistedEntities.remove(entityId);
+			player.sendSystemMessage(Component.translatable(getDescriptionId() + ".removed", entityId));
+		} else {
+			whitelistedEntities.add(entityId);
+			player.sendSystemMessage(Component.translatable(getDescriptionId() + ".added", entityId));
+		}
+		Config.COMMON.whitelistedMobs.set(whitelistedEntities);
 		return InteractionResult.SUCCESS;
 	}
 

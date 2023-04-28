@@ -21,21 +21,19 @@ public class BlacklistToolItem extends Item {
 
 	@Override
 	public InteractionResult interactLivingEntity(ItemStack itemStack, Player player, LivingEntity entity, InteractionHand hand) {
-		if (!player.level.isClientSide) {
-			var entityId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType()).toString();
-			var blacklistedEntities = Config.COMMON.blacklistedMobs.get();
-
-			if (blacklistedEntities.contains(entityId)) {
-				blacklistedEntities.remove(entityId);
-				player.sendSystemMessage(Component.translatable(getDescriptionId() + ".removed", entityId));
-			} else {
-				blacklistedEntities.add(entityId);
-				player.sendSystemMessage(Component.translatable(getDescriptionId() + ".added", entityId));
-			}
-
-			Config.COMMON.blacklistedMobs.set(blacklistedEntities);
+		if (player.level.isClientSide) {
+			return InteractionResult.SUCCESS;
 		}
-
+		var entityId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType()).toString();
+		var blacklistedEntities = Config.COMMON.blacklistedMobs.get();
+		if (blacklistedEntities.contains(entityId)) {
+			blacklistedEntities.remove(entityId);
+			player.sendSystemMessage(Component.translatable(getDescriptionId() + ".removed", entityId));
+		} else {
+			blacklistedEntities.add(entityId);
+			player.sendSystemMessage(Component.translatable(getDescriptionId() + ".added", entityId));
+		}
+		Config.COMMON.blacklistedMobs.set(blacklistedEntities);
 		return InteractionResult.SUCCESS;
 	}
 

@@ -1,4 +1,4 @@
-package daripher.autoleveling.data;
+package daripher.autoleveling.settings;
 
 import java.util.Map;
 
@@ -23,35 +23,34 @@ import net.minecraft.world.level.storage.loot.Deserializers;
 public class DimensionsLevelingSettingsReloader extends SimpleJsonResourceReloadListener {
 	private static final Logger LOGGER = LogUtils.getLogger();
 	private static final Gson GSON = Deserializers.createLootTableSerializer().create();
-	private static Map<ResourceLocation, LevelingSettings> settings = ImmutableMap.of();
+	private static final Map<ResourceLocation, LevelingSettings> SETTINGS = ImmutableMap.of();
 
 	public DimensionsLevelingSettingsReloader() {
 		super(GSON, "leveling_settings/dimensions");
 	}
 
 	@Override
-	protected void apply(Map<ResourceLocation, JsonElement> map, ResourceManager resourceManager, ProfilerFiller profilerFiller) {
-		ImmutableMap.Builder<ResourceLocation, LevelingSettings> mapBuilder = ImmutableMap.builder();
+	protected void apply(Map<ResourceLocation, JsonElement> jsonElements, ResourceManager resourceManager, ProfilerFiller profilerFiller) {
+		SETTINGS.clear();
+		jsonElements.forEach(this::loadSettings);
+	}
 
-		map.forEach((id, json) -> {
-			try {
-				var levelingSettings = LevelingSettings.load(json.getAsJsonObject());
-				mapBuilder.put(id, levelingSettings);
-				LOGGER.info("Loading leveling settings {}", id);
-			} catch (Exception exception) {
-				LOGGER.error("Couldn't parse leveling settings {}", id, exception);
-			}
-		});
-
-		settings = mapBuilder.build();
+	private void loadSettings(ResourceLocation fileId, JsonElement jsonElement) {
+		try {
+			LOGGER.info("Loading leveling settings {}", fileId);
+			var settings = LevelingSettings.load(jsonElement.getAsJsonObject());
+			SETTINGS.put(fileId, settings);
+		} catch (Exception exception) {
+			LOGGER.error("Couldn't parse leveling settings {}", fileId, exception);
+		}
 	}
 
 	@Nonnull
 	public static LevelingSettings getSettingsForDimension(ResourceKey<Level> dimension) {
-		return settings.getOrDefault(dimension.location(), defaultSettings());
+		return SETTINGS.getOrDefault(dimension.location(), createDefaultSettings());
 	}
 
-	private static LevelingSettings defaultSettings() {
+	private static LevelingSettings createDefaultSettings() {
 		var startingLevel = Config.COMMON.defaultStartingLevel.get();
 		var maxLevel = Config.COMMON.defaultMaxLevel.get();
 		var levelPerDistance = Config.COMMON.defaultLevelsPerDistance.get().floatValue();

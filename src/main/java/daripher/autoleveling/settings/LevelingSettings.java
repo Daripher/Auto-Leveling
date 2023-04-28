@@ -1,4 +1,4 @@
-package daripher.autoleveling.data;
+package daripher.autoleveling.settings;
 
 import com.google.gson.JsonObject;
 

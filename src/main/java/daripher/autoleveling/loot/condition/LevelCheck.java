@@ -30,23 +30,17 @@ public record LevelCheck(int min, int max) implements LootItemCondition {
 		if (!context.hasParam(LootContextParams.THIS_ENTITY)) {
 			return false;
 		}
-
 		var entity = context.getParam(LootContextParams.THIS_ENTITY);
-
 		if (!LevelingDataProvider.canHaveLevel(entity)) {
 			return false;
 		}
-
 		if (!(entity instanceof LivingEntity)) {
 			return false;
 		}
-
 		var levelingData = LevelingDataProvider.get((LivingEntity) entity).orElse(null);
-
 		if (levelingData == null) {
 			return false;
 		}
-
 		var level = levelingData.getLevel() + 1;
 		return level >= min && level <= max;
 	}
@@ -55,6 +49,10 @@ public record LevelCheck(int min, int max) implements LootItemCondition {
 		return () -> {
 			return new LevelCheck(min, max);
 		};
+	}
+
+	public static LootItemConditionType createType() {
+		return new LootItemConditionType(new LevelCheck.Serializer());
 	}
 
 	public static class Serializer implements net.minecraft.world.level.storage.loot.Serializer<LevelCheck> {

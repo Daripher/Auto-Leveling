@@ -47,11 +47,11 @@ public class SyncLevelingData {
 	private static void handlePacket(SyncLevelingData message, NetworkEvent.Context ctx) {
 		var client = Minecraft.getInstance();
 		var entity = client.level.getEntity(message.entityId);
-
-		if (entity instanceof LivingEntity) {
-			LevelingDataProvider.get((LivingEntity) entity).ifPresent(levelingData -> {
-				levelingData.deserializeNBT(message.compoundTag);
-			});
+		if (!(entity instanceof LivingEntity)) {
+			return;
 		}
+		LevelingDataProvider.get((LivingEntity) entity).ifPresent(levelingData -> {
+			levelingData.deserializeNBT(message.compoundTag);
+		});
 	}
 }

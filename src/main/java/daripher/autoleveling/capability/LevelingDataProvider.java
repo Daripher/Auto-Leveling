@@ -11,6 +11,10 @@ import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.slf4j.Logger;
+
+import com.mojang.logging.LogUtils;
+
 import daripher.autoleveling.AutoLevelingMod;
 import daripher.autoleveling.api.ILevelingData;
 import daripher.autoleveling.api.LevelingApi;
@@ -56,6 +60,7 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag
 	private static boolean whitelist_and_blacklist_initialized;
 	private static boolean attribute_bonuses_initialized;
 	private LazyOptional<ILevelingData> lazyOptional = LazyOptional.of(LevelingData::new);
+	private static final Logger LOGGER = LogUtils.getLogger();
 
 	@SubscribeEvent
 	public static void attachCapability(AttachCapabilitiesEvent<Entity> event) {
@@ -155,7 +160,7 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag
 	}
 
 	public static void syncWith(ServerPlayer player, LivingEntity entity, ILevelingData levelingData) {
-		NetworkDispatcher.networkChannel.send(PacketDistributor.PLAYER.with(() -> player), new SyncLevelingData(entity, levelingData));
+		NetworkDispatcher.network_channel.send(PacketDistributor.PLAYER.with(() -> player), new SyncLevelingData(entity, levelingData));
 	}
 
 	public static void applyAttributeBonuses(LivingEntity entity, int level) {
@@ -166,7 +171,7 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag
 				var attributeBonus = ((Double) attributeBonusConfig.get(1)).floatValue();
 
 				if (attribute == null) {
-					AutoLevelingMod.LOGGER.error("Attribute '" + attributeId + "' can not be found!");
+					LOGGER.error("Attribute '" + attributeId + "' can not be found!");
 				} else {
 					ATTRIBUTE_BONUSES.put(attribute, attributeBonus);
 				}

@@ -19,19 +19,21 @@ public class MixinLivingEntityRenderer<T extends LivingEntity, M extends EntityM
 	protected M model;
 
 	@Inject(method = "getRenderType", at = @At("HEAD"), cancellable = true)
-	protected void injectGetRenderType(T entity, boolean visible, boolean invisibleToPlayer, boolean glowing, CallbackInfoReturnable<RenderType> callbackInfo) {
-		LevelingDataProvider.get(entity).ifPresent(levelingData -> {
-			var leveledEntityTextureLocation = LeveledMobsTextures.get(entity.getType(), levelingData.getLevel() + 1);
-
-			if (leveledEntityTextureLocation != null) {
-				if (invisibleToPlayer) {
-					callbackInfo.setReturnValue(RenderType.itemEntityTranslucentCull(leveledEntityTextureLocation));
-				} else if (visible) {
-					callbackInfo.setReturnValue(model.renderType(leveledEntityTextureLocation));
-				} else {
-					callbackInfo.setReturnValue(glowing ? RenderType.outline(leveledEntityTextureLocation) : null);
-				}
-			}
-		});
+	protected void setLevelledEntityTexture(T entity, boolean visible, boolean invisibleToPlayer, boolean glowing, CallbackInfoReturnable<RenderType> callbackInfo) {
+		var levelingData = LevelingDataProvider.get(entity).orElse(null);
+		if (levelingData == null) {
+			return;
+		}
+		var textureLocation = LeveledMobsTextures.get(entity.getType(), levelingData.getLevel() + 1);
+		if (textureLocation == null) {
+			return;
+		}
+		if (invisibleToPlayer) {
+			callbackInfo.setReturnValue(RenderType.itemEntityTranslucentCull(textureLocation));
+		} else if (visible) {
+			callbackInfo.setReturnValue(model.renderType(textureLocation));
+		} else {
+			callbackInfo.setReturnValue(glowing ? RenderType.outline(textureLocation) : null);
+		}
 	}
 }
