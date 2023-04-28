@@ -4,7 +4,6 @@ import daripher.autoleveling.AutoLevelingMod;
 import daripher.autoleveling.init.AutoLevelingItems;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.CreativeModeTabEvent;
@@ -26,7 +25,7 @@ public class CreativeTabEvents {
 		builder.displayItems(CreativeTabEvents::addToolsCreativeTabItems);
 	}
 
-	private static void addToolsCreativeTabItems(FeatureFlagSet featureFlagSet, CreativeModeTab.Output output, boolean hasPermission) {
+	private static void addToolsCreativeTabItems(CreativeModeTab.ItemDisplayParameters itemDisplayParameters, CreativeModeTab.Output output) {
 		output.accept(AutoLevelingItems.BLACKLIST_TOOL.get());
 		output.accept(AutoLevelingItems.WHITELIST_TOOL.get());
 	}

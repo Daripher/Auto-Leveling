@@ -2,6 +2,7 @@ package daripher.autoleveling.event;
 
 import daripher.autoleveling.AutoLevelingMod;
 import daripher.autoleveling.init.AutoLevelingAttributes;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
@@ -18,7 +19,7 @@ public class MobsAttributesEvents {
 
 		if (attackingEntity instanceof LivingEntity) {
 			var attackingLivingEntity = (LivingEntity) attackingEntity;
-			var isProjectileDamage = damageSource.isProjectile();
+			var isProjectileDamage = damageSource.is(DamageTypeTags.IS_PROJECTILE);
 			var canApplyProjectileDamageBonus = attackingLivingEntity.getAttribute(AutoLevelingAttributes.PROJECTILE_DAMAGE_BONUS.get()) != null;
 
 			if (isProjectileDamage && canApplyProjectileDamageBonus) {
@@ -26,7 +27,7 @@ public class MobsAttributesEvents {
 				event.setAmount(event.getAmount() * damageBonus);
 			}
 
-			var isExplosionDamage = damageSource.isExplosion();
+			var isExplosionDamage = damageSource.is(DamageTypeTags.IS_EXPLOSION);
 			var canApplyExplosionDamageBonus = attackingLivingEntity.getAttribute(AutoLevelingAttributes.EXPLOSION_DAMAGE_BONUS.get()) != null;
 
 			if (isExplosionDamage && canApplyExplosionDamageBonus) {

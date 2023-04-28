@@ -10,6 +10,7 @@ import daripher.autoleveling.data.EntitiesLevelingSettingsReloader;
 import daripher.autoleveling.saveddata.GlobalLevelingData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -111,7 +112,7 @@ public class MobsLevelingEvents {
 		if (shouldShowName(entity)) {
 			var minecraft = Minecraft.getInstance();
 			event.setResult(Event.Result.ALLOW);
-			double distance = minecraft.getEntityRenderDispatcher().distanceToSqr(entity);
+			var distance = minecraft.getEntityRenderDispatcher().distanceToSqr(entity);
 
 			if (ForgeHooksClient.isNameplateInRenderDistance(entity, distance)) {
 				LevelingDataProvider.get(entity).ifPresent(levelingData -> {
@@ -129,10 +130,11 @@ public class MobsLevelingEvents {
 					var alpha = (int) (backgroundOpacity * 255.0F) << 24;
 					var font = minecraft.font;
 					var x = -font.width(entityName) / 2 - 5 - font.width(levelString);
-					font.drawInBatch(levelString, x, yShift, 553648127, false, matrix4f, event.getMultiBufferSource(), !entity.isDiscrete(), alpha, event.getPackedLight());
+					var displayMode = !entity.isDiscrete() ? Font.DisplayMode.SEE_THROUGH : Font.DisplayMode.NORMAL;
+					font.drawInBatch(levelString, x, yShift, 553648127, false, matrix4f, event.getMultiBufferSource(), displayMode, alpha, event.getPackedLight());
 
 					if (!entity.isDiscrete()) {
-						font.drawInBatch(levelString, x, yShift, -1, false, matrix4f, event.getMultiBufferSource(), false, 0, event.getPackedLight());
+						font.drawInBatch(levelString, x, yShift, -1, false, matrix4f, event.getMultiBufferSource(), displayMode, 0, event.getPackedLight());
 					}
 
 					event.getPoseStack().popPose();
