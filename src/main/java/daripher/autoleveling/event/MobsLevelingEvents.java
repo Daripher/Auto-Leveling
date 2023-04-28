@@ -25,8 +25,8 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.api.distmarker.Dist;
@@ -139,7 +139,7 @@ public class MobsLevelingEvents {
 		LevelingDataProvider.getLevelingData(entity).ifPresent(levelingData -> {
 			int level = levelingData.getLevel() + 1;
 			ITextComponent entityName = event.getContent();
-			ITextComponent levelString = new StringTextComponent("" + level).withStyle(TextFormatting.GREEN);
+			ITextComponent levelString = new TranslationTextComponent("autoleveling.level", level).withStyle(TextFormatting.GREEN);
 			float y = entity.getBbHeight() + 0.5F;
 			int yShift = "deadmau5".equals(entityName.getString()) ? -10 : 0;
 			event.getMatrixStack().pushPose();
@@ -201,7 +201,7 @@ public class MobsLevelingEvents {
 		if (!LevelingDataProvider.canHaveLevel(entity)) {
 			return false;
 		}
-		
+
 		if (!LevelingDataProvider.shouldShowLevel(entity)) {
 			return false;
 		}

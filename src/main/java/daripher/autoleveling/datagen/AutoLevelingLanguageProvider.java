@@ -1,6 +1,6 @@
 package daripher.autoleveling.datagen;
 
-import static net.minecraft.util.text.TextFormatting.YELLOW;
+import static net.minecraft.util.text.TextFormatting.*;
 
 import daripher.autoleveling.AutoLevelingMod;
 import daripher.autoleveling.init.AutoLevelingItems;
@@ -26,6 +26,7 @@ public class AutoLevelingLanguageProvider extends LanguageProvider {
 		addSpecialText(AutoLevelingItems.WHITELIST_TOOL.get(), "added", "%s was added to whitelist");
 		add("jade.autoleveling.tooltip", "Level: %d");
 		add("config.jade.plugin_autoleveling.level", "Level");
+		add("autoleveling.level", "Lv.%s");
 	}
 
 	public void addSpecialText(Item key, String type, String translation) {
