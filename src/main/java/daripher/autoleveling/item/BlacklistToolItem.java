@@ -3,7 +3,6 @@ package daripher.autoleveling.item;
 import java.util.List;
 
 import daripher.autoleveling.config.Config;
-import daripher.autoleveling.init.AutoLevelingCreativeTabs;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -17,7 +16,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 public class BlacklistToolItem extends Item {
 	public BlacklistToolItem() {
-		super(new Properties().tab(AutoLevelingCreativeTabs.AUTO_LEVELING).stacksTo(1));
+		super(new Properties().stacksTo(1));
 	}
 
 	@Override

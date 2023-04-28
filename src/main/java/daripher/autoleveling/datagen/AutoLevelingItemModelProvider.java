@@ -4,7 +4,7 @@ import java.util.Objects;
 
 import daripher.autoleveling.AutoLevelingMod;
 import daripher.autoleveling.init.AutoLevelingItems;
-import net.minecraft.data.DataGenerator;
+import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.client.model.generators.ItemModelBuilder;
@@ -13,8 +13,8 @@ import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class AutoLevelingItemModelProvider extends ItemModelProvider {
-	public AutoLevelingItemModelProvider(DataGenerator gen, ExistingFileHelper existingFileHelper) {
-		super(gen, AutoLevelingMod.MOD_ID, existingFileHelper);
+	public AutoLevelingItemModelProvider(PackOutput packOutput, ExistingFileHelper existingFileHelper) {
+		super(packOutput, AutoLevelingMod.MOD_ID, existingFileHelper);
 	}
 
 	@Override

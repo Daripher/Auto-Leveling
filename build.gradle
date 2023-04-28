@@ -23,7 +23,7 @@ apply plugin: 'org.spongepowered.mixin'
 
 version = '1.15a'
 group = 'daripher.autoleveling'
-archivesBaseName = 'AutoLeveling-1.19.2'
+archivesBaseName = 'AutoLeveling-1.19.3'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
@@ -33,7 +33,7 @@ mixin {
 }
 
 minecraft {
-    mappings channel: 'official', version: '1.19'
+    mappings channel: 'official', version: '1.19.3'
 
     runs {
         client {
@@ -85,7 +85,6 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
 
             args '--mod', 'autoleveling', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
-            args "-mixin.config=autoleveling.mixins.json"
 
             mods {
                 autoleveling {
@@ -108,9 +107,9 @@ repositories {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.19-41.1.0'
+    minecraft 'net.minecraftforge:forge:1.19.3-44.1.23'
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
-    implementation fg.deobf("curse.maven:jade-324717:3903499")
+    implementation fg.deobf("curse.maven:jade-324717:4434045")
 }
 
 jar {

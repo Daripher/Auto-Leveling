@@ -1,16 +1,16 @@
 package daripher.autoleveling.datagen;
 
-import static net.minecraft.ChatFormatting.*;
+import static net.minecraft.ChatFormatting.YELLOW;
 
 import daripher.autoleveling.AutoLevelingMod;
 import daripher.autoleveling.init.AutoLevelingItems;
-import net.minecraft.data.DataGenerator;
+import net.minecraft.data.PackOutput;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.common.data.LanguageProvider;
 
 public class AutoLevelingLanguageProvider extends LanguageProvider {
-	public AutoLevelingLanguageProvider(DataGenerator gen) {
-		super(gen, AutoLevelingMod.MOD_ID, "en_us");
+	public AutoLevelingLanguageProvider(PackOutput packOutput) {
+		super(packOutput, AutoLevelingMod.MOD_ID, "en_us");
 	}
 
 	@Override
