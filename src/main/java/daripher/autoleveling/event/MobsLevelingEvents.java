@@ -117,7 +117,7 @@ public class MobsLevelingEvents {
 				LevelingDataProvider.get(entity).ifPresent(levelingData -> {
 					var level = levelingData.getLevel() + 1;
 					var entityName = event.getContent();
-					var levelString = Component.literal("" + level).withStyle(ChatFormatting.GREEN);
+					var levelString = Component.translatable("autoleveling.level", level).withStyle(ChatFormatting.GREEN);
 					var y = entity.getBbHeight() + 0.5F;
 					var yShift = "deadmau5".equals(entityName.getString()) ? -10 : 0;
 					event.getPoseStack().pushPose();
@@ -181,7 +181,7 @@ public class MobsLevelingEvents {
 		if (!LevelingDataProvider.canHaveLevel(entity)) {
 			return false;
 		}
-		
+
 		if (!LevelingDataProvider.shouldShowLevel(entity)) {
 			return false;
 		}
