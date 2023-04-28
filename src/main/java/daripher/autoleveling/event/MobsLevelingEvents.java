@@ -10,7 +10,7 @@ import daripher.autoleveling.data.EntitiesLevelingSettingsReloader;
 import daripher.autoleveling.saveddata.GlobalLevelingData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
@@ -117,7 +117,7 @@ public class MobsLevelingEvents {
 				LevelingDataProvider.get(entity).ifPresent(levelingData -> {
 					var entityLevel = levelingData.getLevel() + 1;
 					var entityName = event.getContent();
-					var levelString = new TextComponent("" + entityLevel).withStyle(ChatFormatting.GREEN);
+					var levelString = new TranslatableComponent("autoleveling.level", entityLevel).withStyle(ChatFormatting.GREEN);
 					var textY = entity.getBbHeight() + 0.5F;
 					var textOffsetY = "deadmau5".equals(entityName.getString()) ? -10 : 0;
 					event.getPoseStack().pushPose();
@@ -183,7 +183,7 @@ public class MobsLevelingEvents {
 		if (!LevelingDataProvider.canHaveLevel(entity)) {
 			return false;
 		}
-		
+
 		if (!LevelingDataProvider.shouldShowLevel(entity)) {
 			return false;
 		}
