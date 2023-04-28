@@ -21,7 +21,7 @@ plugins {
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'org.spongepowered.mixin'
 
-version = '1.15'
+version = '1.15a'
 group = 'daripher.autoleveling'
 archivesBaseName = 'AutoLeveling-1.18.2'
 
