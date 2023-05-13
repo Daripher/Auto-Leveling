@@ -1,12 +1,12 @@
 package daripher.autoleveling.settings;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.mojang.logging.LogUtils;
@@ -22,7 +22,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 public class EntitiesLevelingSettingsReloader extends SimpleJsonResourceReloadListener {
 	private static final Logger LOGGER = LogUtils.getLogger();
 	private static final Gson GSON = Deserializers.createLootTableSerializer().create();
-	private static final Map<ResourceLocation, LevelingSettings> SETTINGS = ImmutableMap.of();
+	private static final Map<ResourceLocation, LevelingSettings> SETTINGS = new HashMap<>();
 
 	public EntitiesLevelingSettingsReloader() {
 		super(GSON, "leveling_settings/entities");
