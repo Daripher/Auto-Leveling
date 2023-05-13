@@ -30,23 +30,29 @@ public class Config {
 		public final ConfigValue<Boolean> showLevelWhenLookingAt;
 
 		public Common(ForgeConfigSpec.Builder builder) {
-			builder.push("mobs");
-			blacklistedMobs = builder.define("blacklist", new ArrayList<String>());
-			whitelistedMobs = builder.define("whitelist", new ArrayList<String>());
-			alwaysShowLevel = builder.define("always_show_level", false);
-			showLevelWhenLookingAt = builder.define("show_level_when_looking_at", true);
-			expBonus = builder.define("exp_bonus_per_level", 0.1D);
-			blacklistedShownLevels = builder.define("hidden_levels", new ArrayList<String>());
+			builder.push("Mobs");
+			builder.comment("Example: [\"minecraft:zombie\", \"minecraft:skeleton\"]");
+			blacklistedMobs = builder.define("List of mobs that should'nt be able to level up", new ArrayList<String>());
+			builder.comment("If this list is not empty only these mobs will be able to level up");
+			builder.comment("Example: [\"minecraft:zombie\", \"minecraft:skeleton\"]");
+			whitelistedMobs = builder.define("List of mobs that should be able to level up", new ArrayList<String>());
+			alwaysShowLevel = builder.define("Always show mobs levels", false);
+			showLevelWhenLookingAt = builder.define("Only show levels when you look at the mob", true);
+			expBonus = builder.define("Bonus expirience per level", 0.1D);
+			blacklistedShownLevels = builder.define("List of mobs that should have their levels always hidden", new ArrayList<String>());
 			builder.pop();
-			builder.push("attributes");
-			attributesBonuses = builder.defineList("attribute_bonuses", Config::getDefaultAttributeBonuses, Config::isValidAttributeBonus);
+			builder.push("Attributes");
+			builder.comment("Contains a list of pairs of attributes and their bonuses per one level");
+			attributesBonuses = builder.defineList("Attributes bonuses per one level", Config::getDefaultAttributeBonuses, Config::isValidAttributeBonus);
 			builder.pop();
-			builder.push("default_leveling_settings");
-			defaultStartingLevel = builder.defineInRange("starting_level", 1, 1, Integer.MAX_VALUE);
-			defaultMaxLevel = builder.defineInRange("max_level", 0, 0, Integer.MAX_VALUE);
-			defaultLevelsPerDistance = builder.defineInRange("levels_per_distance", 0.01D, 0D, Double.MAX_VALUE);
-			defaultLevelsPerDeepness = builder.defineInRange("levels_per_deepness", 0D, 0D, Double.MAX_VALUE);
-			defaultRandomLevelBonus = builder.defineInRange("random_level_bonus", 0, 0, Integer.MAX_VALUE);
+			builder.push("Default levelling settings");
+			defaultStartingLevel = builder.define("Starting level", 1);
+			builder.comment("If this is equal to 0, there will be no maximum level");
+			defaultMaxLevel = builder.define("Maximum level", 0);
+			defaultLevelsPerDistance = builder.define("Level increase per one block distance from spawn", 0.01D);
+			defaultLevelsPerDeepness = builder.define("Level increase per one block deepness below sea level", 0.0D);
+			builder.comment("If this is higher than 0, the level of monsters will be randomly increased by value between 0 and this value");
+			defaultRandomLevelBonus = builder.define("Random level bonus", 0);
 			builder.pop();
 		}
 	}
