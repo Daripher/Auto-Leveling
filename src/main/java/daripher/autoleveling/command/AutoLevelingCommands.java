@@ -7,7 +7,6 @@ import daripher.autoleveling.AutoLevelingMod;
 import daripher.autoleveling.saveddata.GlobalLevelingData;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.network.chat.Component;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -23,12 +22,6 @@ public class AutoLevelingCommands {
 										.executes(AutoLevelingCommands::executeAddLevelCommand))))
 				.requires(AutoLevelingCommands::hasPermission);
 		event.getDispatcher().register(addGlobalLevelCommand);
-		var getGlobalLevelCommand = Commands.literal("autoleveling")
-				.then(Commands.literal("level")
-						.then(Commands.literal("get")
-								.executes(AutoLevelingCommands::executeGetLevelCommand)))
-				.requires(AutoLevelingCommands::hasPermission);
-		event.getDispatcher().register(getGlobalLevelCommand);
 	}
 
 	private static int executeAddLevelCommand(CommandContext<CommandSourceStack> ctx) {
@@ -37,14 +30,6 @@ public class AutoLevelingCommands {
 		var levelBonus = ctx.getArgument("value", Integer.class);
 		var oldLevelBonus = globalLevelingData.getLevelBonus();
 		globalLevelingData.setLevel(oldLevelBonus + levelBonus);
-		return 1;
-	}
-
-	private static int executeGetLevelCommand(CommandContext<CommandSourceStack> ctx) {
-		var server = ctx.getSource().getServer();
-		var globalLevelingData = GlobalLevelingData.get(server);
-		var levelBonus = globalLevelingData.getLevelBonus();
-		ctx.getSource().sendSystemMessage(Component.literal("Global level bonus is " + levelBonus));
 		return 1;
 	}
 
