@@ -1,11 +1,8 @@
 package daripher.autoleveling.capability;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
@@ -53,11 +50,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 @EventBusSubscriber(bus = Bus.FORGE, modid = AutoLevelingMod.MOD_ID)
 public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag> {
-	private static final List<String> BLACKLISTED_NAMESPACES = new ArrayList<>();
-	private static final List<String> BLACKLISTED_SHOWN_LEVELS_NAMESPACES = new ArrayList<>();
-	private static final List<String> WHITELISTED_NAMESPACES = new ArrayList<>();
 	private static final Map<Attribute, Float> ATTRIBUTE_BONUSES = new HashMap<>();
-	private static boolean whitelist_and_blacklist_initialized;
 	private static boolean attribute_bonuses_initialized;
 	private LazyOptional<ILevelingData> lazyOptional = LazyOptional.of(LevelingData::new);
 	private static final Logger LOGGER = LogUtils.getLogger();
@@ -100,59 +93,45 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag
 	}
 
 	public static boolean canHaveLevel(Entity entity) {
-		if (!whitelist_and_blacklist_initialized) {
-			Predicate<String> namespacePredicate = s -> s.split(":").length == 2 && s.split(":")[1].equals("*");
-			Config.COMMON.whitelistedMobs.get().stream().filter(namespacePredicate).map(s -> s.split(":")[0]).forEach(WHITELISTED_NAMESPACES::add);
-			Config.COMMON.blacklistedMobs.get().stream().filter(namespacePredicate).map(s -> s.split(":")[0]).forEach(BLACKLISTED_NAMESPACES::add);
-			Config.COMMON.blacklistedShownLevels.get().stream().filter(namespacePredicate).map(s -> s.split(":")[0]).forEach(BLACKLISTED_SHOWN_LEVELS_NAMESPACES::add);
-			whitelist_and_blacklist_initialized = true;
-		}
-
 		if (!(entity instanceof LivingEntity)) {
 			return false;
 		}
-
 		var livingEntity = (LivingEntity) entity;
-
 		if (livingEntity.getAttribute(Attributes.ATTACK_DAMAGE) == null) {
 			return false;
 		}
-
 		if (entity.getType() == EntityType.PLAYER) {
 			return false;
 		}
-
 		var entityId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType());
-
-		if (BLACKLISTED_NAMESPACES.contains(entityId.getNamespace())) {
+		var entityNamespace = entityId.getNamespace();
+		var blacklistedMobs = Config.COMMON.blacklistedMobs.get();
+		if (blacklistedMobs.contains(entityNamespace + ":*")) {
 			return false;
 		}
-
-		if (!WHITELISTED_NAMESPACES.isEmpty()) {
-			if (WHITELISTED_NAMESPACES.contains(entityId.getNamespace())) {
+		var whitelistedMobs = Config.COMMON.whitelistedMobs.get();
+		if (!whitelistedMobs.isEmpty()) {
+			if (whitelistedMobs.contains(entityNamespace + ":*")) {
 				return true;
 			}
 		}
-
-		if (Config.COMMON.blacklistedMobs.get().contains(entityId.toString())) {
+		if (blacklistedMobs.contains(entityId.toString())) {
 			return false;
 		}
-
-		if (!Config.COMMON.whitelistedMobs.get().isEmpty()) {
-			return Config.COMMON.whitelistedMobs.get().contains(entityId.toString());
+		if (!whitelistedMobs.isEmpty()) {
+			return whitelistedMobs.contains(entityId.toString());
 		}
-
 		return true;
 	}
 
 	public static boolean shouldShowLevel(Entity entity) {
 		var entityId = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType());
-
-		if (Config.COMMON.blacklistedShownLevels.get().contains(entityId.toString())) {
+		var blacklistedShownLevels = Config.COMMON.blacklistedShownLevels.get();
+		if (blacklistedShownLevels.contains(entityId.toString())) {
 			return false;
 		}
-
-		return !BLACKLISTED_SHOWN_LEVELS_NAMESPACES.contains(entityId.getNamespace());
+		var entityNamespace = entityId.getNamespace();
+		return !blacklistedShownLevels.contains(entityNamespace + ":*");
 	}
 
 	public static LazyOptional<ILevelingData> get(LivingEntity entity) {
@@ -225,10 +204,7 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundTag
 
 	private static LootContext createEquipmentLootContext(LivingEntity entity) {
 		var serverLevel = (ServerLevel) entity.level;
-		var lootContextBuilder = new Builder(serverLevel)
-				.withRandom(entity.getRandom())
-				.withParameter(LootContextParams.THIS_ENTITY, entity)
-				.withParameter(LootContextParams.ORIGIN, entity.position());
+		var lootContextBuilder = new Builder(serverLevel).withRandom(entity.getRandom()).withParameter(LootContextParams.THIS_ENTITY, entity).withParameter(LootContextParams.ORIGIN, entity.position());
 		return lootContextBuilder.create(LootContextParamSets.SELECTOR);
 	}
 }
