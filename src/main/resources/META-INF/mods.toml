@@ -4,7 +4,7 @@ license="All rights reserved"
 
 [[mods]]
 	modId="autoleveling"
-	version="1.15b"
+	version="1.16"
 	displayName="Auto Leveling"
 	authors="Daripher"
 	description='''Adds auto leveling to Minecraft'''
