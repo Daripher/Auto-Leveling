@@ -1,11 +1,9 @@
 package daripher.autoleveling.capability;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
@@ -50,11 +48,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 @EventBusSubscriber(bus = Bus.FORGE, modid = AutoLevelingMod.MOD_ID)
 public class LevelingDataProvider implements ICapabilitySerializable<CompoundNBT> {
-	private static final List<String> BLACKLISTED_NAMESPACES = new ArrayList<>();
-	private static final List<String> BLACKLISTED_SHOWN_LEVELS_NAMESPACES = new ArrayList<>();
-	private static final List<String> WHITELISTED_NAMESPACES = new ArrayList<>();
 	private static final Map<Attribute, Float> ATTRIBUTE_BONUSES = new HashMap<>();
-	private static boolean whitelist_and_blacklist_initialized;
 	private static boolean attribute_bonuses_initialized;
 	private ILevelingData instance = LevelingApi.CAPABILITY.getDefaultInstance();
 
@@ -97,57 +91,45 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundNBT
 	}
 
 	public static boolean canHaveLevel(Entity entity) {
-		if (!whitelist_and_blacklist_initialized) {
-			Predicate<String> namespacePredicate = s -> s.split(":").length == 2 && s.split(":")[1].equals("*");
-			Config.COMMON.whitelistedMobs.get().stream().filter(namespacePredicate).map(s -> s.split(":")[0]).forEach(WHITELISTED_NAMESPACES::add);
-			Config.COMMON.blacklistedMobs.get().stream().filter(namespacePredicate).map(s -> s.split(":")[0]).forEach(BLACKLISTED_NAMESPACES::add);
-			Config.COMMON.blacklistedShownLevels.get().stream().filter(namespacePredicate).map(s -> s.split(":")[0]).forEach(BLACKLISTED_SHOWN_LEVELS_NAMESPACES::add);
-			whitelist_and_blacklist_initialized = true;
-		}
-
 		if (!(entity instanceof LivingEntity)) {
 			return false;
 		}
-
 		LivingEntity livingEntity = (LivingEntity) entity;
-
 		if (livingEntity.getAttribute(Attributes.ATTACK_DAMAGE) == null) {
 			return false;
 		}
-
 		if (entity.getType() == EntityType.PLAYER) {
 			return false;
 		}
-
 		ResourceLocation entityId = ForgeRegistries.ENTITIES.getKey(entity.getType());
-
-		if (BLACKLISTED_NAMESPACES.contains(entityId.getNamespace())) {
+		String entityNamespace = entityId.getNamespace();
+		List<String> blacklistedMobs = Config.COMMON.blacklistedMobs.get();
+		if (blacklistedMobs.contains(entityNamespace + ":*")) {
 			return false;
 		}
-
-		if (!WHITELISTED_NAMESPACES.isEmpty() && WHITELISTED_NAMESPACES.contains(entityId.getNamespace())) {
-			return true;
+		List<String> whitelistedMobs = Config.COMMON.whitelistedMobs.get();
+		if (!whitelistedMobs.isEmpty()) {
+			if (whitelistedMobs.contains(entityNamespace + ":*")) {
+				return true;
+			}
 		}
-
-		if (Config.COMMON.blacklistedMobs.get().contains(entityId.toString())) {
+		if (blacklistedMobs.contains(entityId.toString())) {
 			return false;
 		}
-
-		if (!Config.COMMON.whitelistedMobs.get().isEmpty()) {
-			return Config.COMMON.whitelistedMobs.get().contains(entityId.toString());
+		if (!whitelistedMobs.isEmpty()) {
+			return whitelistedMobs.contains(entityId.toString());
 		}
-
 		return true;
 	}
 
 	public static boolean shouldShowLevel(Entity entity) {
 		ResourceLocation entityId = ForgeRegistries.ENTITIES.getKey(entity.getType());
-
-		if (Config.COMMON.blacklistedShownLevels.get().contains(entityId.toString())) {
+		List<String> blacklistedShownLevels = Config.COMMON.blacklistedShownLevels.get();
+		if (blacklistedShownLevels.contains(entityId.toString())) {
 			return false;
 		}
-
-		return !BLACKLISTED_SHOWN_LEVELS_NAMESPACES.contains(entityId.getNamespace());
+		String entityNamespace = entityId.getNamespace();
+		return !blacklistedShownLevels.contains(entityNamespace + ":*");
 	}
 
 	public static LazyOptional<ILevelingData> getLevelingData(LivingEntity entity) {
@@ -219,8 +201,10 @@ public class LevelingDataProvider implements ICapabilitySerializable<CompoundNBT
 	}
 
 	private static LootContext createEquipmentLootContext(LivingEntity entity) {
-		ServerWorld serverLevel = (ServerWorld) entity.level;
-		Builder lootContextBuilder = new Builder(serverLevel).withRandom(entity.getRandom()).withParameter(LootParameters.THIS_ENTITY, entity)
+		ServerWorld level = (ServerWorld) entity.level;
+		Builder lootContextBuilder = new Builder(level)
+				.withRandom(entity.getRandom())
+				.withParameter(LootParameters.THIS_ENTITY, entity)
 				.withParameter(LootParameters.ORIGIN, entity.position());
 		return lootContextBuilder.create(LootParameterSets.SELECTOR);
 	}
