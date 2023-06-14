@@ -7,8 +7,7 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 
-import daripher.autoleveling.api.ILevelingData;
-import daripher.autoleveling.capability.LevelingDataProvider;
+import daripher.autoleveling.event.MobsLevelingEvents;
 import daripher.autoleveling.init.AutoLevelingLootConditions;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -41,34 +40,16 @@ public class LevelCondition implements ILootCondition {
 
 	@Override
 	public boolean test(LootContext context) {
-		if (!context.hasParam(LootParameters.THIS_ENTITY)) {
-			return false;
-		}
-
+		if (!context.hasParam(LootParameters.THIS_ENTITY)) return false;
 		Entity entity = context.getParamOrNull(LootParameters.THIS_ENTITY);
-
-		if (!LevelingDataProvider.canHaveLevel(entity)) {
-			return false;
-		}
-
-		if (!(entity instanceof LivingEntity)) {
-			return false;
-		}
-
-		ILevelingData levelingData = LevelingDataProvider.getLevelingData((LivingEntity) entity).orElse(null);
-
-		if (levelingData == null) {
-			return false;
-		}
-
-		int level = levelingData.getLevel() + 1;
+		if (!MobsLevelingEvents.hasLevel(entity)) return false;
+		if (!(entity instanceof LivingEntity)) return false;
+		int level = MobsLevelingEvents.getLevel((LivingEntity) entity) + 1;
 		return level >= min && level <= max;
 	}
 
 	public static IBuilder correctLevel(int min, int max) {
-		return () -> {
-			return new LevelCondition(min, max);
-		};
+		return () -> new LevelCondition(min, max);
 	}
 
 	public static class Serializer implements ILootSerializer<LevelCondition> {

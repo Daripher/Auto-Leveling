@@ -39,11 +39,7 @@ public class GlobalLevelingData extends WorldSavedData {
 	public static GlobalLevelingData get(MinecraftServer server) {
 		DimensionSavedDataManager dataStorage = server.overworld().getDataStorage();
 		GlobalLevelingData data = dataStorage.get(GlobalLevelingData::create, "global_leveling");
-
-		if (data == null) {
-			dataStorage.set(data = GlobalLevelingData.create());
-		}
-
+		if (data == null) dataStorage.set(data = GlobalLevelingData.create());
 		return data;
 	}
 }
