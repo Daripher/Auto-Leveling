@@ -3,12 +3,11 @@ package daripher.autoleveling;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import daripher.autoleveling.api.ILevelingData;
 import daripher.autoleveling.config.Config;
 import daripher.autoleveling.init.AutoLevelingAttributes;
 import daripher.autoleveling.init.AutoLevelingItems;
 import daripher.autoleveling.init.AutoLevelingLootItemConditions;
-import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
+import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
@@ -30,9 +29,12 @@ public class AutoLevelingMod {
 		AutoLevelingItems.REGISTRY.register(modEventBus);
 		AutoLevelingAttributes.REGISTRY.register(modEventBus);
 	}
-
+	
 	@SubscribeEvent
-	public static void onRegisterCapabilities(RegisterCapabilitiesEvent event) {
-		event.register(ILevelingData.class);
+	public static void attachMobAttributes(EntityAttributeModificationEvent event) {
+		event.getTypes().forEach(entityType -> {
+			event.add(entityType, AutoLevelingAttributes.PROJECTILE_DAMAGE_BONUS.get());
+			event.add(entityType, AutoLevelingAttributes.EXPLOSION_DAMAGE_BONUS.get());
+		});
 	}
 }

@@ -27,9 +27,9 @@ public class GlobalLevelingData extends SavedData {
 	}
 
 	private static GlobalLevelingData load(CompoundTag tag) {
-		var globalLevelingData = GlobalLevelingData.create();
-		globalLevelingData.levelBonus = tag.getInt("LevelBonus");
-		return globalLevelingData;
+		var data = GlobalLevelingData.create();
+		data.levelBonus = tag.getInt("LevelBonus");
+		return data;
 	}
 
 	public static GlobalLevelingData get(MinecraftServer server) {

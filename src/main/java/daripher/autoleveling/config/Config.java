@@ -2,13 +2,19 @@ package daripher.autoleveling.config;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import daripher.autoleveling.AutoLevelingMod;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public class Config {
 	public static final Common COMMON;
@@ -72,6 +78,21 @@ public class Config {
 		}
 
 		return false;
+	}
+	
+	private static final Map<Attribute, Float> ATTRIBUTE_BONUSES = new HashMap<>();
+	
+	public static Map<Attribute, Float> getAttributeBonuses() {
+		if (ATTRIBUTE_BONUSES.isEmpty()) {
+			Config.COMMON.attributesBonuses.get().forEach(attributeBonusConfig -> {
+				var attributeId = new ResourceLocation((String) attributeBonusConfig.get(0));
+				var attribute = ForgeRegistries.ATTRIBUTES.getValue(attributeId);
+				var attributeBonus = ((Double) attributeBonusConfig.get(1)).floatValue();
+				if (attribute == null) AutoLevelingMod.LOGGER.error("Attribute '" + attributeId + "' can not be found!");
+				else ATTRIBUTE_BONUSES.put(attribute, attributeBonus);
+			});
+		}
+		return ATTRIBUTE_BONUSES;
 	}
 
 	static {
