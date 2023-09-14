@@ -53,7 +53,7 @@ import net.minecraftforge.network.PacketDistributor;
 @EventBusSubscriber(modid = AutoLevelingMod.MOD_ID)
 public class MobsLevelingEvents {
 	private static final String LEVEL_TAG = "LEVEL";
-	
+
 	@SubscribeEvent
 	public static void applyLevelBonuses(EntityJoinLevelEvent event) {
 		if (!shouldSetLevel(event.getEntity()) || event.loadedFromDisk()) return;
@@ -100,18 +100,17 @@ public class MobsLevelingEvents {
 
 	@SubscribeEvent
 	public static void applyAttributesDamageBonus(LivingHurtEvent event) {
-		DamageSource damageSource = event.getSource();
-		if (!(damageSource.getEntity() instanceof LivingEntity)) return;
-		var attacker = (LivingEntity) damageSource.getEntity();
-		float damageBonus = getDamageBonus(damageSource, attacker);
-		if (damageBonus > 1F) event.setAmount(event.getAmount() * damageBonus);
+		DamageSource damage = event.getSource();
+		if (!(damage.getEntity() instanceof LivingEntity attacker)) return;
+		float multiplier = getDamageMultiplier(damage, attacker);
+		if (multiplier > 1F) event.setAmount(event.getAmount() * multiplier);
 	}
 
-	public static float getDamageBonus(DamageSource damageSource, LivingEntity attacker) {
-		if (damageSource.is(DamageTypeTags.IS_PROJECTILE)) {
+	public static float getDamageMultiplier(DamageSource damage, LivingEntity attacker) {
+		if (damage.is(DamageTypeTags.IS_PROJECTILE)) {
 			return getAttributeValue(attacker, AutoLevelingAttributes.PROJECTILE_DAMAGE_MULTIPLIER.get());
 		}
-		if (damageSource.is(DamageTypeTags.IS_EXPLOSION)) {
+		if (damage.is(DamageTypeTags.IS_EXPLOSION)) {
 			return getAttributeValue(attacker, AutoLevelingAttributes.EXPLOSION_DAMAGE_MULTIPLIER.get());
 		}
 		return 1F;
@@ -140,7 +139,7 @@ public class MobsLevelingEvents {
 		if (entity.level().isClientSide) return false;
 		return canHaveLevel(entity);
 	}
-	
+
 	private static int getLevelForEntity(LivingEntity entity, double distanceFromSpawn) {
 		LevelingSettings levelingSettings = EntitiesLevelingSettingsReloader.getSettingsForEntity(entity.getType());
 		if (levelingSettings == null) {
@@ -201,10 +200,8 @@ public class MobsLevelingEvents {
 		int lastHurtByPlayerTime = (int) ObfuscationReflectionHelper.getPrivateValue(LivingEntity.class, entity, "f_20889_");
 		var lastHurtByPlayer = (Player) ObfuscationReflectionHelper.getPrivateValue(LivingEntity.class, entity, "f_20888_");
 		var level = (ServerLevel) entity.level();
-		LootParams.Builder builder = new LootParams.Builder(level)
-				.withParameter(LootContextParams.THIS_ENTITY, entity)
-				.withParameter(LootContextParams.ORIGIN, entity.position())
-				.withParameter(LootContextParams.DAMAGE_SOURCE, damageSource)
+		LootParams.Builder builder = new LootParams.Builder(level).withParameter(LootContextParams.THIS_ENTITY, entity)
+				.withParameter(LootContextParams.ORIGIN, entity.position()).withParameter(LootContextParams.DAMAGE_SOURCE, damageSource)
 				.withOptionalParameter(LootContextParams.KILLER_ENTITY, damageSource.getEntity())
 				.withOptionalParameter(LootContextParams.DIRECT_KILLER_ENTITY, damageSource.getDirectEntity());
 		if (lastHurtByPlayerTime > 0 && lastHurtByPlayer != null) {
@@ -212,12 +209,10 @@ public class MobsLevelingEvents {
 		}
 		return builder.create(LootContextParamSets.ENTITY);
 	}
-	
+
 	private static LootParams createEquipmentLootParams(LivingEntity entity) {
-		return new LootParams.Builder((ServerLevel) entity.level())
-				.withParameter(LootContextParams.THIS_ENTITY, entity)
-				.withParameter(LootContextParams.ORIGIN, entity.position())
-				.create(LootContextParamSets.SELECTOR);
+		return new LootParams.Builder((ServerLevel) entity.level()).withParameter(LootContextParams.THIS_ENTITY, entity)
+				.withParameter(LootContextParams.ORIGIN, entity.position()).create(LootContextParamSets.SELECTOR);
 	}
 
 	private static boolean canHaveLevel(Entity entity) {
@@ -247,7 +242,7 @@ public class MobsLevelingEvents {
 	public static boolean hasLevel(Entity entity) {
 		return entity.getPersistentData().contains(LEVEL_TAG);
 	}
-	
+
 	public static int getLevel(LivingEntity entity) {
 		return entity.getPersistentData().getInt(LEVEL_TAG);
 	}
