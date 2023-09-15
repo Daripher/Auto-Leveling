@@ -20,7 +20,7 @@ public class LevelPlateRenderer {
 	public static void renderEntityLevel(RenderNameTagEvent event) {
 		if (!(event.getEntity() instanceof LivingEntity)) return;
 		var entity = (LivingEntity) event.getEntity();
-		var showLevel = MobsLevelingEvents.hasLevel(entity) && MobsLevelingEvents.shouldShowLevel(entity);
+		var showLevel = MobsLevelingEvents.hasLevel(entity) && MobsLevelingEvents.shouldShowName(entity);
 		if (!showLevel) return;
 		var minecraft = Minecraft.getInstance();
 		var distance = minecraft.getEntityRenderDispatcher().distanceToSqr(entity);

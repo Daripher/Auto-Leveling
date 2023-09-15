@@ -122,7 +122,7 @@ public class MobsLevelingEvents {
 	}
 
 	@OnlyIn(Dist.CLIENT)
-	private static boolean shouldShowName(LivingEntity entity) {
+	public static boolean shouldShowName(LivingEntity entity) {
 		if (!Minecraft.renderNames()) return false;
 		if (entity.isVehicle()) return false;
 		Minecraft minecraft = Minecraft.getInstance();
