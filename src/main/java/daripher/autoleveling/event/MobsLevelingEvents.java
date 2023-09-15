@@ -11,9 +11,13 @@ import daripher.autoleveling.init.AutoLevelingAttributes;
 import daripher.autoleveling.network.NetworkDispatcher;
 import daripher.autoleveling.network.message.SyncLevelingData;
 import daripher.autoleveling.saveddata.GlobalLevelingData;
+import daripher.autoleveling.settings.DimensionLevelingSettings;
+import daripher.autoleveling.settings.LevelingSettings;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -27,6 +31,7 @@ import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.LootContext.Builder;
 import net.minecraft.world.level.storage.loot.LootTable;
@@ -51,18 +56,23 @@ import net.minecraftforge.network.PacketDistributor;
 @EventBusSubscriber(modid = AutoLevelingMod.MOD_ID)
 public class MobsLevelingEvents {
 	private static final String LEVEL_TAG = "LEVEL";
-	
+
 	@SubscribeEvent
 	public static void applyLevelBonuses(EntityJoinWorldEvent event) {
 		if (!shouldSetLevel(event.getEntity()) || event.loadedFromDisk()) return;
 		var entity = (LivingEntity) event.getEntity();
-		var world = (ServerLevel) entity.getLevel();
-		var spawnPos = world.getSharedSpawnPos();
-		var distanceToSpawn = Math.sqrt(spawnPos.distSqr(entity.blockPosition()));
-		var level = getLevelForEntity(entity, distanceToSpawn);
+		BlockPos spawnPos = getSpawnPosition(entity);
+		double distanceToSpawn = Math.sqrt(spawnPos.distSqr(entity.blockPosition()));
+		int level = getLevelForEntity(entity, distanceToSpawn);
 		setLevel(entity, level);
 		applyAttributeBonuses(entity);
 		addEquipment(entity);
+	}
+
+	private static BlockPos getSpawnPosition(LivingEntity entity) {
+		ResourceKey<Level> dimension = entity.getLevel().dimension();
+		DimensionLevelingSettings levelingSettings = DimensionsLevelingSettingsReloader.getSettingsForDimension(dimension);
+		return levelingSettings.spawnPosOverride().orElse(((ServerLevel) entity.getLevel()).getSharedSpawnPos());
 	}
 
 	@SubscribeEvent
@@ -136,16 +146,17 @@ public class MobsLevelingEvents {
 		var showLevelWhenLookingAt = Config.COMMON.showLevelWhenLookingAt.get();
 		if (!alwaysShowLevel && !(showLevelWhenLookingAt && minecraft.crosshairPickEntity == entity)) return false;
 		var clientPlayer = minecraft.player;
-		return Minecraft.renderNames() && entity != minecraft.getCameraEntity() && !entity.isInvisibleTo(clientPlayer) && !entity.isVehicle() && clientPlayer.hasLineOfSight(entity);
+		return Minecraft.renderNames() && entity != minecraft.getCameraEntity() && !entity.isInvisibleTo(clientPlayer) && !entity.isVehicle()
+				&& clientPlayer.hasLineOfSight(entity);
 	}
 
 	private static boolean shouldSetLevel(Entity entity) {
 		if (entity.level.isClientSide) return false;
 		return canHaveLevel(entity);
 	}
-	
+
 	private static int getLevelForEntity(LivingEntity entity, double distanceFromSpawn) {
-		var levelingSettings = EntitiesLevelingSettingsReloader.getSettingsForEntity(entity.getType());
+		LevelingSettings levelingSettings = EntitiesLevelingSettingsReloader.getSettingsForEntity(entity.getType());
 		if (levelingSettings == null) {
 			var dimension = entity.level.dimension();
 			levelingSettings = DimensionsLevelingSettingsReloader.getSettingsForDimension(dimension);
@@ -166,7 +177,7 @@ public class MobsLevelingEvents {
 		}
 		return monsterLevel;
 	}
-	
+
 	@SubscribeEvent
 	public static void applyDamageBonus(LivingHurtEvent event) {
 		var damageSource = event.getSource();
@@ -221,7 +232,6 @@ public class MobsLevelingEvents {
 		return server.getLootTables().get(lootTableId);
 	}
 
-
 	private static LootContext createLootContext(LivingEntity livingEntity, DamageSource damageSource) {
 		var lastHurtByPlayerTime = (int) ObfuscationReflectionHelper.getPrivateValue(LivingEntity.class, livingEntity, "f_20889_");
 		var createLootContextMethod = ObfuscationReflectionHelper.findMethod(LivingEntity.class, "m_7771_", boolean.class, DamageSource.class);
@@ -233,13 +243,10 @@ public class MobsLevelingEvents {
 			return null;
 		}
 	}
-	
+
 	private static LootContext createEquipmentLootContext(LivingEntity entity) {
-		return new Builder((ServerLevel) entity.level)
-				.withRandom(entity.getRandom())
-				.withParameter(LootContextParams.THIS_ENTITY, entity)
-				.withParameter(LootContextParams.ORIGIN, entity.position())
-				.create(LootContextParamSets.SELECTOR);
+		return new Builder((ServerLevel) entity.level).withRandom(entity.getRandom()).withParameter(LootContextParams.THIS_ENTITY, entity)
+				.withParameter(LootContextParams.ORIGIN, entity.position()).create(LootContextParamSets.SELECTOR);
 	}
 
 	private static boolean canHaveLevel(Entity entity) {
@@ -269,7 +276,7 @@ public class MobsLevelingEvents {
 	public static boolean hasLevel(Entity entity) {
 		return entity.getPersistentData().contains(LEVEL_TAG);
 	}
-	
+
 	public static int getLevel(LivingEntity entity) {
 		return entity.getPersistentData().getInt(LEVEL_TAG);
 	}
