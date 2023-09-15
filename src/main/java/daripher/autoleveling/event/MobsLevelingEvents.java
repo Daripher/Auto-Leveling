@@ -11,9 +11,13 @@ import daripher.autoleveling.init.AutoLevelingAttributes;
 import daripher.autoleveling.network.NetworkDispatcher;
 import daripher.autoleveling.network.message.SyncLevelingData;
 import daripher.autoleveling.saveddata.GlobalLevelingData;
+import daripher.autoleveling.settings.DimensionLevelingSettings;
+import daripher.autoleveling.settings.LevelingSettings;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -27,6 +31,7 @@ import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.LootContext.Builder;
 import net.minecraft.world.level.storage.loot.LootTable;
@@ -56,12 +61,18 @@ public class MobsLevelingEvents {
 	public static void applyLevelBonuses(EntityJoinLevelEvent event) {
 		if (!shouldSetLevel(event.getEntity()) || event.loadedFromDisk()) return;
 		var entity = (LivingEntity) event.getEntity();
-		var spawnPos = entity.level.getSharedSpawnPos();
-		var distanceToSpawn = Math.sqrt(spawnPos.distSqr(entity.blockPosition()));
-		var level = getLevelForEntity(entity, distanceToSpawn);
+		BlockPos spawnPos = getSpawnPosition(entity);
+		double distanceToSpawn = Math.sqrt(spawnPos.distSqr(entity.blockPosition()));
+		int level = getLevelForEntity(entity, distanceToSpawn);
 		setLevel(entity, level);
 		applyAttributeBonuses(entity);
 		addEquipment(entity);
+	}
+
+	private static BlockPos getSpawnPosition(LivingEntity entity) {
+		ResourceKey<Level> dimension = entity.getLevel().dimension();
+		DimensionLevelingSettings levelingSettings = DimensionsLevelingSettingsReloader.getSettingsForDimension(dimension);
+		return levelingSettings.spawnPosOverride().orElse(entity.getLevel().getSharedSpawnPos());
 	}
 
 	@SubscribeEvent
@@ -143,7 +154,7 @@ public class MobsLevelingEvents {
 	}
 	
 	private static int getLevelForEntity(LivingEntity entity, double distanceFromSpawn) {
-		var levelingSettings = EntitiesLevelingSettingsReloader.getSettingsForEntity(entity.getType());
+		LevelingSettings levelingSettings = EntitiesLevelingSettingsReloader.getSettingsForEntity(entity.getType());
 		if (levelingSettings == null) {
 			var dimension = entity.level.dimension();
 			levelingSettings = DimensionsLevelingSettingsReloader.getSettingsForDimension(dimension);

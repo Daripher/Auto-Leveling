@@ -1,16 +1,17 @@
 package daripher.autoleveling.data;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.mojang.logging.LogUtils;
 
+import daripher.autoleveling.settings.EntityLevelingSettings;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
@@ -22,7 +23,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 public class EntitiesLevelingSettingsReloader extends SimpleJsonResourceReloadListener {
 	private static final Logger LOGGER = LogUtils.getLogger();
 	private static final Gson GSON = Deserializers.createLootTableSerializer().create();
-	private static Map<ResourceLocation, LevelingSettings> settings = ImmutableMap.of();
+	private static final Map<ResourceLocation, EntityLevelingSettings> SETTINGS = new HashMap<>();
 
 	public EntitiesLevelingSettingsReloader() {
 		super(GSON, "leveling_settings/entities");
@@ -30,23 +31,22 @@ public class EntitiesLevelingSettingsReloader extends SimpleJsonResourceReloadLi
 
 	@Override
 	protected void apply(Map<ResourceLocation, JsonElement> map, ResourceManager resourceManager, ProfilerFiller profilerFiller) {
-		ImmutableMap.Builder<ResourceLocation, LevelingSettings> builder = ImmutableMap.builder();
+		SETTINGS.clear();
+		map.forEach(this::loadSettings);
+	}
 
-		map.forEach((id, json) -> {
-			try {
-				var levelingSettings = LevelingSettings.load(json.getAsJsonObject());
-				builder.put(id, levelingSettings);
-				LOGGER.info("Loading leveling settings {}", id);
-			} catch (Exception exception) {
-				LOGGER.error("Couldn't parse leveling settings {}", id, exception);
-			}
-		});
-
-		settings = builder.build();
+	private void loadSettings(ResourceLocation fileId, JsonElement jsonElement) {
+		try {
+			LOGGER.info("Loading leveling settings {}", fileId);
+			EntityLevelingSettings settings = EntityLevelingSettings.load(jsonElement.getAsJsonObject());
+			SETTINGS.put(fileId, settings);
+		} catch (Exception exception) {
+			LOGGER.error("Couldn't parse leveling settings {}", fileId, exception);
+		}
 	}
 
 	@Nullable
-	public static LevelingSettings getSettingsForEntity(EntityType<?> entityType) {
-		return settings.get(ForgeRegistries.ENTITY_TYPES.getKey(entityType));
+	public static EntityLevelingSettings getSettingsForEntity(EntityType<?> entityType) {
+		return SETTINGS.get(ForgeRegistries.ENTITY_TYPES.getKey(entityType));
 	}
 }
