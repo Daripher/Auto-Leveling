@@ -9,9 +9,14 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
 
 public class AutoLevelingLootConditions {
-	public static final LootConditionType LEVEL_CHECK = registerCondition("level_check", new LevelCondition.Serializer());
+  public static final LootConditionType LEVEL_CHECK =
+      registerCondition("level_check", new LevelCondition.Serializer());
 
-	private static <T extends ILootCondition> LootConditionType registerCondition(String name, ILootSerializer<T> serializer) {
-		return Registry.register(Registry.LOOT_CONDITION_TYPE, new ResourceLocation(AutoLevelingMod.MOD_ID, name), new LootConditionType(serializer));
-	}
+  private static <T extends ILootCondition> LootConditionType registerCondition(
+      String name, ILootSerializer<T> serializer) {
+    return Registry.register(
+        Registry.LOOT_CONDITION_TYPE,
+        new ResourceLocation(AutoLevelingMod.MOD_ID, name),
+        new LootConditionType(serializer));
+  }
 }

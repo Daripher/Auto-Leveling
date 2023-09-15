@@ -8,8 +8,9 @@ import net.minecraft.entity.LivingEntity;
 
 @WailaPlugin
 public class AutoLevelingWailaPlugin implements IWailaPlugin {
-	@Override
-	public void register(IRegistrar registration) {
-		registration.registerComponentProvider(LevelComponentProvider.INSTANCE, TooltipPosition.BODY, LivingEntity.class);
-	}
+  @Override
+  public void register(IRegistrar registration) {
+    registration.registerComponentProvider(
+        LevelComponentProvider.INSTANCE, TooltipPosition.BODY, LivingEntity.class);
+  }
 }

@@ -1,9 +1,8 @@
 package daripher.autoleveling.item;
 
-import java.util.List;
-
 import daripher.autoleveling.config.Config;
 import daripher.autoleveling.init.AutoLevelingCreativeTabs;
+import java.util.List;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -18,32 +17,36 @@ import net.minecraft.world.World;
 import net.minecraftforge.registries.ForgeRegistries;
 
 public class BlacklistToolItem extends Item {
-	public BlacklistToolItem() {
-		super(new Properties().tab(AutoLevelingCreativeTabs.AUTO_LEVELING).stacksTo(1));
-	}
+  public BlacklistToolItem() {
+    super(new Properties().tab(AutoLevelingCreativeTabs.AUTO_LEVELING).stacksTo(1));
+  }
 
-	@Override
-	public ActionResultType interactLivingEntity(ItemStack itemStack, PlayerEntity player, LivingEntity entity, Hand hand) {
-		if (!player.level.isClientSide) {
-			String entityId = ForgeRegistries.ENTITIES.getKey(entity.getType()).toString();
-			List<String> blacklistedEntities = Config.COMMON.blacklistedMobs.get();
+  @Override
+  public ActionResultType interactLivingEntity(
+      ItemStack itemStack, PlayerEntity player, LivingEntity entity, Hand hand) {
+    if (!player.level.isClientSide) {
+      String entityId = ForgeRegistries.ENTITIES.getKey(entity.getType()).toString();
+      List<String> blacklistedEntities = Config.COMMON.blacklistedMobs.get();
 
-			if (blacklistedEntities.contains(entityId)) {
-				blacklistedEntities.remove(entityId);
-				player.sendMessage(new TranslationTextComponent(getDescriptionId() + ".removed", entityId), Util.NIL_UUID);
-			} else {
-				blacklistedEntities.add(entityId);
-				player.sendMessage(new TranslationTextComponent(getDescriptionId() + ".added", entityId), Util.NIL_UUID);
-			}
+      if (blacklistedEntities.contains(entityId)) {
+        blacklistedEntities.remove(entityId);
+        player.sendMessage(
+            new TranslationTextComponent(getDescriptionId() + ".removed", entityId), Util.NIL_UUID);
+      } else {
+        blacklistedEntities.add(entityId);
+        player.sendMessage(
+            new TranslationTextComponent(getDescriptionId() + ".added", entityId), Util.NIL_UUID);
+      }
 
-			Config.COMMON.blacklistedMobs.set(blacklistedEntities);
-		}
+      Config.COMMON.blacklistedMobs.set(blacklistedEntities);
+    }
 
-		return ActionResultType.SUCCESS;
-	}
+    return ActionResultType.SUCCESS;
+  }
 
-	@Override
-	public void appendHoverText(ItemStack itemStack, World level, List<ITextComponent> components, ITooltipFlag tooltipFlag) {
-		components.add(new TranslationTextComponent(getDescriptionId() + ".tooltip"));
-	}
+  @Override
+  public void appendHoverText(
+      ItemStack itemStack, World level, List<ITextComponent> components, ITooltipFlag tooltipFlag) {
+    components.add(new TranslationTextComponent(getDescriptionId() + ".tooltip"));
+  }
 }
