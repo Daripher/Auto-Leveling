@@ -4,12 +4,13 @@ import daripher.autoleveling.AutoLevelingMod;
 import daripher.autoleveling.config.Config;
 import daripher.autoleveling.data.DimensionsLevelingSettingsReloader;
 import daripher.autoleveling.data.EntitiesLevelingSettingsReloader;
-import daripher.autoleveling.data.LevelingSettings;
 import daripher.autoleveling.init.AutoLevelingAttributes;
 import daripher.autoleveling.mixin.LivingEntityAccessor;
 import daripher.autoleveling.network.NetworkDispatcher;
 import daripher.autoleveling.network.message.SyncLevelingData;
 import daripher.autoleveling.saveddata.GlobalLevelingData;
+import daripher.autoleveling.settings.DimensionLevelingSettings;
+import daripher.autoleveling.settings.LevelingSettings;
 import java.util.List;
 import java.util.UUID;
 import net.minecraft.client.Minecraft;
@@ -64,14 +65,20 @@ public class MobsLevelingEvents {
   public static void onEntityJoinWorld(EntityJoinWorldEvent event) {
     if (!shouldSetLevel(event.getEntity())) return;
     LivingEntity entity = (LivingEntity) event.getEntity();
-    ServerWorld world = ((ServerWorld) entity.level);
-    BlockPos spawnPos = world.getSharedSpawnPos();
+    BlockPos spawnPos = getSpawnPosition(entity);
     double distanceFromSpawn = Math.sqrt(spawnPos.distSqr(entity.blockPosition()));
     int level = getLevelForEntity(entity, distanceFromSpawn);
     setLevel(entity, level);
     applyAttributeBonuses(entity);
     addEquipment(entity);
     entity.addTag("autoleveling_spawned");
+  }
+
+  private static BlockPos getSpawnPosition(LivingEntity entity) {
+    RegistryKey<World> dimension = entity.level.dimension();
+    DimensionLevelingSettings settings =
+        DimensionsLevelingSettingsReloader.getSettingsForDimension(dimension);
+    return settings.getSpawnPosOverride().orElse(((ServerWorld) entity.level).getSharedSpawnPos());
   }
 
   @SubscribeEvent

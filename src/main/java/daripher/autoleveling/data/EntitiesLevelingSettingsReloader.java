@@ -1,8 +1,10 @@
 package daripher.autoleveling.data;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import daripher.autoleveling.settings.EntityLevelingSettings;
+import daripher.autoleveling.settings.LevelingSettings;
+import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -19,7 +21,7 @@ import org.apache.logging.log4j.Logger;
 public class EntitiesLevelingSettingsReloader extends JsonReloadListener {
   private static final Logger LOGGER = LogManager.getLogger();
   private static final Gson GSON = LootSerializers.createLootTableSerializer().create();
-  private static Map<ResourceLocation, LevelingSettings> settings = ImmutableMap.of();
+  private static final Map<ResourceLocation, LevelingSettings> SETTINGS = new HashMap<>();
 
   public EntitiesLevelingSettingsReloader() {
     super(GSON, "leveling_settings/entities");
@@ -27,7 +29,7 @@ public class EntitiesLevelingSettingsReloader extends JsonReloadListener {
 
   @Nullable
   public static LevelingSettings getSettingsForEntity(EntityType<?> entityType) {
-    return settings.get(ForgeRegistries.ENTITIES.getKey(entityType));
+    return SETTINGS.get(ForgeRegistries.ENTITIES.getKey(entityType));
   }
 
   @Override
@@ -35,19 +37,17 @@ public class EntitiesLevelingSettingsReloader extends JsonReloadListener {
       Map<ResourceLocation, JsonElement> map,
       @Nonnull IResourceManager resourceManager,
       @Nonnull IProfiler profiler) {
-    ImmutableMap.Builder<ResourceLocation, LevelingSettings> builder = ImmutableMap.builder();
+    SETTINGS.clear();
 
     map.forEach(
         (id, json) -> {
           try {
-            LevelingSettings levelingSettings = LevelingSettings.load(json.getAsJsonObject());
-            builder.put(id, levelingSettings);
+            LevelingSettings settings = EntityLevelingSettings.load(json.getAsJsonObject());
+            SETTINGS.put(id, settings);
             LOGGER.info("Loading leveling settings {}", id);
           } catch (Exception exception) {
             LOGGER.error("Couldn't parse leveling settings {}", id, exception);
           }
         });
-
-    settings = builder.build();
   }
 }

@@ -1,9 +1,10 @@
 package daripher.autoleveling.data;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import daripher.autoleveling.config.Config;
+import daripher.autoleveling.settings.DimensionLevelingSettings;
+import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nonnull;
 import net.minecraft.client.resources.JsonReloadListener;
@@ -19,24 +20,24 @@ import org.apache.logging.log4j.Logger;
 public class DimensionsLevelingSettingsReloader extends JsonReloadListener {
   private static final Logger LOGGER = LogManager.getLogger();
   private static final Gson GSON = LootSerializers.createLootTableSerializer().create();
-  private static Map<ResourceLocation, LevelingSettings> settings = ImmutableMap.of();
+  private static final Map<ResourceLocation, DimensionLevelingSettings> SETTINGS = new HashMap<>();
 
   public DimensionsLevelingSettingsReloader() {
     super(GSON, "leveling_settings/dimensions");
   }
 
-  public static LevelingSettings getSettingsForDimension(RegistryKey<World> dimension) {
-    return settings.getOrDefault(dimension.location(), defaultSettings());
+  public static DimensionLevelingSettings getSettingsForDimension(RegistryKey<World> dimension) {
+    return SETTINGS.getOrDefault(dimension.location(), defaultSettings());
   }
 
-  private static LevelingSettings defaultSettings() {
-    int startingLevel = Config.COMMON.defaultStartingLevel.get();
-    int maxLevel = Config.COMMON.defaultMaxLevel.get();
-    float levelPerDistance = Config.COMMON.defaultLevelsPerDistance.get().floatValue();
-    float levelPerDeepness = Config.COMMON.defaultLevelsPerDeepness.get().floatValue();
-    int randomLevelBonus = Config.COMMON.defaultRandomLevelBonus.get();
-    return new LevelingSettings(
-        startingLevel, maxLevel, levelPerDistance, levelPerDeepness, randomLevelBonus);
+  private static DimensionLevelingSettings defaultSettings() {
+    return new DimensionLevelingSettings(
+        Config.COMMON.defaultStartingLevel.get(),
+        Config.COMMON.defaultMaxLevel.get(),
+        Config.COMMON.defaultLevelsPerDistance.get().floatValue(),
+        Config.COMMON.defaultLevelsPerDeepness.get().floatValue(),
+        Config.COMMON.defaultRandomLevelBonus.get(),
+        null);
   }
 
   @Override
@@ -44,19 +45,18 @@ public class DimensionsLevelingSettingsReloader extends JsonReloadListener {
       Map<ResourceLocation, JsonElement> map,
       @Nonnull IResourceManager resourceManager,
       @Nonnull IProfiler profiler) {
-    ImmutableMap.Builder<ResourceLocation, LevelingSettings> builder = ImmutableMap.builder();
+    SETTINGS.clear();
 
     map.forEach(
         (id, json) -> {
           try {
-            LevelingSettings levelingSettings = LevelingSettings.load(json.getAsJsonObject());
-            builder.put(id, levelingSettings);
+            DimensionLevelingSettings settings =
+                DimensionLevelingSettings.load(json.getAsJsonObject());
+            SETTINGS.put(id, settings);
             LOGGER.info("Loading leveling settings {}", id);
           } catch (Exception exception) {
             LOGGER.error("Couldn't parse leveling settings {}", id, exception);
           }
         });
-
-    settings = builder.build();
   }
 }
