@@ -1,13 +1,13 @@
 package daripher.autoleveling.settings;
 
 public interface LevelingSettings {
-	int startingLevel();
+  int startingLevel();
 
-	int maxLevel();
+  int maxLevel();
 
-	float levelsPerDistance();
+  float levelsPerDistance();
 
-	float levelsPerDeepness();
+  float levelsPerDeepness();
 
-	int randomLevelBonus();
+  int randomLevelBonus();
 }

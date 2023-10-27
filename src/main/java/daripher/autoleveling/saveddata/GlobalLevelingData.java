@@ -5,34 +5,37 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.saveddata.SavedData;
 
 public class GlobalLevelingData extends SavedData {
-	private int levelBonus;
+  private int levelBonus;
 
-	@Override
-	public CompoundTag save(CompoundTag tag) {
-		tag.putInt("LevelBonus", levelBonus);
-		return tag;
-	}
+  private static GlobalLevelingData create() {
+    return new GlobalLevelingData();
+  }
 
-	public void setLevel(int level) {
-		this.levelBonus = level;
-		setDirty();
-	}
+  private static GlobalLevelingData load(CompoundTag tag) {
+    var data = GlobalLevelingData.create();
+    data.levelBonus = tag.getInt("LevelBonus");
+    return data;
+  }
 
-	public int getLevelBonus() {
-		return levelBonus;
-	}
+  public static GlobalLevelingData get(MinecraftServer server) {
+    return server
+        .overworld()
+        .getDataStorage()
+        .computeIfAbsent(GlobalLevelingData::load, GlobalLevelingData::create, "global_leveling");
+  }
 
-	private static GlobalLevelingData create() {
-		return new GlobalLevelingData();
-	}
+  @Override
+  public CompoundTag save(CompoundTag tag) {
+    tag.putInt("LevelBonus", levelBonus);
+    return tag;
+  }
 
-	private static GlobalLevelingData load(CompoundTag tag) {
-		var data = GlobalLevelingData.create();
-		data.levelBonus = tag.getInt("LevelBonus");
-		return data;
-	}
+  public void setLevel(int level) {
+    this.levelBonus = level;
+    setDirty();
+  }
 
-	public static GlobalLevelingData get(MinecraftServer server) {
-		return server.overworld().getDataStorage().computeIfAbsent(GlobalLevelingData::load, GlobalLevelingData::create, "global_leveling");
-	}
+  public int getLevelBonus() {
+    return levelBonus;
+  }
 }

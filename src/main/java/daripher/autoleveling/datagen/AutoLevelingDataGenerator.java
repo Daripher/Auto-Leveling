@@ -8,14 +8,15 @@ import net.minecraftforge.forge.event.lifecycle.GatherDataEvent;
 
 @EventBusSubscriber(modid = AutoLevelingMod.MOD_ID, bus = Bus.MOD)
 public class AutoLevelingDataGenerator {
-	@SubscribeEvent
-	public static void onGatherData(GatherDataEvent event) {
-		var dataGenerator = event.getGenerator();
-		var existingFileHelper = event.getExistingFileHelper();
+  @SubscribeEvent
+  public static void onGatherData(GatherDataEvent event) {
+    var dataGenerator = event.getGenerator();
+    var existingFileHelper = event.getExistingFileHelper();
 
-		if (event.includeClient()) {
-			dataGenerator.addProvider(new AutoLevelingLanguageProvider(dataGenerator));
-			dataGenerator.addProvider(new AutoLevelingItemModelProvider(dataGenerator, existingFileHelper));
-		}
-	}
+    if (event.includeClient()) {
+      dataGenerator.addProvider(new AutoLevelingLanguageProvider(dataGenerator));
+      dataGenerator.addProvider(
+          new AutoLevelingItemModelProvider(dataGenerator, existingFileHelper));
+    }
+  }
 }
