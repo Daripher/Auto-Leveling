@@ -1,20 +1,27 @@
 package daripher.autoleveling.event;
 
+import com.mojang.math.Matrix4f;
 import daripher.autoleveling.AutoLevelingMod;
 import daripher.autoleveling.config.Config;
 import daripher.autoleveling.data.DimensionsLevelingSettingsReloader;
 import daripher.autoleveling.data.EntitiesLevelingSettingsReloader;
 import daripher.autoleveling.init.AutoLevelingAttributes;
+import daripher.autoleveling.mixin.LivingEntityAccessor;
 import daripher.autoleveling.network.NetworkDispatcher;
 import daripher.autoleveling.network.message.SyncLevelingData;
 import daripher.autoleveling.saveddata.GlobalLevelingData;
 import daripher.autoleveling.settings.DimensionLevelingSettings;
 import daripher.autoleveling.settings.LevelingSettings;
-import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 import java.util.UUID;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -27,6 +34,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -49,7 +57,6 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import net.minecraftforge.network.PacketDistributor;
 
 @EventBusSubscriber(modid = AutoLevelingMod.MOD_ID)
@@ -59,7 +66,7 @@ public class MobsLevelingEvents {
   @SubscribeEvent
   public static void applyLevelBonuses(EntityJoinWorldEvent event) {
     if (!shouldSetLevel(event.getEntity()) || event.loadedFromDisk()) return;
-    var entity = (LivingEntity) event.getEntity();
+    LivingEntity entity = (LivingEntity) event.getEntity();
     BlockPos spawnPos = getSpawnPosition(entity);
     double distanceToSpawn = Math.sqrt(spawnPos.distSqr(entity.blockPosition()));
     int level = getLevelForEntity(entity, distanceToSpawn);
@@ -80,18 +87,21 @@ public class MobsLevelingEvents {
   @SubscribeEvent
   public static void adjustExpirienceDrop(LivingExperienceDropEvent event) {
     if (!hasLevel(event.getEntity())) return;
-    var level = getLevel(event.getEntityLiving()) + 1;
-    var originalExp = event.getOriginalExperience();
-    var expBonus = Config.COMMON.expBonus.get() * level;
+    int level = getLevel(event.getEntityLiving()) + 1;
+    int originalExp = event.getOriginalExperience();
+    double expBonus = Config.COMMON.expBonus.get() * level;
     event.setDroppedExperience((int) (originalExp + originalExp * expBonus));
   }
 
   @SubscribeEvent
   public static void dropAdditionalLoot(LivingDropsEvent event) {
     if (!hasLevel(event.getEntity())) return;
-    var leveledTableId = new ResourceLocation(AutoLevelingMod.MOD_ID, "gameplay/leveled_mobs");
-    var lootTable = event.getEntity().level.getServer().getLootTables().get(leveledTableId);
-    var lootContext = createLootContext(event.getEntityLiving(), event.getSource());
+    ResourceLocation leveledTableId =
+        new ResourceLocation(AutoLevelingMod.MOD_ID, "gameplay/leveled_mobs");
+    MinecraftServer server = event.getEntity().level.getServer();
+    if (server == null) return;
+    LootTable lootTable = server.getLootTables().get(leveledTableId);
+    LootContext lootContext = createLootContext(event.getEntityLiving(), event.getSource());
     lootTable.getRandomItems(lootContext).forEach(event.getEntity()::spawnAtLocation);
   }
 
@@ -104,7 +114,7 @@ public class MobsLevelingEvents {
   @SubscribeEvent
   public static void syncEntityLevel(PlayerEvent.StartTracking event) {
     if (!hasLevel(event.getTarget())) return;
-    var entity = (LivingEntity) event.getTarget();
+    LivingEntity entity = (LivingEntity) event.getTarget();
     NetworkDispatcher.networkChannel.send(
         PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getEntity()),
         new SyncLevelingData(entity));
@@ -115,28 +125,28 @@ public class MobsLevelingEvents {
   public static void renderEntityLevel(RenderNameplateEvent event) {
     if (!(event.getEntity() instanceof LivingEntity entity)) return;
     if (!shouldShowName(entity)) return;
-    var minecraft = Minecraft.getInstance();
+    Minecraft minecraft = Minecraft.getInstance();
     event.setResult(Event.Result.ALLOW);
     double distance = minecraft.getEntityRenderDispatcher().distanceToSqr(entity);
     if (!ForgeHooksClient.isNameplateInRenderDistance(entity, distance)) return;
-    var entityLevel = getLevel(entity) + 1;
-    var entityName = event.getContent();
-    var levelString =
+    int entityLevel = getLevel(entity) + 1;
+    Component entityName = event.getContent();
+    MutableComponent levelString =
         new TranslatableComponent("autoleveling.level", entityLevel)
             .withStyle(ChatFormatting.GREEN);
-    var textY = entity.getBbHeight() + 0.5F;
-    var textOffsetY = "deadmau5".equals(entityName.getString()) ? -10 : 0;
+    float textY = entity.getBbHeight() + 0.5F;
+    int textOffsetY = "deadmau5".equals(entityName.getString()) ? -10 : 0;
     event.getPoseStack().pushPose();
     event.getPoseStack().translate(0.0D, textY, 0.0D);
     event.getPoseStack().mulPose(minecraft.getEntityRenderDispatcher().cameraOrientation());
     event.getPoseStack().scale(-0.025F, -0.025F, 0.025F);
-    var pose = event.getPoseStack().last().pose();
-    var backgroundOpacity = minecraft.options.getBackgroundOpacity(0.25F);
-    var alpha = (int) (backgroundOpacity * 255.0F) << 24;
-    var font = minecraft.font;
-    var textX = -font.width(entityName) / 2 - 5 - font.width(levelString);
-    var multiBufferSource = event.getMultiBufferSource();
-    var packedLight = event.getPackedLight();
+    Matrix4f pose = event.getPoseStack().last().pose();
+    float backgroundOpacity = minecraft.options.getBackgroundOpacity(0.25F);
+    int alpha = (int) (backgroundOpacity * 255.0F) << 24;
+    Font font = minecraft.font;
+    int textX = -font.width(entityName) / 2 - 5 - font.width(levelString);
+    MultiBufferSource multiBufferSource = event.getMultiBufferSource();
+    int packedLight = event.getPackedLight();
     font.drawInBatch(
         levelString,
         textX,
@@ -167,12 +177,13 @@ public class MobsLevelingEvents {
   private static boolean shouldShowName(LivingEntity entity) {
     if (!hasLevel(entity)) return false;
     if (!shouldShowLevel(entity)) return false;
-    var minecraft = Minecraft.getInstance();
-    var alwaysShowLevel = Config.COMMON.alwaysShowLevel.get();
-    var showLevelWhenLookingAt = Config.COMMON.showLevelWhenLookingAt.get();
+    Minecraft minecraft = Minecraft.getInstance();
+    Boolean alwaysShowLevel = Config.COMMON.alwaysShowLevel.get();
+    Boolean showLevelWhenLookingAt = Config.COMMON.showLevelWhenLookingAt.get();
     if (!alwaysShowLevel && !(showLevelWhenLookingAt && minecraft.crosshairPickEntity == entity))
       return false;
-    var clientPlayer = minecraft.player;
+    LocalPlayer clientPlayer = minecraft.player;
+    if (clientPlayer == null) return false;
     return Minecraft.renderNames()
         && entity != minecraft.getCameraEntity()
         && !entity.isInvisibleTo(clientPlayer)
@@ -186,62 +197,61 @@ public class MobsLevelingEvents {
   }
 
   private static int getLevelForEntity(LivingEntity entity, double distanceFromSpawn) {
+    MinecraftServer server = entity.getServer();
+    if (server == null) return 0;
     LevelingSettings levelingSettings =
         EntitiesLevelingSettingsReloader.getSettingsForEntity(entity.getType());
     if (levelingSettings == null) {
-      var dimension = entity.level.dimension();
+      ResourceKey<Level> dimension = entity.level.dimension();
       levelingSettings = DimensionsLevelingSettingsReloader.getSettingsForDimension(dimension);
     }
-    var monsterLevel = (int) (levelingSettings.levelsPerDistance() * distanceFromSpawn);
-    var maxLevel = levelingSettings.maxLevel();
-    var levelBonus = levelingSettings.randomLevelBonus() + 1;
+    int monsterLevel = (int) (levelingSettings.levelsPerDistance() * distanceFromSpawn);
+    int maxLevel = levelingSettings.maxLevel();
+    int levelBonus = levelingSettings.randomLevelBonus() + 1;
     monsterLevel += levelingSettings.startingLevel() - 1;
     if (levelBonus > 0) monsterLevel += entity.getRandom().nextInt(levelBonus);
     monsterLevel = Math.abs(monsterLevel);
     if (maxLevel > 0) monsterLevel = Math.min(monsterLevel, maxLevel - 1);
-    var server = entity.getServer();
-    var globalLevelingData = GlobalLevelingData.get(server);
+    GlobalLevelingData globalLevelingData = GlobalLevelingData.get(server);
     monsterLevel += globalLevelingData.getLevelBonus();
     if (entity.getY() < 64) {
-      var deepness = 64 - entity.getY();
-      monsterLevel += levelingSettings.levelsPerDeepness() * deepness;
+      double deepness = 64 - entity.getY();
+      monsterLevel += (int) (levelingSettings.levelsPerDeepness() * deepness);
     }
     return monsterLevel;
   }
 
   @SubscribeEvent
   public static void applyDamageBonus(LivingHurtEvent event) {
-    var damageSource = event.getSource();
+    DamageSource damageSource = event.getSource();
     if (!(damageSource.getEntity() instanceof LivingEntity attacker)) return;
     if (damageSource.isProjectile()) {
-      var projectileDamage = AutoLevelingAttributes.PROJECTILE_DAMAGE_BONUS.get();
+      Attribute projectileDamage = AutoLevelingAttributes.PROJECTILE_DAMAGE_BONUS.get();
       if (attacker.getAttribute(projectileDamage) == null) return;
-      var damageBonus = (float) attacker.getAttributeValue(projectileDamage);
+      float damageBonus = (float) attacker.getAttributeValue(projectileDamage);
       event.setAmount(event.getAmount() * damageBonus);
     }
     if (damageSource.isExplosion()) {
-      var explosionDamage = AutoLevelingAttributes.EXPLOSION_DAMAGE_BONUS.get();
+      Attribute explosionDamage = AutoLevelingAttributes.EXPLOSION_DAMAGE_BONUS.get();
       if (attacker.getAttribute(explosionDamage) == null) return;
-      var damageBonus = (float) attacker.getAttributeValue(explosionDamage);
+      float damageBonus = (float) attacker.getAttributeValue(explosionDamage);
       event.setAmount(event.getAmount() * damageBonus);
     }
   }
 
   public static void applyAttributeBonuses(LivingEntity entity) {
-    var level = getLevel(entity);
+    int level = getLevel(entity);
     Config.getAttributeBonuses()
         .forEach(
-            (attribute, bonus) -> {
-              applyAttributeBonusIfPossible(entity, attribute, bonus * level);
-            });
+            (attribute, bonus) -> applyAttributeBonusIfPossible(entity, attribute, bonus * level));
   }
 
   private static void applyAttributeBonusIfPossible(
       LivingEntity entity, Attribute attribute, double bonus) {
-    var attributeInstance = entity.getAttribute(attribute);
-    var modifierId = UUID.fromString("6a102cb4-d735-4cb7-8ab2-3d383219a44e");
+    AttributeInstance attributeInstance = entity.getAttribute(attribute);
+    UUID modifierId = UUID.fromString("6a102cb4-d735-4cb7-8ab2-3d383219a44e");
     if (attributeInstance == null) return;
-    var modifier = attributeInstance.getModifier(modifierId);
+    AttributeModifier modifier = attributeInstance.getModifier(modifierId);
     if (modifier != null && modifier.getAmount() == bonus) return;
     if (modifier != null) attributeInstance.removeModifier(modifier);
     modifier =
@@ -251,11 +261,12 @@ public class MobsLevelingEvents {
   }
 
   public static void addEquipment(LivingEntity entity) {
-    for (var slot : EquipmentSlot.values()) {
-      var server = entity.getLevel().getServer();
-      var equipmentTable = getEquipmentLootTableForSlot(server, entity, slot);
+    MinecraftServer server = entity.getLevel().getServer();
+    if (server == null) return;
+    for (EquipmentSlot slot : EquipmentSlot.values()) {
+      LootTable equipmentTable = getEquipmentLootTableForSlot(server, entity, slot);
       if (equipmentTable == LootTable.EMPTY) continue;
-      var lootContext = createEquipmentLootContext(entity);
+      LootContext lootContext = createEquipmentLootContext(entity);
       equipmentTable
           .getRandomItems(lootContext)
           .forEach(itemStack -> entity.setItemSlot(slot, itemStack));
@@ -264,32 +275,19 @@ public class MobsLevelingEvents {
 
   private static LootTable getEquipmentLootTableForSlot(
       MinecraftServer server, LivingEntity entity, EquipmentSlot equipmentSlot) {
-    var entityId = EntityType.getKey(entity.getType());
-    var lootTableId =
+    ResourceLocation entityId = EntityType.getKey(entity.getType());
+    ResourceLocation lootTableId =
         new ResourceLocation(
             entityId.getNamespace(),
             "equipment/" + entityId.getPath() + "_" + equipmentSlot.getName());
     return server.getLootTables().get(lootTableId);
   }
 
-  private static LootContext createLootContext(
-      LivingEntity livingEntity, DamageSource damageSource) {
-    var lastHurtByPlayerTime =
-        (int)
-            ObfuscationReflectionHelper.getPrivateValue(
-                LivingEntity.class, livingEntity, "f_20889_");
-    var createLootContextMethod =
-        ObfuscationReflectionHelper.findMethod(
-            LivingEntity.class, "m_7771_", boolean.class, DamageSource.class);
-    try {
-      var builder =
-          (LootContext.Builder)
-              createLootContextMethod.invoke(livingEntity, lastHurtByPlayerTime > 0, damageSource);
-      return builder.create(LootContextParamSets.ENTITY);
-    } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-      e.printStackTrace();
-      return null;
-    }
+  private static LootContext createLootContext(LivingEntity entity, DamageSource damageSource) {
+    LivingEntityAccessor accessor = (LivingEntityAccessor) entity;
+    int lastHurtByPlayerTime = accessor.getLastHurtByPlayerTime();
+    Builder builder = accessor.invokeCreateLootContext(lastHurtByPlayerTime > 0, damageSource);
+    return builder.create(LootContextParamSets.ENTITY);
   }
 
   private static LootContext createEquipmentLootContext(LivingEntity entity) {
@@ -304,11 +302,11 @@ public class MobsLevelingEvents {
     if (!(entity instanceof LivingEntity livingEntity)) return false;
     if (livingEntity.getAttribute(Attributes.ATTACK_DAMAGE) == null) return false;
     if (entity.getType() == EntityType.PLAYER) return false;
-    var entityId = EntityType.getKey(entity.getType());
-    var entityNamespace = entityId.getNamespace();
-    var blacklistedMobs = Config.COMMON.blacklistedMobs.get();
+    ResourceLocation entityId = EntityType.getKey(entity.getType());
+    String entityNamespace = entityId.getNamespace();
+    List<String> blacklistedMobs = Config.COMMON.blacklistedMobs.get();
     if (blacklistedMobs.contains(entityNamespace + ":*")) return false;
-    var whitelistedMobs = Config.COMMON.whitelistedMobs.get();
+    List<String> whitelistedMobs = Config.COMMON.whitelistedMobs.get();
     if (whitelistedMobs.contains(entityNamespace + ":*")) return true;
     if (blacklistedMobs.contains(entityId.toString())) return false;
     if (!whitelistedMobs.isEmpty()) return whitelistedMobs.contains(entityId.toString());
@@ -316,10 +314,10 @@ public class MobsLevelingEvents {
   }
 
   public static boolean shouldShowLevel(Entity entity) {
-    var entityId = EntityType.getKey(entity.getType());
-    var blacklist = Config.COMMON.blacklistedShownLevels.get();
+    ResourceLocation entityId = EntityType.getKey(entity.getType());
+    List<String> blacklist = Config.COMMON.blacklistedShownLevels.get();
     if (blacklist.contains(entityId.toString())) return false;
-    var namespace = entityId.getNamespace();
+    String namespace = entityId.getNamespace();
     return !blacklist.contains(namespace + ":*");
   }
 

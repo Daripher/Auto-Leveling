@@ -1,6 +1,8 @@
 package daripher.autoleveling.datagen;
 
 import daripher.autoleveling.AutoLevelingMod;
+import net.minecraft.data.DataGenerator;
+import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
@@ -10,8 +12,8 @@ import net.minecraftforge.forge.event.lifecycle.GatherDataEvent;
 public class AutoLevelingDataGenerator {
   @SubscribeEvent
   public static void onGatherData(GatherDataEvent event) {
-    var dataGenerator = event.getGenerator();
-    var existingFileHelper = event.getExistingFileHelper();
+    DataGenerator dataGenerator = event.getGenerator();
+    ExistingFileHelper existingFileHelper = event.getExistingFileHelper();
 
     if (event.includeClient()) {
       dataGenerator.addProvider(new AutoLevelingLanguageProvider(dataGenerator));

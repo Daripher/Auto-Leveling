@@ -52,9 +52,10 @@ public class Config {
           .get()
           .forEach(
               attributeBonusConfig -> {
-                var attributeId = new ResourceLocation((String) attributeBonusConfig.get(0));
-                var attribute = ForgeRegistries.ATTRIBUTES.getValue(attributeId);
-                var attributeBonus = ((Double) attributeBonusConfig.get(1)).floatValue();
+                ResourceLocation attributeId =
+                    new ResourceLocation((String) attributeBonusConfig.get(0));
+                Attribute attribute = ForgeRegistries.ATTRIBUTES.getValue(attributeId);
+                float attributeBonus = ((Double) attributeBonusConfig.get(1)).floatValue();
                 if (attribute == null)
                   AutoLevelingMod.LOGGER.error("Attribute '" + attributeId + "' can not be found!");
                 else ATTRIBUTE_BONUSES.put(attribute, attributeBonus);
@@ -83,12 +84,12 @@ public class Config {
       Predicate<Object> positiveOrZeroInteger = o -> o instanceof Integer && (Integer) o >= 0;
       Predicate<Object> positiveInteger = o -> o instanceof Integer && (Integer) o > 0;
       builder.push("mobs");
-      blacklistedMobs = builder.define("blacklist", new ArrayList<String>());
-      whitelistedMobs = builder.define("whitelist", new ArrayList<String>());
+      blacklistedMobs = builder.define("blacklist", new ArrayList<>());
+      whitelistedMobs = builder.define("whitelist", new ArrayList<>());
       alwaysShowLevel = builder.define("always_show_level", false);
       showLevelWhenLookingAt = builder.define("show_level_when_looking_at", true);
       expBonus = builder.define("exp_bonus_per_level", 0.1D);
-      blacklistedShownLevels = builder.define("hidden_levels", new ArrayList<String>());
+      blacklistedShownLevels = builder.define("hidden_levels", new ArrayList<>());
       builder.pop();
       builder.push("attributes");
       attributesBonuses =

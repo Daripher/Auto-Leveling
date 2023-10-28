@@ -24,7 +24,7 @@ public class NetworkDispatcher {
             () -> "1.0",
             s -> true,
             s -> true);
-    var toClient = Optional.of(NetworkDirection.PLAY_TO_CLIENT);
+    Optional<NetworkDirection> toClient = Optional.of(NetworkDirection.PLAY_TO_CLIENT);
     networkChannel.registerMessage(
         1,
         SyncLevelingData.class,

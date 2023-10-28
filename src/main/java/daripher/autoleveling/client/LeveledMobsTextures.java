@@ -1,5 +1,6 @@
 package daripher.autoleveling.client;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -25,15 +26,10 @@ public class LeveledMobsTextures implements ResourceManagerReloadListener {
     if (!hasTextures(entityType)) {
       return null;
     }
-
     for (int i = level; i > 0; i--) {
-      var textureLocation = TEXTURES.get(entityType).get(i);
-
-      if (textureLocation != null) {
-        return textureLocation;
-      }
+      ResourceLocation texture = TEXTURES.get(entityType).get(i);
+      if (texture != null) return texture;
     }
-
     return null;
   }
 
@@ -49,29 +45,29 @@ public class LeveledMobsTextures implements ResourceManagerReloadListener {
   @Override
   public void onResourceManagerReload(ResourceManager resourceManager) {
     TEXTURES.clear();
-    var entityTextures =
+    Collection<ResourceLocation> entityTextures =
         resourceManager.listResources("textures/leveled_mobs", s -> s.endsWith(".png"));
-
     if (!entityTextures.isEmpty()) {
-      for (var textureLocation : entityTextures) {
-        var fileName =
+      for (ResourceLocation textureLocation : entityTextures) {
+        String fileName =
             textureLocation.getPath().replace("textures/leveled_mobs/", "").replace(".png", "");
-
-        if (!fileName.contains("_")) continue;
-
-        var entityId = new ResourceLocation(textureLocation.getNamespace(), fileName.split("_")[0]);
-        var entityType = ForgeRegistries.ENTITIES.getValue(entityId);
-
-        if (entityType == null) continue;
-
-        if (TEXTURES.get(entityType) == null) TEXTURES.put(entityType, new HashMap<>());
-
-        try {
-          var entityLevel = Integer.parseInt(fileName.split("_")[1]);
-          TEXTURES.get(entityType).put(entityLevel, textureLocation);
-        } catch (NumberFormatException exception) {
-          exception.printStackTrace();
+        if (!fileName.contains("_")) {
+          continue;
         }
+        ResourceLocation entityId =
+            new ResourceLocation(textureLocation.getNamespace(), fileName.split("_")[0]);
+        EntityType<?> entityType = ForgeRegistries.ENTITIES.getValue(entityId);
+        if (entityType == null) {
+          continue;
+        }
+        TEXTURES.computeIfAbsent(entityType, k -> new HashMap<>());
+        int entityLevel;
+        try {
+          entityLevel = Integer.parseInt(fileName.split("_")[1]);
+        } catch (NumberFormatException exception) {
+          continue;
+        }
+        TEXTURES.get(entityType).put(entityLevel, textureLocation);
       }
     }
   }

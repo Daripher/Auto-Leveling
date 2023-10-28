@@ -1,11 +1,13 @@
 package daripher.autoleveling.command;
 
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import daripher.autoleveling.AutoLevelingMod;
 import daripher.autoleveling.saveddata.GlobalLevelingData;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -14,24 +16,24 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 public class AutoLevelingCommands {
   @SubscribeEvent
   public static void onRegisterCommands(RegisterCommandsEvent event) {
-    var addGlobalLevelCommand =
+    LiteralArgumentBuilder<CommandSourceStack> addLevelCommand =
         Commands.literal("autoleveling")
+            .requires(AutoLevelingCommands::hasPermission)
             .then(
                 Commands.literal("level")
                     .then(
                         Commands.literal("add")
                             .then(
                                 Commands.argument("value", IntegerArgumentType.integer())
-                                    .executes(AutoLevelingCommands::executeAddLevelCommand))))
-            .requires(AutoLevelingCommands::hasPermission);
-    event.getDispatcher().register(addGlobalLevelCommand);
+                                    .executes(AutoLevelingCommands::addLevel))));
+    event.getDispatcher().register(addLevelCommand);
   }
 
-  private static int executeAddLevelCommand(CommandContext<CommandSourceStack> ctx) {
-    var server = ctx.getSource().getServer();
-    var globalLevelingData = GlobalLevelingData.get(server);
-    var levelBonus = ctx.getArgument("value", Integer.class);
-    var oldLevelBonus = globalLevelingData.getLevelBonus();
+  private static int addLevel(CommandContext<CommandSourceStack> ctx) {
+    MinecraftServer server = ctx.getSource().getServer();
+    GlobalLevelingData globalLevelingData = GlobalLevelingData.get(server);
+    Integer levelBonus = ctx.getArgument("value", Integer.class);
+    int oldLevelBonus = globalLevelingData.getLevelBonus();
     globalLevelingData.setLevel(oldLevelBonus + levelBonus);
     return 1;
   }

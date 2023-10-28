@@ -4,6 +4,7 @@ import daripher.autoleveling.event.MobsLevelingEvents;
 import java.util.function.Supplier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -22,14 +23,14 @@ public class SyncLevelingData {
   }
 
   public static SyncLevelingData decode(FriendlyByteBuf buf) {
-    var result = new SyncLevelingData();
+    SyncLevelingData result = new SyncLevelingData();
     result.entityId = buf.readInt();
     result.level = buf.readInt();
     return result;
   }
 
   public static void receive(SyncLevelingData message, Supplier<NetworkEvent.Context> ctxSupplier) {
-    var ctx = ctxSupplier.get();
+    NetworkEvent.Context ctx = ctxSupplier.get();
     ctx.setPacketHandled(true);
     ctx.enqueueWork(
         () -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> handlePacket(message, ctx)));
@@ -37,8 +38,11 @@ public class SyncLevelingData {
 
   @OnlyIn(value = Dist.CLIENT)
   private static void handlePacket(SyncLevelingData message, NetworkEvent.Context ctx) {
-    var client = Minecraft.getInstance();
-    var entity = client.level.getEntity(message.entityId);
+    ctx.setPacketHandled(true);
+    Minecraft client = Minecraft.getInstance();
+    if (client.level == null) return;
+    Entity entity = client.level.getEntity(message.entityId);
+    if (entity == null) return;
     MobsLevelingEvents.setLevel((LivingEntity) entity, message.level);
   }
 

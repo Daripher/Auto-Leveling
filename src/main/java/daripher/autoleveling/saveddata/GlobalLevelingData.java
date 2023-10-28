@@ -3,6 +3,7 @@ package daripher.autoleveling.saveddata;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.saveddata.SavedData;
+import org.jetbrains.annotations.NotNull;
 
 public class GlobalLevelingData extends SavedData {
   private int levelBonus;
@@ -12,7 +13,7 @@ public class GlobalLevelingData extends SavedData {
   }
 
   private static GlobalLevelingData load(CompoundTag tag) {
-    var data = GlobalLevelingData.create();
+    GlobalLevelingData data = GlobalLevelingData.create();
     data.levelBonus = tag.getInt("LevelBonus");
     return data;
   }
@@ -25,7 +26,7 @@ public class GlobalLevelingData extends SavedData {
   }
 
   @Override
-  public CompoundTag save(CompoundTag tag) {
+  public @NotNull CompoundTag save(CompoundTag tag) {
     tag.putInt("LevelBonus", levelBonus);
     return tag;
   }
