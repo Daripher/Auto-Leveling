@@ -2,9 +2,8 @@ package daripher.autoleveling.client;
 
 import java.util.HashMap;
 import java.util.Map;
-
+import java.util.Set;
 import javax.annotation.Nullable;
-
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
@@ -18,63 +17,66 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 @EventBusSubscriber(bus = Bus.MOD, value = Dist.CLIENT)
 public class LeveledMobsTextures implements ResourceManagerReloadListener {
-	private static final LeveledMobsTextures INSTANCE = new LeveledMobsTextures();
-	private static final Map<EntityType<?>, Map<Integer, ResourceLocation>> TEXTURES = new HashMap<>();
+  private static final LeveledMobsTextures INSTANCE = new LeveledMobsTextures();
+  private static final Map<EntityType<?>, Map<Integer, ResourceLocation>> TEXTURES =
+      new HashMap<>();
 
-	@Override
-	public void onResourceManagerReload(ResourceManager resourceManager) {
-		TEXTURES.clear();
-		var entityTextures = resourceManager.listResources("textures/leveled_mobs", l -> l.getPath().endsWith(".png")).keySet();
+  @Nullable
+  public static ResourceLocation get(EntityType<?> entityType, int level) {
+    if (!hasTextures(entityType)) {
+      return null;
+    }
 
-		if (!entityTextures.isEmpty()) {
-			for (ResourceLocation location : entityTextures) {
-				var fileName = location.getPath().replace("textures/leveled_mobs/", "").replace(".png", "");
+    for (int i = level; i > 0; i--) {
+      ResourceLocation textureLocation = TEXTURES.get(entityType).get(i);
 
-				if (!fileName.contains("_"))
-					continue;
+      if (textureLocation != null) {
+        return textureLocation;
+      }
+    }
 
-				var entityId = fileName.split("_")[0];
-				var entityType = ForgeRegistries.ENTITY_TYPES.getValue(new ResourceLocation(location.getNamespace(), entityId));
+    return null;
+  }
 
-				if (entityType == null)
-					continue;
+  private static boolean hasTextures(EntityType<?> entityType) {
+    return TEXTURES.containsKey(entityType) && !TEXTURES.get(entityType).isEmpty();
+  }
 
-				if (TEXTURES.get(entityType) == null)
-					TEXTURES.put(entityType, new HashMap<>());
+  @SubscribeEvent
+  public static void onRegisterClientReloadListeners(RegisterClientReloadListenersEvent event) {
+    event.registerReloadListener(INSTANCE);
+  }
 
-				try {
-					var level = Integer.parseInt(fileName.split("_")[1]);
-					TEXTURES.get(entityType).put(level, location);
-				} catch (NumberFormatException exception) {
-					exception.printStackTrace();
-				}
-			}
-		}
-	}
+  @Override
+  public void onResourceManagerReload(ResourceManager resourceManager) {
+    TEXTURES.clear();
+    Set<ResourceLocation> entityTextures =
+        resourceManager
+            .listResources("textures/leveled_mobs", l -> l.getPath().endsWith(".png"))
+            .keySet();
 
-	@Nullable
-	public static ResourceLocation get(EntityType<?> entityType, int level) {
-		if (!hasTextures(entityType)) {
-			return null;
-		}
+    if (!entityTextures.isEmpty()) {
+      for (ResourceLocation location : entityTextures) {
+        String fileName = location.getPath().replace("textures/leveled_mobs/", "").replace(".png", "");
 
-		for (int i = level; i > 0; i--) {
-			var textureLocation = TEXTURES.get(entityType).get(i);
+        if (!fileName.contains("_")) continue;
 
-			if (textureLocation != null) {
-				return textureLocation;
-			}
-		}
+        String entityId = fileName.split("_")[0];
+        EntityType<?> entityType =
+            ForgeRegistries.ENTITY_TYPES.getValue(
+                new ResourceLocation(location.getNamespace(), entityId));
 
-		return null;
-	}
+        if (entityType == null) continue;
 
-	private static boolean hasTextures(EntityType<?> entityType) {
-		return TEXTURES.containsKey(entityType) && !TEXTURES.get(entityType).isEmpty();
-	}
+        if (TEXTURES.get(entityType) == null) TEXTURES.put(entityType, new HashMap<>());
 
-	@SubscribeEvent
-	public static void onRegisterClientReloadListeners(RegisterClientReloadListenersEvent event) {
-		event.registerReloadListener(INSTANCE);
-	}
+        try {
+          int level = Integer.parseInt(fileName.split("_")[1]);
+          TEXTURES.get(entityType).put(level, location);
+        } catch (NumberFormatException exception) {
+          exception.printStackTrace();
+        }
+      }
+    }
+  }
 }
