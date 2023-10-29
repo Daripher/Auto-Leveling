@@ -15,17 +15,14 @@ import net.minecraft.world.level.storage.loot.parameters.LootContextParam;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.minecraft.world.level.storage.loot.predicates.LootItemConditionType;
+import org.jetbrains.annotations.NotNull;
 
 public record LevelCheck(int min, int max) implements LootItemCondition {
-  public static LootItemCondition.Builder correctLevel(int min, int max) {
-    return () -> new LevelCheck(min, max);
-  }
-
-  public LootItemConditionType getType() {
+  public @NotNull LootItemConditionType getType() {
     return AutoLevelingLootItemConditions.LEVEL_CHECK.get();
   }
 
-  public Set<LootContextParam<?>> getReferencedContextParams() {
+  public @NotNull Set<LootContextParam<?>> getReferencedContextParams() {
     return ImmutableSet.of(LootContextParams.THIS_ENTITY);
   }
 
@@ -40,12 +37,12 @@ public record LevelCheck(int min, int max) implements LootItemCondition {
   public static class Serializer
       implements net.minecraft.world.level.storage.loot.Serializer<LevelCheck> {
     public void serialize(
-        JsonObject jsonObject, LevelCheck levelCheck, JsonSerializationContext context) {
+        JsonObject jsonObject, LevelCheck levelCheck, @NotNull JsonSerializationContext context) {
       jsonObject.addProperty("min", levelCheck.min);
       jsonObject.addProperty("max", levelCheck.max);
     }
 
-    public LevelCheck deserialize(JsonObject jsonObject, JsonDeserializationContext context) {
+    public @NotNull LevelCheck deserialize(@NotNull JsonObject jsonObject, @NotNull JsonDeserializationContext context) {
       int min = GsonHelper.getAsInt(jsonObject, "min", 0);
       int max = GsonHelper.getAsInt(jsonObject, "max", 0);
       return new LevelCheck(min, max);

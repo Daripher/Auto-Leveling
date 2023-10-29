@@ -16,6 +16,7 @@ import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.loot.Deserializers;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 public class DimensionsLevelingSettingsReloader extends SimpleJsonResourceReloadListener {
@@ -50,8 +51,8 @@ public class DimensionsLevelingSettingsReloader extends SimpleJsonResourceReload
   @Override
   protected void apply(
       Map<ResourceLocation, JsonElement> map,
-      ResourceManager resourceManager,
-      ProfilerFiller profilerFiller) {
+      @NotNull ResourceManager resourceManager,
+      @NotNull ProfilerFiller profilerFiller) {
     SETTINGS.clear();
     map.forEach(this::loadSettings);
   }

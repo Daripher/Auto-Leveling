@@ -23,18 +23,11 @@ public class LeveledMobsTextures implements ResourceManagerReloadListener {
 
   @Nullable
   public static ResourceLocation get(EntityType<?> entityType, int level) {
-    if (!hasTextures(entityType)) {
-      return null;
-    }
-
+    if (!hasTextures(entityType)) return null;
     for (int i = level; i > 0; i--) {
       ResourceLocation textureLocation = TEXTURES.get(entityType).get(i);
-
-      if (textureLocation != null) {
-        return textureLocation;
-      }
+      if (textureLocation != null) return textureLocation;
     }
-
     return null;
   }
 
@@ -54,29 +47,24 @@ public class LeveledMobsTextures implements ResourceManagerReloadListener {
         resourceManager
             .listResources("textures/leveled_mobs", l -> l.getPath().endsWith(".png"))
             .keySet();
-
-    if (!entityTextures.isEmpty()) {
-      for (ResourceLocation location : entityTextures) {
-        String fileName = location.getPath().replace("textures/leveled_mobs/", "").replace(".png", "");
-
-        if (!fileName.contains("_")) continue;
-
-        String entityId = fileName.split("_")[0];
-        EntityType<?> entityType =
-            ForgeRegistries.ENTITY_TYPES.getValue(
-                new ResourceLocation(location.getNamespace(), entityId));
-
-        if (entityType == null) continue;
-
-        if (TEXTURES.get(entityType) == null) TEXTURES.put(entityType, new HashMap<>());
-
-        try {
-          int level = Integer.parseInt(fileName.split("_")[1]);
-          TEXTURES.get(entityType).put(level, location);
-        } catch (NumberFormatException exception) {
-          exception.printStackTrace();
-        }
+    if (entityTextures.isEmpty()) return;
+    for (ResourceLocation location : entityTextures) {
+      String fileName =
+          location.getPath().replace("textures/leveled_mobs/", "").replace(".png", "");
+      if (!fileName.contains("_")) continue;
+      int level;
+      try {
+        level = Integer.parseInt(fileName.split("_")[1]);
+      } catch (NumberFormatException exception) {
+        continue;
       }
+      String entityId = fileName.split("_")[0];
+      EntityType<?> entityType =
+          ForgeRegistries.ENTITY_TYPES.getValue(
+              new ResourceLocation(location.getNamespace(), entityId));
+      if (entityType == null) continue;
+      TEXTURES.computeIfAbsent(entityType, k -> new HashMap<>());
+      TEXTURES.get(entityType).put(level, location);
     }
   }
 }
