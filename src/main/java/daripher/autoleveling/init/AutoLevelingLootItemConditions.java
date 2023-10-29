@@ -8,7 +8,9 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
 
 public class AutoLevelingLootItemConditions {
-	public static final DeferredRegister<LootItemConditionType> REGISTRY = DeferredRegister.create(Registries.LOOT_CONDITION_TYPE, AutoLevelingMod.MOD_ID);
+  public static final DeferredRegister<LootItemConditionType> REGISTRY =
+      DeferredRegister.create(Registries.LOOT_CONDITION_TYPE, AutoLevelingMod.MOD_ID);
 
-	public static final RegistryObject<LootItemConditionType> LEVEL_CHECK = REGISTRY.register("level_check", LevelCheck::createType);
+  public static final RegistryObject<LootItemConditionType> LEVEL_CHECK =
+      REGISTRY.register("level_check", LevelCheck::createType);
 }

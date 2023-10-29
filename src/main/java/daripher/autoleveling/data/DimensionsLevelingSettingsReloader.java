@@ -1,19 +1,14 @@
 package daripher.autoleveling.data;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
-import javax.annotation.Nonnull;
-
-import org.slf4j.Logger;
-
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.mojang.logging.LogUtils;
-
 import daripher.autoleveling.config.Config;
 import daripher.autoleveling.settings.DimensionLevelingSettings;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import javax.annotation.Nonnull;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -21,43 +16,53 @@ import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.loot.Deserializers;
+import org.slf4j.Logger;
 
 public class DimensionsLevelingSettingsReloader extends SimpleJsonResourceReloadListener {
-	private static final Logger LOGGER = LogUtils.getLogger();
-	private static final Gson GSON = Deserializers.createLootTableSerializer().create();
-	private static final Map<ResourceLocation, DimensionLevelingSettings> SETTINGS = new HashMap<>();
+  private static final Logger LOGGER = LogUtils.getLogger();
+  private static final Gson GSON = Deserializers.createLootTableSerializer().create();
+  private static final Map<ResourceLocation, DimensionLevelingSettings> SETTINGS = new HashMap<>();
 
-	public DimensionsLevelingSettingsReloader() {
-		super(GSON, "leveling_settings/dimensions");
-	}
+  public DimensionsLevelingSettingsReloader() {
+    super(GSON, "leveling_settings/dimensions");
+  }
 
-	@Override
-	protected void apply(Map<ResourceLocation, JsonElement> jsonElements, ResourceManager resourceManager, ProfilerFiller profilerFiller) {
-		SETTINGS.clear();
-		jsonElements.forEach(this::loadSettings);
-	}
+  @Nonnull
+  public static DimensionLevelingSettings getSettingsForDimension(ResourceKey<Level> dimension) {
+    return SETTINGS.getOrDefault(dimension.location(), createDefaultSettings());
+  }
 
-	private void loadSettings(ResourceLocation fileId, JsonElement jsonElement) {
-		try {
-			LOGGER.info("Loading leveling settings {}", fileId);
-			var settings = DimensionLevelingSettings.load(jsonElement.getAsJsonObject());
-			SETTINGS.put(fileId, settings);
-		} catch (Exception exception) {
-			LOGGER.error("Couldn't parse leveling settings {}", fileId, exception);
-		}
-	}
+  private static DimensionLevelingSettings createDefaultSettings() {
+    int startingLevel = Config.COMMON.defaultStartingLevel.get();
+    int maxLevel = Config.COMMON.defaultMaxLevel.get();
+    float levelPerDistance = Config.COMMON.defaultLevelsPerDistance.get().floatValue();
+    float levelPerDeepness = Config.COMMON.defaultLevelsPerDeepness.get().floatValue();
+    int randomLevelBonus = Config.COMMON.defaultRandomLevelBonus.get();
+    return new DimensionLevelingSettings(
+        startingLevel,
+        maxLevel,
+        levelPerDistance,
+        levelPerDeepness,
+        randomLevelBonus,
+        Optional.empty());
+  }
 
-	@Nonnull
-	public static DimensionLevelingSettings getSettingsForDimension(ResourceKey<Level> dimension) {
-		return SETTINGS.getOrDefault(dimension.location(), createDefaultSettings());
-	}
+  @Override
+  protected void apply(
+      Map<ResourceLocation, JsonElement> jsonElements,
+      ResourceManager resourceManager,
+      ProfilerFiller profilerFiller) {
+    SETTINGS.clear();
+    jsonElements.forEach(this::loadSettings);
+  }
 
-	private static DimensionLevelingSettings createDefaultSettings() {
-		int startingLevel = Config.COMMON.defaultStartingLevel.get();
-		int maxLevel = Config.COMMON.defaultMaxLevel.get();
-		float levelPerDistance = Config.COMMON.defaultLevelsPerDistance.get().floatValue();
-		float levelPerDeepness = Config.COMMON.defaultLevelsPerDeepness.get().floatValue();
-		int randomLevelBonus = Config.COMMON.defaultRandomLevelBonus.get();
-		return new DimensionLevelingSettings(startingLevel, maxLevel, levelPerDistance, levelPerDeepness, randomLevelBonus, Optional.empty());
-	}
+  private void loadSettings(ResourceLocation fileId, JsonElement jsonElement) {
+    try {
+      LOGGER.info("Loading leveling settings {}", fileId);
+      DimensionLevelingSettings settings = DimensionLevelingSettings.load(jsonElement.getAsJsonObject());
+      SETTINGS.put(fileId, settings);
+    } catch (Exception exception) {
+      LOGGER.error("Couldn't parse leveling settings {}", fileId, exception);
+    }
+  }
 }

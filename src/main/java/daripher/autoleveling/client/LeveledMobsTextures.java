@@ -1,15 +1,13 @@
 package daripher.autoleveling.client;
 
+import com.mojang.logging.LogUtils;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
-
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
-
-import org.slf4j.Logger;
-
-import com.mojang.logging.LogUtils;
-
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
@@ -20,76 +18,81 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 import net.minecraftforge.registries.ForgeRegistries;
+import org.slf4j.Logger;
 
 @EventBusSubscriber(bus = Bus.MOD, value = Dist.CLIENT)
 public enum LeveledMobsTextures implements ResourceManagerReloadListener {
-	INSTANCE;
+  INSTANCE;
 
-	private static final Map<EntityType<?>, Map<Integer, ResourceLocation>> CACHED_TEXTURES = new HashMap<>();
-	private static final String TEXTURES_FOLDER = "textures/leveled_mobs";
-	private static final String TEXTURE_FILE_NAME_FORMAT = "^[a-z|_]+_[1-9]+$";
-	private static final String PNG_FILE_SUFFIX = ".png";
-	private static final Logger LOGGER = LogUtils.getLogger();
+  private static final Map<EntityType<?>, Map<Integer, ResourceLocation>> CACHED_TEXTURES =
+      new HashMap<>();
+  private static final String TEXTURES_FOLDER = "textures/leveled_mobs";
+  private static final String TEXTURE_FILE_NAME_FORMAT = "^[a-z|_]+_[1-9]+$";
+  private static final String PNG_FILE_SUFFIX = ".png";
+  private static final Logger LOGGER = LogUtils.getLogger();
 
-	@Override
-	public void onResourceManagerReload(ResourceManager resourceManager) {
-		CACHED_TEXTURES.clear();
-		var textures = resourceManager.listResources(TEXTURES_FOLDER, this::isPngImage).keySet();
-		var textureNamePredicate = Pattern.compile(TEXTURE_FILE_NAME_FORMAT).asPredicate();
-		var validTextures = textures.stream().filter(textureLocation -> textureNamePredicate.test(textureLocation.toString()));
-		validTextures.forEach(this::saveTexture);
-	}
+  @Nullable
+  public static ResourceLocation get(EntityType<?> entityType, int level) {
+    if (!hasTexturesFor(entityType)) {
+      return null;
+    }
+    for (int i = level; i > 0; i--) {
+      ResourceLocation textureLocation = getTextureFor(entityType, i);
+      if (textureLocation != null) {
+        return textureLocation;
+      }
+    }
+    return null;
+  }
 
-	private void saveTexture(ResourceLocation textureLocation) {
-		var textureName = getTextureFileName(textureLocation);
-		var splitTextureName = textureName.split("_");
-		var entityTypeName = splitTextureName[0];
-		var entityTypeId = new ResourceLocation(textureLocation.getNamespace(), entityTypeName);
-		var entityType = ForgeRegistries.ENTITY_TYPES.getValue(entityTypeId);
-		if (entityType == null) {
-			LOGGER.warn("Can't read texture {}, unknown entity type {} specified", textureLocation, entityTypeId);
-			return;
-		}
-		if (CACHED_TEXTURES.get(entityType) == null) {
-			CACHED_TEXTURES.put(entityType, new HashMap<>());
-		}
-		var entityLevel = Integer.parseInt(splitTextureName[1]);
-		CACHED_TEXTURES.get(entityType).put(entityLevel, textureLocation);
-	}
+  @Nullable
+  private static ResourceLocation getTextureFor(EntityType<?> entityType, int level) {
+    return CACHED_TEXTURES.get(entityType).get(level);
+  }
 
-	public String getTextureFileName(ResourceLocation resourceLocation) {
-		return resourceLocation.getPath().replace(TEXTURES_FOLDER, "").replace(PNG_FILE_SUFFIX, "");
-	}
+  private static boolean hasTexturesFor(EntityType<?> entityType) {
+    return CACHED_TEXTURES.containsKey(entityType) && !CACHED_TEXTURES.get(entityType).isEmpty();
+  }
 
-	@Nullable
-	public static ResourceLocation get(EntityType<?> entityType, int level) {
-		if (!hasTexturesFor(entityType)) {
-			return null;
-		}
-		for (int i = level; i > 0; i--) {
-			var textureLocation = getTextureFor(entityType, i);
-			if (textureLocation != null) {
-				return textureLocation;
-			}
-		}
-		return null;
-	}
+  @SubscribeEvent
+  public static void registerReloadListener(RegisterClientReloadListenersEvent event) {
+    event.registerReloadListener(INSTANCE);
+  }
 
-	@Nullable
-	private static ResourceLocation getTextureFor(EntityType<?> entityType, int level) {
-		return CACHED_TEXTURES.get(entityType).get(level);
-	}
+  @Override
+  public void onResourceManagerReload(ResourceManager resourceManager) {
+    CACHED_TEXTURES.clear();
+    Set<ResourceLocation> textures = resourceManager.listResources(TEXTURES_FOLDER, this::isPngImage).keySet();
+    Predicate<String> textureNamePredicate = Pattern.compile(TEXTURE_FILE_NAME_FORMAT).asPredicate();
+    Stream<ResourceLocation> validTextures =
+        textures.stream()
+            .filter(textureLocation -> textureNamePredicate.test(textureLocation.toString()));
+    validTextures.forEach(this::saveTexture);
+  }
 
-	private static boolean hasTexturesFor(EntityType<?> entityType) {
-		return CACHED_TEXTURES.containsKey(entityType) && !CACHED_TEXTURES.get(entityType).isEmpty();
-	}
+  private void saveTexture(ResourceLocation textureLocation) {
+    String textureName = getTextureFileName(textureLocation);
+    String[] splitTextureName = textureName.split("_");
+    String entityTypeName = splitTextureName[0];
+    ResourceLocation entityTypeId = new ResourceLocation(textureLocation.getNamespace(), entityTypeName);
+    EntityType<?> entityType = ForgeRegistries.ENTITY_TYPES.getValue(entityTypeId);
+    if (entityType == null) {
+      LOGGER.warn(
+          "Can't read texture {}, unknown entity type {} specified", textureLocation, entityTypeId);
+      return;
+    }
+    if (CACHED_TEXTURES.get(entityType) == null) {
+      CACHED_TEXTURES.put(entityType, new HashMap<>());
+    }
+    int entityLevel = Integer.parseInt(splitTextureName[1]);
+    CACHED_TEXTURES.get(entityType).put(entityLevel, textureLocation);
+  }
 
-	private boolean isPngImage(ResourceLocation resourceLocation) {
-		return resourceLocation.getPath().endsWith(PNG_FILE_SUFFIX);
-	}
+  public String getTextureFileName(ResourceLocation resourceLocation) {
+    return resourceLocation.getPath().replace(TEXTURES_FOLDER, "").replace(PNG_FILE_SUFFIX, "");
+  }
 
-	@SubscribeEvent
-	public static void registerReloadListener(RegisterClientReloadListenersEvent event) {
-		event.registerReloadListener(INSTANCE);
-	}
+  private boolean isPngImage(ResourceLocation resourceLocation) {
+    return resourceLocation.getPath().endsWith(PNG_FILE_SUFFIX);
+  }
 }

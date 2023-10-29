@@ -7,8 +7,8 @@ import snownee.jade.api.WailaPlugin;
 
 @WailaPlugin
 public class AutoLevelingWailaPlugin implements IWailaPlugin {
-	@Override
-	public void registerClient(IWailaClientRegistration registration) {
-		registration.registerEntityComponent(LevelComponentProvider.INSTANCE, LivingEntity.class);
-	}
+  @Override
+  public void registerClient(IWailaClientRegistration registration) {
+    registration.registerEntityComponent(LevelComponentProvider.INSTANCE, LivingEntity.class);
+  }
 }

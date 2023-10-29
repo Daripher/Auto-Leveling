@@ -9,14 +9,20 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
 
 public class AutoLevelingTabs {
-	public static final DeferredRegister<CreativeModeTab> REGISTRY = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, AutoLevelingMod.MOD_ID);
+  public static final DeferredRegister<CreativeModeTab> REGISTRY =
+      DeferredRegister.create(Registries.CREATIVE_MODE_TAB, AutoLevelingMod.MOD_ID);
 
-	public static final RegistryObject<CreativeModeTab> TOOLS = REGISTRY.register("tools", () -> CreativeModeTab.builder()
-			  .title(Component.translatable("itemGroup.autoleveling"))
-			  .icon(() -> new ItemStack(AutoLevelingItems.BLACKLIST_TOOL.get()))
-			  .displayItems((params, output) -> {
-				  output.accept(AutoLevelingItems.BLACKLIST_TOOL.get());
-				  output.accept(AutoLevelingItems.WHITELIST_TOOL.get());
-			  })
-			  .build());
+  public static final RegistryObject<CreativeModeTab> TOOLS =
+      REGISTRY.register(
+          "tools",
+          () ->
+              CreativeModeTab.builder()
+                  .title(Component.translatable("itemGroup.autoleveling"))
+                  .icon(() -> new ItemStack(AutoLevelingItems.BLACKLIST_TOOL.get()))
+                  .displayItems(
+                      (params, output) -> {
+                        output.accept(AutoLevelingItems.BLACKLIST_TOOL.get());
+                        output.accept(AutoLevelingItems.WHITELIST_TOOL.get());
+                      })
+                  .build());
 }
