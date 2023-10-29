@@ -14,6 +14,7 @@ import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.storage.loot.Deserializers;
 import net.minecraftforge.registries.ForgeRegistries;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 public class EntitiesLevelingSettingsReloader extends SimpleJsonResourceReloadListener {
@@ -33,8 +34,8 @@ public class EntitiesLevelingSettingsReloader extends SimpleJsonResourceReloadLi
   @Override
   protected void apply(
       Map<ResourceLocation, JsonElement> jsonElements,
-      ResourceManager resourceManager,
-      ProfilerFiller profilerFiller) {
+      @NotNull ResourceManager resourceManager,
+      @NotNull ProfilerFiller profilerFiller) {
     SETTINGS.clear();
     jsonElements.forEach(this::loadSettings);
   }

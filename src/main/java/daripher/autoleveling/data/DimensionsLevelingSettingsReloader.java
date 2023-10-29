@@ -16,6 +16,7 @@ import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.loot.Deserializers;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 public class DimensionsLevelingSettingsReloader extends SimpleJsonResourceReloadListener {
@@ -50,8 +51,8 @@ public class DimensionsLevelingSettingsReloader extends SimpleJsonResourceReload
   @Override
   protected void apply(
       Map<ResourceLocation, JsonElement> jsonElements,
-      ResourceManager resourceManager,
-      ProfilerFiller profilerFiller) {
+      @NotNull ResourceManager resourceManager,
+      @NotNull ProfilerFiller profilerFiller) {
     SETTINGS.clear();
     jsonElements.forEach(this::loadSettings);
   }
@@ -59,7 +60,8 @@ public class DimensionsLevelingSettingsReloader extends SimpleJsonResourceReload
   private void loadSettings(ResourceLocation fileId, JsonElement jsonElement) {
     try {
       LOGGER.info("Loading leveling settings {}", fileId);
-      DimensionLevelingSettings settings = DimensionLevelingSettings.load(jsonElement.getAsJsonObject());
+      DimensionLevelingSettings settings =
+          DimensionLevelingSettings.load(jsonElement.getAsJsonObject());
       SETTINGS.put(fileId, settings);
     } catch (Exception exception) {
       LOGGER.error("Couldn't parse leveling settings {}", fileId, exception);

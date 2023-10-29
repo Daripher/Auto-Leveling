@@ -3,6 +3,7 @@ package daripher.autoleveling.network.message;
 import daripher.autoleveling.event.MobsLevelingEvents;
 import java.util.function.Supplier;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -38,8 +39,12 @@ public class SyncLevelingData {
 
   @OnlyIn(value = Dist.CLIENT)
   private static void handlePacket(SyncLevelingData message, NetworkEvent.Context ctx) {
+    ctx.setPacketHandled(true);
     Minecraft client = Minecraft.getInstance();
-    Entity entity = client.level.getEntity(message.entityId);
+    ClientLevel level = client.level;
+    if (level == null) return;
+    Entity entity = level.getEntity(message.entityId);
+    if (entity == null) return;
     MobsLevelingEvents.setLevel((LivingEntity) entity, message.level);
   }
 

@@ -40,7 +40,8 @@ public class LevelPlateRenderer {
     float backgroundOpacity = minecraft.options.getBackgroundOpacity(0.25F);
     int textAlpha = (int) (backgroundOpacity * 255.0F) << 24;
     Font font = minecraft.font;
-    Font.DisplayMode displayMode = !entity.isDiscrete() ? Font.DisplayMode.SEE_THROUGH : Font.DisplayMode.NORMAL;
+    Font.DisplayMode displayMode =
+        !entity.isDiscrete() ? Font.DisplayMode.SEE_THROUGH : Font.DisplayMode.NORMAL;
     int textX = -font.width(entityName) / 2 - 5 - font.width(entityLevelComponent);
     int textY = "deadmau5".equals(entityName.getString()) ? -10 : 0;
     font.drawInBatch(

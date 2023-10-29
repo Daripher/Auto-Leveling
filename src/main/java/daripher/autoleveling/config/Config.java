@@ -52,7 +52,8 @@ public class Config {
           .get()
           .forEach(
               attributeBonusConfig -> {
-                ResourceLocation attributeId = new ResourceLocation((String) attributeBonusConfig.get(0));
+                ResourceLocation attributeId =
+                    new ResourceLocation((String) attributeBonusConfig.get(0));
                 Attribute attribute = ForgeRegistries.ATTRIBUTES.getValue(attributeId);
                 float attributeBonus = ((Double) attributeBonusConfig.get(1)).floatValue();
                 if (attribute == null)
@@ -85,18 +86,17 @@ public class Config {
       builder.push("Mobs");
       builder.comment("Example: [\"minecraft:zombie\", \"minecraft:skeleton\"]");
       blacklistedMobs =
-          builder.define(
-              "List of mobs that should'nt be able to level up", new ArrayList<String>());
+          builder.define("List of mobs that shouldn't be able to level up", new ArrayList<>());
       builder.comment("If this list is not empty only these mobs will be able to level up");
       builder.comment("Example: [\"minecraft:zombie\", \"minecraft:skeleton\"]");
       whitelistedMobs =
-          builder.define("List of mobs that should be able to level up", new ArrayList<String>());
+          builder.define("List of mobs that should be able to level up", new ArrayList<>());
       alwaysShowLevel = builder.define("Always show mobs levels", false);
       showLevelWhenLookingAt = builder.define("Only show levels when you look at the mob", true);
-      expBonus = builder.define("Bonus expirience per level", 0.1D);
+      expBonus = builder.define("Bonus experience per level", 0.1D);
       blacklistedShownLevels =
           builder.define(
-              "List of mobs that should have their levels always hidden", new ArrayList<String>());
+              "List of mobs that should have their levels always hidden", new ArrayList<>());
       builder.pop();
       builder.push("Attributes");
       builder.comment("Contains a list of pairs of attributes and their bonuses per one level");

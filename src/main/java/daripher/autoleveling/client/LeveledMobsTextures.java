@@ -62,8 +62,10 @@ public enum LeveledMobsTextures implements ResourceManagerReloadListener {
   @Override
   public void onResourceManagerReload(ResourceManager resourceManager) {
     CACHED_TEXTURES.clear();
-    Set<ResourceLocation> textures = resourceManager.listResources(TEXTURES_FOLDER, this::isPngImage).keySet();
-    Predicate<String> textureNamePredicate = Pattern.compile(TEXTURE_FILE_NAME_FORMAT).asPredicate();
+    Set<ResourceLocation> textures =
+        resourceManager.listResources(TEXTURES_FOLDER, this::isPngImage).keySet();
+    Predicate<String> textureNamePredicate =
+        Pattern.compile(TEXTURE_FILE_NAME_FORMAT).asPredicate();
     Stream<ResourceLocation> validTextures =
         textures.stream()
             .filter(textureLocation -> textureNamePredicate.test(textureLocation.toString()));
@@ -74,16 +76,15 @@ public enum LeveledMobsTextures implements ResourceManagerReloadListener {
     String textureName = getTextureFileName(textureLocation);
     String[] splitTextureName = textureName.split("_");
     String entityTypeName = splitTextureName[0];
-    ResourceLocation entityTypeId = new ResourceLocation(textureLocation.getNamespace(), entityTypeName);
+    ResourceLocation entityTypeId =
+        new ResourceLocation(textureLocation.getNamespace(), entityTypeName);
     EntityType<?> entityType = ForgeRegistries.ENTITY_TYPES.getValue(entityTypeId);
     if (entityType == null) {
       LOGGER.warn(
           "Can't read texture {}, unknown entity type {} specified", textureLocation, entityTypeId);
       return;
     }
-    if (CACHED_TEXTURES.get(entityType) == null) {
-      CACHED_TEXTURES.put(entityType, new HashMap<>());
-    }
+    CACHED_TEXTURES.computeIfAbsent(entityType, k -> new HashMap<>());
     int entityLevel = Integer.parseInt(splitTextureName[1]);
     CACHED_TEXTURES.get(entityType).put(entityLevel, textureLocation);
   }
