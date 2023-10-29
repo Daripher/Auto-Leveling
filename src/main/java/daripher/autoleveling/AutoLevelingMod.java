@@ -5,6 +5,7 @@ import daripher.autoleveling.config.Config;
 import daripher.autoleveling.init.AutoLevelingAttributes;
 import daripher.autoleveling.init.AutoLevelingItems;
 import daripher.autoleveling.init.AutoLevelingLootItemConditions;
+import daripher.autoleveling.init.AutoLevelingTabs;
 import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -25,6 +26,7 @@ public class AutoLevelingMod {
     AutoLevelingLootItemConditions.REGISTRY.register(modEventBus);
     AutoLevelingItems.REGISTRY.register(modEventBus);
     AutoLevelingAttributes.REGISTRY.register(modEventBus);
+    AutoLevelingTabs.REGISTRY.register(modEventBus);
     Config.registerCommonConfig();
   }
 
