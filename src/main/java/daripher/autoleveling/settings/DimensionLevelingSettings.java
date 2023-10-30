@@ -7,6 +7,7 @@ import net.minecraft.util.math.BlockPos;
 
 public class DimensionLevelingSettings extends LevelingSettings {
   private final @Nullable BlockPos spawnPosOverride;
+  private final float levelsPerDay;
 
   public DimensionLevelingSettings(
       int startingLevel,
@@ -14,13 +15,19 @@ public class DimensionLevelingSettings extends LevelingSettings {
       float levelsPerDistance,
       float levelsPerDeepness,
       int randomLevelBonus,
-      @Nullable BlockPos spawnPosOverride) {
+      @Nullable BlockPos spawnPosOverride,
+      float levelsPerDay) {
     super(startingLevel, maxLevel, levelsPerDistance, levelsPerDeepness, randomLevelBonus);
     this.spawnPosOverride = spawnPosOverride;
+    this.levelsPerDay = levelsPerDay;
   }
 
   public Optional<BlockPos> getSpawnPosOverride() {
     return Optional.ofNullable(spawnPosOverride);
+  }
+
+  public float getLevelsPerDay() {
+    return levelsPerDay;
   }
 
   public static DimensionLevelingSettings load(JsonObject jsonObject) {
@@ -30,7 +37,8 @@ public class DimensionLevelingSettings extends LevelingSettings {
         jsonObject.get("levels_per_distance").getAsFloat(),
         jsonObject.get("levels_per_deepness").getAsFloat(),
         jsonObject.get("random_level_bonus").getAsInt(),
-        readOptionalBlockPos(jsonObject, "spawn_pos_override").orElse(null));
+        readOptionalBlockPos(jsonObject, "spawn_pos_override").orElse(null),
+        jsonObject.get("levels_per_day").getAsFloat());
   }
 
   private static Optional<BlockPos> readOptionalBlockPos(JsonObject jsonObject, String name) {
