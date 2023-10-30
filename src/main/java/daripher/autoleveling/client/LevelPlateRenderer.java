@@ -13,6 +13,7 @@ import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.event.RenderNameTagEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import org.joml.Matrix4f;
 
@@ -20,6 +21,7 @@ import org.joml.Matrix4f;
 public class LevelPlateRenderer {
   @SubscribeEvent
   public static void renderEntityLevel(RenderNameTagEvent event) {
+    if (ModList.get().isLoaded("neat")) return;
     if (!(event.getEntity() instanceof LivingEntity entity)) return;
     boolean showLevel =
         MobsLevelingEvents.hasLevel(entity) && MobsLevelingEvents.shouldShowName(entity);
