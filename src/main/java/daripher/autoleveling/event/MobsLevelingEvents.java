@@ -80,7 +80,7 @@ public class MobsLevelingEvents {
   public static void adjustExperienceDrop(LivingExperienceDropEvent event) {
     if (!hasLevel(event.getEntity())) return;
     int level = getLevel(event.getEntity()) + 1;
-    int originalExp = event.getOriginalExperience();
+    int originalExp = event.getDroppedExperience();
     double expBonus = Config.COMMON.expBonus.get() * level;
     event.setDroppedExperience((int) (originalExp + originalExp * expBonus));
   }
