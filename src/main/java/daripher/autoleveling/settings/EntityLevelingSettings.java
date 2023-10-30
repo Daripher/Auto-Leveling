@@ -9,13 +9,18 @@ public record EntityLevelingSettings(
     float levelsPerDeepness,
     int randomLevelBonus)
     implements LevelingSettings {
+
+  @Override
+  public float levelsPerDay() {
+    return 0f;
+  }
+
   public static EntityLevelingSettings load(JsonObject jsonObject) {
-    int startingLevel = jsonObject.get("starting_level").getAsInt();
-    int maxLevel = jsonObject.get("max_level").getAsInt();
-    float levelsPerDistance = jsonObject.get("levels_per_distance").getAsFloat();
-    float levelsPerDeepness = jsonObject.get("levels_per_deepness").getAsFloat();
-    int randomLevelBonus = jsonObject.get("random_level_bonus").getAsInt();
     return new EntityLevelingSettings(
-        startingLevel, maxLevel, levelsPerDistance, levelsPerDeepness, randomLevelBonus);
+        jsonObject.get("starting_level").getAsInt(),
+        jsonObject.get("max_level").getAsInt(),
+        jsonObject.get("levels_per_distance").getAsFloat(),
+        jsonObject.get("levels_per_deepness").getAsFloat(),
+        jsonObject.get("random_level_bonus").getAsInt());
   }
 }
