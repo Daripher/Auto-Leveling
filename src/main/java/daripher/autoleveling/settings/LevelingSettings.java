@@ -10,4 +10,6 @@ public interface LevelingSettings {
   float levelsPerDeepness();
 
   int randomLevelBonus();
+
+  float levelsPerDay();
 }

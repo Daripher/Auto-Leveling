@@ -34,18 +34,14 @@ public class DimensionsLevelingSettingsReloader extends SimpleJsonResourceReload
   }
 
   private static DimensionLevelingSettings createDefaultSettings() {
-    int startingLevel = Config.COMMON.defaultStartingLevel.get();
-    int maxLevel = Config.COMMON.defaultMaxLevel.get();
-    float levelPerDistance = Config.COMMON.defaultLevelsPerDistance.get().floatValue();
-    float levelPerDeepness = Config.COMMON.defaultLevelsPerDeepness.get().floatValue();
-    int randomLevelBonus = Config.COMMON.defaultRandomLevelBonus.get();
     return new DimensionLevelingSettings(
-        startingLevel,
-        maxLevel,
-        levelPerDistance,
-        levelPerDeepness,
-        randomLevelBonus,
-        Optional.empty());
+        Config.COMMON.defaultStartingLevel.get(),
+        Config.COMMON.defaultMaxLevel.get(),
+        Config.COMMON.defaultLevelsPerDistance.get().floatValue(),
+        Config.COMMON.defaultLevelsPerDeepness.get().floatValue(),
+        Config.COMMON.defaultRandomLevelBonus.get(),
+        Optional.empty(),
+        Config.COMMON.defaultLevelsPerDay.get().floatValue());
   }
 
   @Override

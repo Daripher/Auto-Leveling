@@ -79,6 +79,7 @@ public class Config {
     public final ConfigValue<Double> expBonus;
     public final ConfigValue<Double> defaultLevelsPerDistance;
     public final ConfigValue<Double> defaultLevelsPerDeepness;
+    public final ConfigValue<Double> defaultLevelsPerDay;
     public final ConfigValue<Boolean> alwaysShowLevel;
     public final ConfigValue<Boolean> showLevelWhenLookingAt;
 
@@ -117,6 +118,9 @@ public class Config {
       builder.comment(
           "If this is higher than 0, the level of monsters will be randomly increased by value between 0 and this value");
       defaultRandomLevelBonus = builder.define("Random level bonus", 0);
+      builder.comment(
+          "If this is higher than 0, mobs level will increase every day by specified amount");
+      defaultLevelsPerDay = builder.define("Level bonus per day", 0d);
       builder.pop();
     }
   }

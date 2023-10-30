@@ -9,6 +9,7 @@ import daripher.autoleveling.mixin.LivingEntityAccessor;
 import daripher.autoleveling.network.NetworkDispatcher;
 import daripher.autoleveling.network.message.SyncLevelingData;
 import daripher.autoleveling.saveddata.GlobalLevelingData;
+import daripher.autoleveling.saveddata.WorldLevelingData;
 import daripher.autoleveling.settings.DimensionLevelingSettings;
 import daripher.autoleveling.settings.LevelingSettings;
 import java.util.List;
@@ -61,7 +62,7 @@ public class MobsLevelingEvents {
     LivingEntity entity = (LivingEntity) event.getEntity();
     BlockPos spawnPos = getSpawnPosition(entity);
     double distanceToSpawn = Math.sqrt(spawnPos.distSqr(entity.blockPosition()));
-    int level = getLevelForEntity(entity, distanceToSpawn);
+    int level = createLevelForEntity(entity, distanceToSpawn);
     setLevel(entity, level);
     applyAttributeBonuses(entity);
     addEquipment(entity);
@@ -154,7 +155,7 @@ public class MobsLevelingEvents {
     return canHaveLevel(entity);
   }
 
-  private static int getLevelForEntity(LivingEntity entity, double distanceFromSpawn) {
+  private static int createLevelForEntity(LivingEntity entity, double distanceFromSpawn) {
     MinecraftServer server = entity.getServer();
     if (server == null) return 0;
     LevelingSettings levelingSettings =
@@ -169,6 +170,7 @@ public class MobsLevelingEvents {
     monsterLevel += levelingSettings.startingLevel() - 1;
     if (levelBonus > 0) monsterLevel += entity.getRandom().nextInt(levelBonus);
     monsterLevel = Math.abs(monsterLevel);
+    monsterLevel += WorldLevelingData.get((ServerLevel) entity.level()).getLevelBonus();
     if (maxLevel > 0) monsterLevel = Math.min(monsterLevel, maxLevel - 1);
     GlobalLevelingData globalLevelingData = GlobalLevelingData.get(server);
     monsterLevel += globalLevelingData.getLevelBonus();
