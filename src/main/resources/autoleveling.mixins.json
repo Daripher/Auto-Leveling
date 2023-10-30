@@ -4,7 +4,8 @@
   "compatibilityLevel": "JAVA_17",
   "package": "daripher.autoleveling.mixin",
   "mixins": [
-    "LivingEntityAccessor"
+    "LivingEntityAccessor",
+    "neat/HealthBarRendererMixin"
   ],
   "client": [
     "client.MixinLivingEntityRenderer"
