@@ -79,6 +79,8 @@ public class Config {
     public final ConfigValue<Double> defaultLevelsPerDeepness;
     public final ConfigValue<Integer> defaultRandomLevelBonus;
     public final ConfigValue<Double> defaultLevelsPerDay;
+    public final ConfigValue<Double> defaultLevelPowerPerDistance;
+    public final ConfigValue<Double> defaultLevelPowerPerDeepness;
 
     public Common(ForgeConfigSpec.Builder builder) {
       Predicate<Object> positiveOrZeroDouble = o -> o instanceof Double && (Double) o >= 0;
@@ -107,6 +109,10 @@ public class Config {
       defaultLevelsPerDeepness = builder.define("levels_per_deepness", 0D, positiveOrZeroDouble);
       defaultRandomLevelBonus = builder.define("random_level_bonus", 0, positiveOrZeroInteger);
       defaultLevelsPerDay = builder.define("levels_per_day", 0D, positiveOrZeroDouble);
+      defaultLevelPowerPerDistance =
+          builder.define("level_power_per_distance", 0D, positiveOrZeroDouble);
+      defaultLevelPowerPerDeepness =
+          builder.define("level_power_per_deepness", 0D, positiveOrZeroDouble);
       builder.pop();
     }
   }

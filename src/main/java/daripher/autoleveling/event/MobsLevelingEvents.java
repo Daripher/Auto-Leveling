@@ -196,7 +196,7 @@ public class MobsLevelingEvents {
     return !entity.getTags().contains("autoleveling_spawned");
   }
 
-  private static int createLevelForEntity(LivingEntity entity, double distanceFromSpawn) {
+  private static int createLevelForEntity(LivingEntity entity, double distance) {
     MinecraftServer server = entity.getServer();
     if (server == null) return 0;
     LevelingSettings levelingSettings =
@@ -205,8 +205,15 @@ public class MobsLevelingEvents {
       RegistryKey<World> dimension = entity.level.dimension();
       levelingSettings = DimensionsLevelingSettingsReloader.getSettingsForDimension(dimension);
     }
-    int level = (int) (levelingSettings.levelsPerDistance * distanceFromSpawn);
+    int level = levelingSettings.startingLevel - 1;
     int maxLevel = levelingSettings.maxLevel;
+    level += (int) (levelingSettings.levelsPerDistance * distance);
+    level += (int) Math.pow(distance, distance * levelingSettings.levelPowerPerDistance) - 1;
+    if (entity.getY() < 64) {
+      double deepness = 64 - entity.getY();
+      level += (int) (levelingSettings.levelsPerDeepness * deepness);
+      level += (int) Math.pow(deepness, deepness * levelingSettings.levelPowerPerDeepness) - 1;
+    }
     int levelBonus = levelingSettings.randomLevelBonus + 1;
     level += levelingSettings.startingLevel - 1;
     if (levelBonus > 0) level += entity.getRandom().nextInt(levelBonus);
@@ -215,10 +222,6 @@ public class MobsLevelingEvents {
     if (maxLevel > 0) level = Math.min(level, maxLevel - 1);
     GlobalLevelingData globalLevelingData = GlobalLevelingData.get(server);
     level += globalLevelingData.getLevelBonus();
-    if (entity.getY() < 64) {
-      double deepness = 64 - entity.getY();
-      level += (int) (levelingSettings.levelsPerDeepness * deepness);
-    }
     return level;
   }
 

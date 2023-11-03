@@ -16,8 +16,17 @@ public class DimensionLevelingSettings extends LevelingSettings {
       float levelsPerDeepness,
       int randomLevelBonus,
       @Nullable BlockPos spawnPosOverride,
-      float levelsPerDay) {
-    super(startingLevel, maxLevel, levelsPerDistance, levelsPerDeepness, randomLevelBonus);
+      float levelsPerDay,
+      float levelPowerPerDistance,
+      float levelPowerPerDeepness) {
+    super(
+        startingLevel,
+        maxLevel,
+        levelsPerDistance,
+        levelsPerDeepness,
+        randomLevelBonus,
+        levelPowerPerDistance,
+        levelPowerPerDeepness);
     this.spawnPosOverride = spawnPosOverride;
     this.levelsPerDay = levelsPerDay;
   }
@@ -38,7 +47,9 @@ public class DimensionLevelingSettings extends LevelingSettings {
         jsonObject.get("levels_per_deepness").getAsFloat(),
         jsonObject.get("random_level_bonus").getAsInt(),
         readOptionalBlockPos(jsonObject, "spawn_pos_override").orElse(null),
-        jsonObject.get("levels_per_day").getAsFloat());
+        jsonObject.get("levels_per_day").getAsFloat(),
+        jsonObject.get("level_power_per_distance").getAsFloat(),
+        jsonObject.get("level_power_per_deepness").getAsFloat());
   }
 
   private static Optional<BlockPos> readOptionalBlockPos(JsonObject jsonObject, String name) {

@@ -38,7 +38,9 @@ public class DimensionsLevelingSettingsReloader extends JsonReloadListener {
         Config.COMMON.defaultLevelsPerDeepness.get().floatValue(),
         Config.COMMON.defaultRandomLevelBonus.get(),
         null,
-        Config.COMMON.defaultLevelsPerDay.get().floatValue());
+        Config.COMMON.defaultLevelsPerDay.get().floatValue(),
+        Config.COMMON.defaultLevelPowerPerDistance.get().floatValue(),
+        Config.COMMON.defaultLevelPowerPerDeepness.get().floatValue());
   }
 
   @Override

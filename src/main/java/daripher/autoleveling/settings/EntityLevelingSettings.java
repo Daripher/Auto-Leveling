@@ -8,8 +8,17 @@ public class EntityLevelingSettings extends LevelingSettings {
       int maxLevel,
       float levelsPerDistance,
       float levelsPerDeepness,
-      int randomLevelBonus) {
-    super(startingLevel, maxLevel, levelsPerDistance, levelsPerDeepness, randomLevelBonus);
+      int randomLevelBonus,
+      float levelPowerPerDistance,
+      float levelPowerPerDeepness) {
+    super(
+        startingLevel,
+        maxLevel,
+        levelsPerDistance,
+        levelsPerDeepness,
+        randomLevelBonus,
+        levelPowerPerDistance,
+        levelPowerPerDeepness);
   }
 
   public static EntityLevelingSettings load(JsonObject jsonObject) {
@@ -18,6 +27,8 @@ public class EntityLevelingSettings extends LevelingSettings {
         jsonObject.get("max_level").getAsInt(),
         jsonObject.get("levels_per_distance").getAsFloat(),
         jsonObject.get("levels_per_deepness").getAsFloat(),
-        jsonObject.get("random_level_bonus").getAsInt());
+        jsonObject.get("random_level_bonus").getAsInt(),
+        jsonObject.get("level_power_per_distance").getAsFloat(),
+        jsonObject.get("level_power_per_deepness").getAsFloat());
   }
 }
