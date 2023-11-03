@@ -41,7 +41,9 @@ public class DimensionsLevelingSettingsReloader extends SimpleJsonResourceReload
         Config.COMMON.defaultLevelsPerDeepness.get().floatValue(),
         Config.COMMON.defaultRandomLevelBonus.get(),
         Optional.empty(),
-        Config.COMMON.defaultLevelsPerDay.get().floatValue());
+        Config.COMMON.defaultLevelsPerDay.get().floatValue(),
+        Config.COMMON.defaultLevelPowerPerDistance.get().floatValue(),
+        Config.COMMON.defaultLevelPowerPerDeepness.get().floatValue());
   }
 
   @Override
