@@ -12,7 +12,9 @@ public record DimensionLevelingSettings(
     float levelsPerDeepness,
     int randomLevelBonus,
     Optional<BlockPos> spawnPosOverride,
-    float levelsPerDay)
+    float levelsPerDay,
+    float levelPowerPerDistance,
+    float levelPowerPerDeepness)
     implements LevelingSettings {
   public static DimensionLevelingSettings load(JsonObject jsonObject) {
     return new DimensionLevelingSettings(
@@ -22,7 +24,9 @@ public record DimensionLevelingSettings(
         jsonObject.get("levels_per_deepness").getAsFloat(),
         jsonObject.get("random_level_bonus").getAsInt(),
         loadOptionalBlockPos(jsonObject, "spawn_pos_override"),
-        jsonObject.get("levels_per_day").getAsFloat());
+        jsonObject.get("levels_per_day").getAsFloat(),
+        jsonObject.get("level_power_per_distance").getAsFloat(),
+        jsonObject.get("level_power_per_deepness").getAsInt());
   }
 
   @NotNull
