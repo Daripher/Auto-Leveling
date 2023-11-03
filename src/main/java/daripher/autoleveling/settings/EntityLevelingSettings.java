@@ -7,7 +7,9 @@ public record EntityLevelingSettings(
     int maxLevel,
     float levelsPerDistance,
     float levelsPerDeepness,
-    int randomLevelBonus)
+    int randomLevelBonus,
+    float levelPowerPerDistance,
+    float levelPowerPerDeepness)
     implements LevelingSettings {
 
   @Override
@@ -21,6 +23,8 @@ public record EntityLevelingSettings(
         jsonObject.get("max_level").getAsInt(),
         jsonObject.get("levels_per_distance").getAsFloat(),
         jsonObject.get("levels_per_deepness").getAsFloat(),
-        jsonObject.get("random_level_bonus").getAsInt());
+        jsonObject.get("random_level_bonus").getAsInt(),
+        jsonObject.get("level_power_per_distance").getAsFloat(),
+        jsonObject.get("level_power_per_deepness").getAsInt());
   }
 }

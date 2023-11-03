@@ -80,6 +80,8 @@ public class Config {
     public final ConfigValue<Double> defaultLevelsPerDistance;
     public final ConfigValue<Double> defaultLevelsPerDeepness;
     public final ConfigValue<Double> defaultLevelsPerDay;
+    public final ConfigValue<Double> defaultLevelPowerPerDistance;
+    public final ConfigValue<Double> defaultLevelPowerPerDeepness;
     public final ConfigValue<Boolean> alwaysShowLevel;
     public final ConfigValue<Boolean> showLevelWhenLookingAt;
 
@@ -121,6 +123,10 @@ public class Config {
       builder.comment(
           "If this is higher than 0, mobs level will increase every day by specified amount");
       defaultLevelsPerDay = builder.define("Level bonus per day", 0d);
+      builder.comment("Exponential level increase with distance");
+      defaultLevelPowerPerDistance = builder.define("level_power_per_distance", 0d);
+      builder.comment("Exponential level increase with deepness");
+      defaultLevelPowerPerDeepness = builder.define("level_power_per_deepness", 0d);
       builder.pop();
     }
   }

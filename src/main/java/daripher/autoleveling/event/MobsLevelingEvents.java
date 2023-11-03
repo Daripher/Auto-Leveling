@@ -156,7 +156,7 @@ public class MobsLevelingEvents {
     return canHaveLevel(entity);
   }
 
-  private static int createLevelForEntity(LivingEntity entity, double distanceFromSpawn) {
+  private static int createLevelForEntity(LivingEntity entity, double distance) {
     MinecraftServer server = entity.getServer();
     if (server == null) return 0;
     LevelingSettings levelingSettings =
@@ -165,20 +165,23 @@ public class MobsLevelingEvents {
       ResourceKey<Level> dimension = entity.level().dimension();
       levelingSettings = DimensionsLevelingSettingsReloader.getSettingsForDimension(dimension);
     }
-    int monsterLevel = (int) (levelingSettings.levelsPerDistance() * distanceFromSpawn);
+    int monsterLevel = levelingSettings.startingLevel() - 1;
     int maxLevel = levelingSettings.maxLevel();
+    monsterLevel += (int) (levelingSettings.levelsPerDistance() * distance);
+    monsterLevel += (int) Math.pow(distance, distance * levelingSettings.levelPowerPerDistance()) - 1;
+    if (entity.getY() < 64) {
+      double deepness = 64 - entity.getY();
+      monsterLevel += (int) (levelingSettings.levelsPerDeepness() * deepness);
+      monsterLevel +=
+          (int) Math.pow(deepness, deepness * levelingSettings.levelPowerPerDeepness()) - 1;
+    }
     int levelBonus = levelingSettings.randomLevelBonus() + 1;
-    monsterLevel += levelingSettings.startingLevel() - 1;
     if (levelBonus > 0) monsterLevel += entity.getRandom().nextInt(levelBonus);
     monsterLevel = Math.abs(monsterLevel);
     monsterLevel += WorldLevelingData.get((ServerLevel) entity.level()).getLevelBonus();
     if (maxLevel > 0) monsterLevel = Math.min(monsterLevel, maxLevel - 1);
     GlobalLevelingData globalLevelingData = GlobalLevelingData.get(server);
     monsterLevel += globalLevelingData.getLevelBonus();
-    if (entity.getY() < 64) {
-      double deepness = 64 - entity.getY();
-      monsterLevel += (int) (levelingSettings.levelsPerDeepness() * deepness);
-    }
     return monsterLevel;
   }
 
