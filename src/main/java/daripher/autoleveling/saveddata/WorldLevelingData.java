@@ -21,11 +21,11 @@ public class WorldLevelingData extends SavedData {
   }
 
   @SubscribeEvent
-  public static void tick(TickEvent.WorldTickEvent event) {
+  public static void tick(TickEvent.LevelTickEvent event) {
     if (event.phase != TickEvent.Phase.START) return;
-    if (event.world.isClientSide) return;
-    WorldLevelingData levelingData = WorldLevelingData.get((ServerLevel) event.world);
-    levelingData.tick(event.world);
+    if (event.level.isClientSide) return;
+    WorldLevelingData levelingData = WorldLevelingData.get((ServerLevel) event.level);
+    levelingData.tick(event.level);
   }
 
   private static WorldLevelingData load(CompoundTag tag) {
