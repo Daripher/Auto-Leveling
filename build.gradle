@@ -110,7 +110,10 @@ repositories {
 dependencies {
     minecraft 'net.minecraftforge:forge:1.19-41.1.0'
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+    // jade
     implementation fg.deobf("curse.maven:jade-324717:3903499")
+    // neat
+    implementation fg.deobf("curse.maven:neat-238372:3878735")
 }
 
 jar {
