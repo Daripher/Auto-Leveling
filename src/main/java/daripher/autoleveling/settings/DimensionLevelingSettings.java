@@ -1,6 +1,7 @@
 package daripher.autoleveling.settings;
 
 import com.google.gson.JsonObject;
+import daripher.autoleveling.config.Config;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import net.minecraft.util.math.BlockPos;
@@ -48,19 +49,9 @@ public class DimensionLevelingSettings extends LevelingSettings {
         jsonObject.get("random_level_bonus").getAsInt(),
         readOptionalBlockPos(jsonObject, "spawn_pos_override").orElse(null),
         jsonObject.get("levels_per_day").getAsFloat(),
-        jsonObject.get("level_power_per_distance").getAsFloat(),
-        jsonObject.get("level_power_per_deepness").getAsFloat());
-  }
-
-  private static Optional<BlockPos> readOptionalBlockPos(JsonObject jsonObject, String name) {
-    if (!jsonObject.has(name)) {
-      return Optional.empty();
-    } else {
-      JsonObject posJson = jsonObject.get(name).getAsJsonObject();
-      int x = posJson.get("x").getAsInt();
-      int y = posJson.get("y").getAsInt();
-      int z = posJson.get("z").getAsInt();
-      return Optional.of(new BlockPos(x, y, z));
-    }
+        readOptionalFloat(jsonObject, "level_power_per_distance")
+            .orElse(Config.COMMON.defaultLevelPowerPerDistance.get().floatValue()),
+        readOptionalFloat(jsonObject, "level_power_per_deepness")
+            .orElse(Config.COMMON.defaultLevelPowerPerDeepness.get().floatValue()));
   }
 }
