@@ -1,6 +1,8 @@
 package daripher.autoleveling.settings;
 
 import com.google.gson.JsonObject;
+import daripher.autoleveling.config.Config;
+import java.util.Optional;
 
 public record EntityLevelingSettings(
     int startingLevel,
@@ -24,7 +26,17 @@ public record EntityLevelingSettings(
         jsonObject.get("levels_per_distance").getAsFloat(),
         jsonObject.get("levels_per_deepness").getAsFloat(),
         jsonObject.get("random_level_bonus").getAsInt(),
-        jsonObject.get("level_power_per_distance").getAsFloat(),
-        jsonObject.get("level_power_per_deepness").getAsInt());
+        readOptionalFloat(jsonObject, "level_power_per_distance")
+            .orElse(Config.COMMON.defaultLevelPowerPerDistance.get().floatValue()),
+        readOptionalFloat(jsonObject, "level_power_per_deepness")
+            .orElse(Config.COMMON.defaultLevelPowerPerDeepness.get().floatValue()));
+  }
+
+  private static Optional<Float> readOptionalFloat(JsonObject jsonObject, String name) {
+    if (!jsonObject.has(name)) {
+      return Optional.empty();
+    } else {
+      return Optional.of(jsonObject.get(name).getAsFloat());
+    }
   }
 }
