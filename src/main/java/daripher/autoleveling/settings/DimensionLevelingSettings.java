@@ -25,7 +25,8 @@ public record DimensionLevelingSettings(
         jsonObject.get("levels_per_deepness").getAsFloat(),
         jsonObject.get("random_level_bonus").getAsInt(),
         loadOptionalBlockPos(jsonObject, "spawn_pos_override"),
-        jsonObject.get("levels_per_day").getAsFloat(),
+        readOptionalFloat(jsonObject, "levels_per_day")
+            .orElse(Config.COMMON.defaultLevelsPerDay.get().floatValue()),
         readOptionalFloat(jsonObject, "level_power_per_distance")
             .orElse(Config.COMMON.defaultLevelPowerPerDistance.get().floatValue()),
         readOptionalFloat(jsonObject, "level_power_per_deepness")
