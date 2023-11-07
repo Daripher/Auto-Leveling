@@ -3,6 +3,7 @@ plugins {
     id 'idea'
     id 'maven-publish'
     id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+    id 'org.spongepowered.mixin' version '0.7.+'
 }
 
 version = mod_version
@@ -154,7 +155,16 @@ repositories {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+    // jade
 	implementation fg.deobf("curse.maven:jade-324717:4573194")
+    // neat
+    implementation fg.deobf("curse.maven:neat-238372:4580940")
+}
+
+mixin {
+    add sourceSets.main, 'autoleveling.refmap.json'
+    config 'autoleveling.mixins.json'
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
