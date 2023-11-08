@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_8",
   "package": "daripher.autoleveling.mixin",
   "mixins": [
+    "LivingEntityAccessor"
   ],
   "client": [
     "client.MixinLivingEntityRenderer"

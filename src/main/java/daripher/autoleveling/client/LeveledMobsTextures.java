@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Predicate;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityType;
@@ -63,7 +64,7 @@ public class LeveledMobsTextures implements ISelectiveResourceReloadListener {
 
   @Override
   public void onResourceManagerReload(
-      IResourceManager resourceManager, Predicate<IResourceType> resourcePredicate) {
+      @Nonnull IResourceManager resourceManager, Predicate<IResourceType> resourcePredicate) {
     if (!resourcePredicate.test(VanillaResourceType.TEXTURES)) return;
 
     TEXTURES.clear();
@@ -89,7 +90,7 @@ public class LeveledMobsTextures implements ISelectiveResourceReloadListener {
 
       if (entityType == null) continue;
 
-      if (TEXTURES.get(entityType) == null) TEXTURES.put(entityType, new HashMap<>());
+      TEXTURES.computeIfAbsent(entityType, k -> new HashMap<>());
 
       String levelString = fileName.split("_")[1];
 

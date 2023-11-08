@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import java.util.Map;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import net.minecraft.client.resources.JsonReloadListener;
 import net.minecraft.entity.EntityType;
@@ -32,8 +33,8 @@ public class EntitiesLevelingSettingsReloader extends JsonReloadListener {
   @Override
   protected void apply(
       Map<ResourceLocation, JsonElement> map,
-      IResourceManager resourceManager,
-      IProfiler profiler) {
+      @Nonnull IResourceManager resourceManager,
+      @Nonnull IProfiler profiler) {
     ImmutableMap.Builder<ResourceLocation, LevelingSettings> builder = ImmutableMap.builder();
 
     map.forEach(
@@ -47,7 +48,6 @@ public class EntitiesLevelingSettingsReloader extends JsonReloadListener {
           }
         });
 
-    ImmutableMap<ResourceLocation, LevelingSettings> immutableMap = builder.build();
-    settings = immutableMap;
+    settings = builder.build();
   }
 }

@@ -12,6 +12,8 @@ public class AutoLevelingLootConditions {
   public static final LootConditionType LEVEL_CHECK =
       registerCondition("level_check", new LevelCondition.Serializer());
 
+  public static void init() {}
+
   private static <T extends ILootCondition> LootConditionType registerCondition(
       String name, ILootSerializer<T> serializer) {
     return Registry.register(

@@ -7,6 +7,7 @@ import com.google.gson.JsonSerializationContext;
 import daripher.autoleveling.event.MobsLevelingEvents;
 import daripher.autoleveling.init.AutoLevelingLootConditions;
 import java.util.Set;
+import javax.annotation.Nonnull;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.loot.ILootSerializer;
@@ -26,15 +27,13 @@ public class LevelCondition implements ILootCondition {
     this.max = max;
   }
 
-  public static IBuilder correctLevel(int min, int max) {
-    return () -> new LevelCondition(min, max);
-  }
-
+  @Nonnull
   @Override
   public LootConditionType getType() {
     return AutoLevelingLootConditions.LEVEL_CHECK;
   }
 
+  @Nonnull
   @Override
   public Set<LootParameter<?>> getReferencedContextParams() {
     return ImmutableSet.of(LootParameters.THIS_ENTITY);
@@ -44,6 +43,7 @@ public class LevelCondition implements ILootCondition {
   public boolean test(LootContext context) {
     if (!context.hasParam(LootParameters.THIS_ENTITY)) return false;
     Entity entity = context.getParamOrNull(LootParameters.THIS_ENTITY);
+    if (entity == null) return false;
     if (!MobsLevelingEvents.hasLevel(entity)) return false;
     if (!(entity instanceof LivingEntity)) return false;
     int level = MobsLevelingEvents.getLevel((LivingEntity) entity) + 1;
@@ -52,12 +52,16 @@ public class LevelCondition implements ILootCondition {
 
   public static class Serializer implements ILootSerializer<LevelCondition> {
     public void serialize(
-        JsonObject jsonObject, LevelCondition levelCheck, JsonSerializationContext context) {
+        JsonObject jsonObject,
+        LevelCondition levelCheck,
+        @Nonnull JsonSerializationContext context) {
       jsonObject.addProperty("min", levelCheck.min);
       jsonObject.addProperty("max", levelCheck.max);
     }
 
-    public LevelCondition deserialize(JsonObject jsonObject, JsonDeserializationContext context) {
+    @Nonnull
+    public LevelCondition deserialize(
+        @Nonnull JsonObject jsonObject, @Nonnull JsonDeserializationContext context) {
       int min = JSONUtils.getAsInt(jsonObject, "min", 0);
       int max = JSONUtils.getAsInt(jsonObject, "max", 0);
       return new LevelCondition(min, max);

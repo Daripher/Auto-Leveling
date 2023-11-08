@@ -6,11 +6,10 @@ import daripher.autoleveling.data.DimensionsLevelingSettingsReloader;
 import daripher.autoleveling.data.EntitiesLevelingSettingsReloader;
 import daripher.autoleveling.data.LevelingSettings;
 import daripher.autoleveling.init.AutoLevelingAttributes;
+import daripher.autoleveling.mixin.LivingEntityAccessor;
 import daripher.autoleveling.network.NetworkDispatcher;
 import daripher.autoleveling.network.message.SyncLevelingData;
 import daripher.autoleveling.saveddata.GlobalLevelingData;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.UUID;
 import net.minecraft.client.Minecraft;
@@ -55,7 +54,6 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 @EventBusSubscriber(modid = AutoLevelingMod.MOD_ID)
@@ -88,9 +86,11 @@ public class MobsLevelingEvents {
   @SubscribeEvent
   public static void dropAdditionalLoot(LivingDropsEvent event) {
     if (!hasLevel(event.getEntity())) return;
+    MinecraftServer server = event.getEntity().level.getServer();
+    if (server == null) return;
     ResourceLocation leveledTableId =
         new ResourceLocation(AutoLevelingMod.MOD_ID, "gameplay/leveled_mobs");
-    LootTable lootTable = event.getEntity().level.getServer().getLootTables().get(leveledTableId);
+    LootTable lootTable = server.getLootTables().get(leveledTableId);
     LootContext lootContext = createLootContext(event.getEntityLiving(), event.getSource());
     lootTable.getRandomItems(lootContext).forEach(event.getEntity()::spawnAtLocation);
   }
@@ -134,7 +134,7 @@ public class MobsLevelingEvents {
     float backgroundOpacity = minecraft.options.getBackgroundOpacity(0.25F);
     int alpha = (int) (backgroundOpacity * 255.0F) << 24;
     FontRenderer font = minecraft.font;
-    float x = -font.width(entityName) / 2 - 5 - font.width(levelString);
+    float x = -font.width(entityName) / 2f - 5 - font.width(levelString);
     font.drawInBatch(
         levelString,
         x,
@@ -166,11 +166,12 @@ public class MobsLevelingEvents {
     if (!hasLevel(entity)) return false;
     if (!shouldShowLevel(entity)) return false;
     Minecraft minecraft = Minecraft.getInstance();
+    ClientPlayerEntity clientPlayer = minecraft.player;
+    if (clientPlayer == null) return false;
     boolean alwaysShowLevel = Config.COMMON.alwaysShowLevel.get();
     boolean showLevelWhenLookingAt = Config.COMMON.showLevelWhenLookingAt.get();
     if (!alwaysShowLevel && !(showLevelWhenLookingAt && minecraft.crosshairPickEntity == entity))
       return false;
-    ClientPlayerEntity clientPlayer = minecraft.player;
     return Minecraft.renderNames()
         && entity != minecraft.getCameraEntity()
         && !entity.isInvisibleTo(clientPlayer)
@@ -185,6 +186,8 @@ public class MobsLevelingEvents {
   }
 
   private static int getLevelForEntity(LivingEntity entity, double distanceFromSpawn) {
+    MinecraftServer server = entity.getServer();
+    if (server == null) return 0;
     LevelingSettings levelingSettings =
         EntitiesLevelingSettingsReloader.getSettingsForEntity(entity.getType());
     if (levelingSettings == null) {
@@ -198,12 +201,11 @@ public class MobsLevelingEvents {
     if (levelBonus > 0) level += entity.getRandom().nextInt(levelBonus);
     level = Math.abs(level);
     if (maxLevel > 0) level = Math.min(level, maxLevel - 1);
-    MinecraftServer server = entity.getServer();
     GlobalLevelingData globalLevelingData = GlobalLevelingData.get(server);
     level += globalLevelingData.getLevelBonus();
     if (entity.getY() < 64) {
       double deepness = 64 - entity.getY();
-      level += levelingSettings.levelsPerDeepness * deepness;
+      level += (int) (levelingSettings.levelsPerDeepness * deepness);
     }
     return level;
   }
@@ -231,9 +233,7 @@ public class MobsLevelingEvents {
     int level = getLevel(entity);
     Config.getAttributeBonuses()
         .forEach(
-            (attribute, bonus) -> {
-              applyAttributeBonusIfPossible(entity, attribute, bonus * level);
-            });
+            (attribute, bonus) -> applyAttributeBonusIfPossible(entity, attribute, bonus * level));
   }
 
   private static void applyAttributeBonusIfPossible(
@@ -251,8 +251,9 @@ public class MobsLevelingEvents {
   }
 
   public static void addEquipment(LivingEntity entity) {
+    MinecraftServer server = entity.level.getServer();
+    if (server == null) return;
     for (EquipmentSlotType slot : EquipmentSlotType.values()) {
-      MinecraftServer server = entity.level.getServer();
       LootTable equipmentTable = getEquipmentLootTableForSlot(server, entity, slot);
       if (equipmentTable == LootTable.EMPTY) continue;
       LootContext lootContext = createEquipmentLootContext(entity);
@@ -272,22 +273,11 @@ public class MobsLevelingEvents {
     return server.getLootTables().get(lootTableId);
   }
 
-  private static LootContext createLootContext(
-      LivingEntity livingEntity, DamageSource damageSource) {
-    int lastHurtByPlayerTime = ObfuscationReflectionHelper.getPrivateValue(
-        LivingEntity.class, livingEntity, "f_20889_");
-    Method createLootContextMethod =
-        ObfuscationReflectionHelper.findMethod(
-            LivingEntity.class, "m_7771_", boolean.class, DamageSource.class);
-    try {
-      Builder builder =
-          (LootContext.Builder)
-              createLootContextMethod.invoke(livingEntity, lastHurtByPlayerTime > 0, damageSource);
-      return builder.create(LootParameterSets.ENTITY);
-    } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-      e.printStackTrace();
-      return null;
-    }
+  private static LootContext createLootContext(LivingEntity entity, DamageSource damageSource) {
+    LivingEntityAccessor accessor = (LivingEntityAccessor) entity;
+    int lastHurtByPlayerTime = accessor.getLastHurtByPlayerTime();
+    Builder builder = accessor.invokeCreateLootContext(lastHurtByPlayerTime > 0, damageSource);
+    return builder.create(LootParameterSets.ENTITY);
   }
 
   private static LootContext createEquipmentLootContext(LivingEntity entity) {

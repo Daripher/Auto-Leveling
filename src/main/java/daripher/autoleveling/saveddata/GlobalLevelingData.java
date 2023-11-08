@@ -1,5 +1,6 @@
 package daripher.autoleveling.saveddata;
 
+import javax.annotation.Nonnull;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.storage.DimensionSavedDataManager;
@@ -23,6 +24,7 @@ public class GlobalLevelingData extends WorldSavedData {
     return data;
   }
 
+  @Nonnull
   @Override
   public CompoundNBT save(CompoundNBT tag) {
     tag.putInt("LevelBonus", levelBonus);

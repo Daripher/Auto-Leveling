@@ -25,8 +25,7 @@ public class AutoLevelingMod {
   public AutoLevelingMod() {
     ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.COMMON_SPEC);
     IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-    // Just to call initialization
-    AutoLevelingLootConditions.LEVEL_CHECK.getClass();
+    AutoLevelingLootConditions.init();
     AutoLevelingItems.REGISTRY.register(modEventBus);
     AutoLevelingAttributes.REGISTRY.register(modEventBus);
   }

@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import daripher.autoleveling.config.Config;
 import java.util.Map;
+import javax.annotation.Nonnull;
 import net.minecraft.client.resources.JsonReloadListener;
 import net.minecraft.loot.LootSerializers;
 import net.minecraft.profiler.IProfiler;
@@ -41,8 +42,8 @@ public class DimensionsLevelingSettingsReloader extends JsonReloadListener {
   @Override
   protected void apply(
       Map<ResourceLocation, JsonElement> map,
-      IResourceManager resourceManager,
-      IProfiler profiler) {
+      @Nonnull IResourceManager resourceManager,
+      @Nonnull IProfiler profiler) {
     ImmutableMap.Builder<ResourceLocation, LevelingSettings> builder = ImmutableMap.builder();
 
     map.forEach(
@@ -56,7 +57,6 @@ public class DimensionsLevelingSettingsReloader extends JsonReloadListener {
           }
         });
 
-    ImmutableMap<ResourceLocation, LevelingSettings> immutableMap = builder.build();
-    settings = immutableMap;
+    settings = builder.build();
   }
 }

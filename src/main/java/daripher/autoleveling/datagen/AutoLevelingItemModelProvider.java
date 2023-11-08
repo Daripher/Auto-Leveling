@@ -6,7 +6,6 @@ import java.util.Objects;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.client.model.generators.ItemModelBuilder;
 import net.minecraftforge.client.model.generators.ItemModelProvider;
 import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -22,9 +21,9 @@ public class AutoLevelingItemModelProvider extends ItemModelProvider {
     registerHandheldModel(AutoLevelingItems.WHITELIST_TOOL.get());
   }
 
-  private ItemModelBuilder registerHandheldModel(Item item) {
+  private void registerHandheldModel(Item item) {
     ResourceLocation itemId = Objects.requireNonNull(ForgeRegistries.ITEMS.getKey(item));
-    return withExistingParent(itemId.toString(), mcLoc("handheld"))
+    withExistingParent(itemId.toString(), mcLoc("handheld"))
         .texture("layer0", modLoc("item/" + itemId.getPath()));
   }
 }
