@@ -66,6 +66,7 @@ public class MobsLevelingEvents {
   public static void onEntityJoinWorld(EntityJoinWorldEvent event) {
     if (!shouldSetLevel(event.getEntity())) return;
     LivingEntity entity = (LivingEntity) event.getEntity();
+    if (entity.getTags().contains("autoleveling_spawned") && hasLevel(entity)) return;
     BlockPos spawnPos = getSpawnPosition(entity);
     double distanceFromSpawn = Math.sqrt(spawnPos.distSqr(entity.blockPosition()));
     int level = createLevelForEntity(entity, distanceFromSpawn);
@@ -248,8 +249,8 @@ public class MobsLevelingEvents {
   private static void applyAttributeBonusIfPossible(
       LivingEntity entity, Attribute attribute, double bonus) {
     ModifiableAttributeInstance attributeInstance = entity.getAttribute(attribute);
-    UUID modifierId = UUID.fromString("6a102cb4-d735-4cb7-8ab2-3d383219a44e");
     if (attributeInstance == null) return;
+    UUID modifierId = UUID.fromString("6a102cb4-d735-4cb7-8ab2-3d383219a44e");
     AttributeModifier modifier = attributeInstance.getModifier(modifierId);
     if (modifier != null && modifier.getAmount() == bonus) return;
     if (modifier != null) attributeInstance.removeModifier(modifier);
@@ -299,8 +300,6 @@ public class MobsLevelingEvents {
 
   private static boolean canHaveLevel(Entity entity) {
     if (!(entity instanceof LivingEntity)) return false;
-    LivingEntity livingEntity = (LivingEntity) entity;
-    if (livingEntity.getAttribute(Attributes.ATTACK_DAMAGE) == null) return false;
     if (entity.getType() == EntityType.PLAYER) return false;
     ResourceLocation entityId = EntityType.getKey(entity.getType());
     String entityNamespace = entityId.getNamespace();
