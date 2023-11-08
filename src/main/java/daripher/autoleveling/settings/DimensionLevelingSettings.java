@@ -48,7 +48,8 @@ public class DimensionLevelingSettings extends LevelingSettings {
         jsonObject.get("levels_per_deepness").getAsFloat(),
         jsonObject.get("random_level_bonus").getAsInt(),
         readOptionalBlockPos(jsonObject, "spawn_pos_override").orElse(null),
-        jsonObject.get("levels_per_day").getAsFloat(),
+        readOptionalFloat(jsonObject, "levels_per_day")
+            .orElse(Config.COMMON.defaultLevelsPerDay.get().floatValue()),
         readOptionalFloat(jsonObject, "level_power_per_distance")
             .orElse(Config.COMMON.defaultLevelPowerPerDistance.get().floatValue()),
         readOptionalFloat(jsonObject, "level_power_per_deepness")
