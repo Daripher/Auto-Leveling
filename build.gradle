@@ -18,7 +18,7 @@ apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 apply plugin: 'org.spongepowered.mixin'
 
-version = '1.17'
+version = '1.19'
 group = 'daripher.autoleveling'
 archivesBaseName = 'AutoLeveling-1.16.5'
 
@@ -102,9 +102,9 @@ jar {
         attributes([
             "Specification-Title": "autoleveling",
             "Specification-Vendor": "Daripher",
-            "Specification-Version": "${version}",
+            "Specification-Version": "${archiveVersion}",
             "Implementation-Title": project.name,
-            "Implementation-Version": "${version}",
+            "Implementation-Version": "${archiveVersion}",
             "Implementation-Vendor" :"Daripher",
             "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
