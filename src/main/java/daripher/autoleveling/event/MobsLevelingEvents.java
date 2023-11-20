@@ -67,7 +67,7 @@ public class MobsLevelingEvents {
   public static void onEntityJoinWorld(EntityJoinWorldEvent event) {
     if (!shouldSetLevel(event.getEntity())) return;
     LivingEntity entity = (LivingEntity) event.getEntity();
-    if (entity.getTags().contains("autoleveling_spawned") && hasLevel(entity)) return;
+    if (entity.getTags().contains("autoleveling_spawned") || hasLevel(entity)) return;
     BlockPos spawnPos = getSpawnPosition(entity);
     double distanceFromSpawn = Math.sqrt(spawnPos.distSqr(entity.blockPosition()));
     int level = createLevelForEntity(entity, distanceFromSpawn);
