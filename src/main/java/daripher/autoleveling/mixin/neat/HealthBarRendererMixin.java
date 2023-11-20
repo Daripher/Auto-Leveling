@@ -39,6 +39,7 @@ public class HealthBarRendererMixin {
       ItemStack icon,
       boolean boss,
       CallbackInfo callback) {
+    if (!MobsLevelingEvents.hasLevel(entity)) return;
     if (!MobsLevelingEvents.shouldShowLevel(entity)) return;
     int entityLevel = MobsLevelingEvents.getLevel(entity) + 1;
     String name =
