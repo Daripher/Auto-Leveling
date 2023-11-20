@@ -27,6 +27,7 @@ public class HealthBarRendererMixin {
       MultiBufferSource buffers,
       Quaternionf cameraOrientation,
       CallbackInfo callback) {
+    if (!MobsLevelingEvents.hasLevel(entity)) return;
     if (!MobsLevelingEvents.shouldShowLevel(entity)) return;
     Minecraft mc = Minecraft.getInstance();
     int entityLevel = MobsLevelingEvents.getLevel((LivingEntity) entity) + 1;
