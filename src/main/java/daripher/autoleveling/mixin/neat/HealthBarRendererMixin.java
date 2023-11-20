@@ -19,6 +19,7 @@ import vazkii.neat.NeatConfig;
 
 @Mixin(value = HealthBarRenderer.class, remap = false)
 public class HealthBarRendererMixin {
+  @SuppressWarnings("DefaultAnnotationParam")
   @Inject(
       method = "renderEntity",
       at =
