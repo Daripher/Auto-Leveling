@@ -67,7 +67,10 @@ public class MobsLevelingEvents {
   public static void applyLevelBonuses(EntityJoinLevelEvent event) {
     if (!shouldSetLevel(event.getEntity())) return;
     LivingEntity entity = (LivingEntity) event.getEntity();
-    if (hasLevel(entity)) return;
+    if (hasLevel(entity)) {
+      applyAttributeBonuses(entity);
+      return;
+    }
     BlockPos spawnPos = getSpawnPosition(entity);
     double distanceToSpawn = Math.sqrt(spawnPos.distSqr(entity.blockPosition()));
     int level = createLevelForEntity(entity, distanceToSpawn);
