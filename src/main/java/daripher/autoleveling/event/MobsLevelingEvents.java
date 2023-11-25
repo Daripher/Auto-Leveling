@@ -71,14 +71,12 @@ public class MobsLevelingEvents {
       applyAttributeBonuses(entity);
       return;
     }
-    if (entity.getTags().contains("autoleveling_spawned")) return;
     BlockPos spawnPos = getSpawnPosition(entity);
     double distanceFromSpawn = Math.sqrt(spawnPos.distSqr(entity.blockPosition()));
     int level = createLevelForEntity(entity, distanceFromSpawn);
     setLevel(entity, level);
     applyAttributeBonuses(entity);
     addEquipment(entity);
-    entity.addTag("autoleveling_spawned");
   }
 
   private static BlockPos getSpawnPosition(LivingEntity entity) {
