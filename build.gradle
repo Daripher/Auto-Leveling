@@ -21,7 +21,7 @@ plugins {
 
 apply plugin: 'org.spongepowered.mixin'
 
-version = '1.19a'
+version = '1.19b'
 group = 'daripher.autoleveling'
 archivesBaseName = 'AutoLeveling-1.19.2'
 
