@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntityRenderer.class)
-public class MixinLivingEntityRenderer<T extends LivingEntity, M extends EntityModel<T>> {
+public class LivingEntityRendererMixin<T extends LivingEntity, M extends EntityModel<T>> {
   @Shadow protected M model;
 
   @Inject(method = "getRenderType", at = @At("HEAD"), cancellable = true)
