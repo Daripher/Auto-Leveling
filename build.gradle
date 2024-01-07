@@ -160,6 +160,12 @@ dependencies {
 	implementation fg.deobf("curse.maven:jade-324717:4573194")
     // neat
     implementation fg.deobf("curse.maven:neat-238372:4580940")
+    // infernal mobs
+    implementation fg.deobf("curse.maven:atomicstrykers-infernal-mobs-227875:4882078")
+    // attribute fix
+    implementation fg.deobf("curse.maven:attributefix-280510:4648448")
+    // max health fix
+    implementation fg.deobf("curse.maven:max-health-fix-492246:4648479")
 }
 
 mixin {
