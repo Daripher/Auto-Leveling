@@ -1,13 +1,10 @@
 package daripher.autoleveling.config;
 
 import daripher.autoleveling.AutoLevelingMod;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -18,7 +15,7 @@ import org.apache.commons.lang3.tuple.Pair;
 public class Config {
   public static final Common COMMON;
   public static final ForgeConfigSpec COMMON_SPEC;
-  private static final Map<Attribute, Float> ATTRIBUTE_BONUSES = new HashMap<>();
+  private static final Map<Attribute, AttributeModifier> ATTRIBUTE_BONUSES = new HashMap<>();
 
   static {
     Pair<Common, ForgeConfigSpec> specPair = new ForgeConfigSpec.Builder().configure(Common::new);
@@ -45,23 +42,28 @@ public class Config {
     return false;
   }
 
-  public static Map<Attribute, Float> getAttributeBonuses() {
+  public static Map<Attribute, AttributeModifier> getAttributeBonuses() {
     if (ATTRIBUTE_BONUSES.isEmpty()) {
-      Config.COMMON
-          .attributesBonuses
-          .get()
-          .forEach(
-              attributeBonusConfig -> {
-                ResourceLocation attributeId =
-                    new ResourceLocation((String) attributeBonusConfig.get(0));
-                Attribute attribute = ForgeRegistries.ATTRIBUTES.getValue(attributeId);
-                float attributeBonus = ((Double) attributeBonusConfig.get(1)).floatValue();
-                if (attribute == null)
-                  AutoLevelingMod.LOGGER.error("Attribute '" + attributeId + "' can not be found!");
-                else ATTRIBUTE_BONUSES.put(attribute, attributeBonus);
-              });
+      for (List<Object> objects : Config.COMMON.attributesBonuses.get()) {
+        readAttributeBonus(objects);
+      }
     }
     return ATTRIBUTE_BONUSES;
+  }
+
+  private static void readAttributeBonus(List<Object> attributeBonusConfig) {
+    ResourceLocation attributeId = new ResourceLocation((String) attributeBonusConfig.get(0));
+    Attribute attribute = ForgeRegistries.ATTRIBUTES.getValue(attributeId);
+    float attributeBonus = ((Double) attributeBonusConfig.get(1)).floatValue();
+    if (attribute == null) {
+      AutoLevelingMod.LOGGER.error("Attribute '" + attributeId + "' can not be found!");
+      return;
+    }
+    UUID uuid = UUID.fromString("6a102cb4-d735-4cb7-8ab2-3d383219a44e");
+    AttributeModifier.Operation operation = AttributeModifier.Operation.MULTIPLY_BASE;
+    AttributeModifier modifier =
+        new AttributeModifier(uuid, "AutoLeveling", attributeBonus, operation);
+    ATTRIBUTE_BONUSES.put(attribute, modifier);
   }
 
   public static void registerCommonConfig() {
@@ -73,15 +75,15 @@ public class Config {
     public final ConfigValue<List<String>> blacklistedMobs;
     public final ConfigValue<List<String>> whitelistedMobs;
     public final ConfigValue<List<String>> blacklistedShownLevels;
-    public final ConfigValue<Integer> defaultStartingLevel;
-    public final ConfigValue<Integer> defaultMaxLevel;
-    public final ConfigValue<Integer> defaultRandomLevelBonus;
+    public final ConfigValue<Integer> startingLevel;
+    public final ConfigValue<Integer> maxLevel;
+    public final ConfigValue<Integer> randomLevelBonus;
     public final ConfigValue<Double> expBonus;
-    public final ConfigValue<Double> defaultLevelsPerDistance;
-    public final ConfigValue<Double> defaultLevelsPerDeepness;
-    public final ConfigValue<Double> defaultLevelsPerDay;
-    public final ConfigValue<Double> defaultLevelPowerPerDistance;
-    public final ConfigValue<Double> defaultLevelPowerPerDeepness;
+    public final ConfigValue<Double> levelsPerDistance;
+    public final ConfigValue<Double> levelsPerDeepness;
+    public final ConfigValue<Double> levelsPerDay;
+    public final ConfigValue<Double> levelPowerPerDistance;
+    public final ConfigValue<Double> levelPowerPerDeepness;
     public final ConfigValue<Boolean> alwaysShowLevel;
     public final ConfigValue<Boolean> showLevelWhenLookingAt;
 
@@ -110,23 +112,22 @@ public class Config {
               Config::isValidAttributeBonus);
       builder.pop();
       builder.push("Default levelling settings");
-      defaultStartingLevel = builder.define("Starting level", 1);
+      startingLevel = builder.define("Starting level", 1);
       builder.comment("If this is equal to 0, there will be no maximum level");
-      defaultMaxLevel = builder.define("Maximum level", 0);
-      defaultLevelsPerDistance =
-          builder.define("Level increase per one block distance from spawn", 0.01D);
-      defaultLevelsPerDeepness =
+      maxLevel = builder.define("Maximum level", 0);
+      levelsPerDistance = builder.define("Level increase per one block distance from spawn", 0.01D);
+      levelsPerDeepness =
           builder.define("Level increase per one block deepness below sea level", 0.0D);
       builder.comment(
           "If this is higher than 0, the level of monsters will be randomly increased by value between 0 and this value");
-      defaultRandomLevelBonus = builder.define("Random level bonus", 0);
+      randomLevelBonus = builder.define("Random level bonus", 0);
       builder.comment(
           "If this is higher than 0, mobs level will increase every day by specified amount");
-      defaultLevelsPerDay = builder.define("Level bonus per day", 0d);
+      levelsPerDay = builder.define("Level bonus per day", 0d);
       builder.comment("Exponential level increase with distance");
-      defaultLevelPowerPerDistance = builder.define("level_power_per_distance", 0d);
+      levelPowerPerDistance = builder.define("level_power_per_distance", 0d);
       builder.comment("Exponential level increase with deepness");
-      defaultLevelPowerPerDeepness = builder.define("level_power_per_deepness", 0d);
+      levelPowerPerDeepness = builder.define("level_power_per_deepness", 0d);
       builder.pop();
     }
   }

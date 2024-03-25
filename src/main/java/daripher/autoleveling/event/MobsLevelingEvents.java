@@ -13,8 +13,9 @@ import daripher.autoleveling.saveddata.WorldLevelingData;
 import daripher.autoleveling.settings.DimensionLevelingSettings;
 import daripher.autoleveling.settings.LevelingSettings;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
+import javax.annotation.Nonnull;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
@@ -32,7 +33,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -74,9 +74,11 @@ public class MobsLevelingEvents {
 
   private static BlockPos getSpawnPosition(LivingEntity entity) {
     ResourceKey<Level> dimension = entity.level().dimension();
-    DimensionLevelingSettings levelingSettings =
-        DimensionsLevelingSettingsReloader.getSettingsForDimension(dimension);
-    return levelingSettings.spawnPosOverride().orElse(entity.level().getSharedSpawnPos());
+    DimensionLevelingSettings settings = DimensionsLevelingSettingsReloader.get(dimension);
+    if (settings.spawnPosOverride() == null) {
+      return entity.level().getSharedSpawnPos();
+    }
+    return settings.spawnPosOverride();
   }
 
   @SubscribeEvent
@@ -111,9 +113,9 @@ public class MobsLevelingEvents {
   public static void syncEntityLevel(PlayerEvent.StartTracking event) {
     if (!hasLevel(event.getTarget())) return;
     LivingEntity entity = (LivingEntity) event.getTarget();
-    NetworkDispatcher.network_channel.send(
-        PacketDistributor.PLAYER.with(() -> (ServerPlayer) event.getEntity()),
-        new SyncLevelingData(entity));
+    ServerPlayer player = (ServerPlayer) event.getEntity();
+    PacketDistributor.PacketTarget packetTarget = PacketDistributor.PLAYER.with(() -> player);
+    NetworkDispatcher.network_channel.send(packetTarget, new SyncLevelingData(entity));
   }
 
   @SubscribeEvent
@@ -162,23 +164,17 @@ public class MobsLevelingEvents {
   private static int createLevelForEntity(LivingEntity entity, double distance) {
     MinecraftServer server = entity.getServer();
     if (server == null) return 0;
-    LevelingSettings levelingSettings =
-        EntitiesLevelingSettingsReloader.getSettingsForEntity(entity.getType());
-    if (levelingSettings == null) {
-      ResourceKey<Level> dimension = entity.level().dimension();
-      levelingSettings = DimensionsLevelingSettingsReloader.getSettingsForDimension(dimension);
-    }
-    int monsterLevel = levelingSettings.startingLevel() - 1;
-    int maxLevel = levelingSettings.maxLevel();
-    monsterLevel += (int) (levelingSettings.levelsPerDistance() * distance);
-    monsterLevel += (int) Math.pow(distance, distance * levelingSettings.levelPowerPerDistance()) - 1;
+    LevelingSettings settings = getLevelingSettings(entity);
+    int monsterLevel = settings.startingLevel() - 1;
+    int maxLevel = settings.maxLevel();
+    monsterLevel += (int) (settings.levelsPerDistance() * distance);
+    monsterLevel += (int) Math.pow(distance, distance * settings.levelPowerPerDistance()) - 1;
     if (entity.getY() < 64) {
       double deepness = 64 - entity.getY();
-      monsterLevel += (int) (levelingSettings.levelsPerDeepness() * deepness);
-      monsterLevel +=
-          (int) Math.pow(deepness, deepness * levelingSettings.levelPowerPerDeepness()) - 1;
+      monsterLevel += (int) (settings.levelsPerDeepness() * deepness);
+      monsterLevel += (int) Math.pow(deepness, deepness * settings.levelPowerPerDeepness()) - 1;
     }
-    int levelBonus = levelingSettings.randomLevelBonus() + 1;
+    int levelBonus = settings.randomLevelBonus() + 1;
     if (levelBonus > 0) monsterLevel += entity.getRandom().nextInt(levelBonus);
     monsterLevel = Math.abs(monsterLevel);
     monsterLevel += WorldLevelingData.get((ServerLevel) entity.level()).getLevelBonus();
@@ -188,22 +184,45 @@ public class MobsLevelingEvents {
     return monsterLevel;
   }
 
-  public static void applyAttributeBonuses(LivingEntity entity) {
-    int level = getLevel(entity);
-    Config.getAttributeBonuses()
-        .forEach((attribute, bonus) -> applyAttributeBonus(entity, attribute, bonus * level));
+  @Nonnull
+  private static LevelingSettings getLevelingSettings(LivingEntity entity) {
+    LevelingSettings settings = EntitiesLevelingSettingsReloader.get(entity.getType());
+    if (settings == null) {
+      ResourceKey<Level> dimension = entity.level().dimension();
+      return DimensionsLevelingSettingsReloader.get(dimension);
+    }
+    return settings;
   }
 
-  private static void applyAttributeBonus(LivingEntity entity, Attribute attribute, double bonus) {
+  public static void applyAttributeBonuses(LivingEntity entity) {
+    getAttributeBonuses(entity)
+        .forEach((attribute, bonus) -> applyAttributeBonus(entity, attribute, bonus));
+  }
+
+  private static Map<Attribute, AttributeModifier> getAttributeBonuses(LivingEntity entity) {
+    LevelingSettings settings = getLevelingSettings(entity);
+    if (settings.attributeModifiers().isEmpty()) {
+      return Config.getAttributeBonuses();
+    }
+    return settings.attributeModifiers();
+  }
+
+  private static void applyAttributeBonus(
+      LivingEntity entity, Attribute attribute, AttributeModifier modifier) {
     AttributeInstance attributeInstance = entity.getAttribute(attribute);
-    if (attributeInstance == null) return;
-    UUID modifierId = UUID.fromString("6a102cb4-d735-4cb7-8ab2-3d383219a44e");
-    AttributeModifier modifier = attributeInstance.getModifier(modifierId);
-    if (modifier != null && modifier.getAmount() == bonus) return;
-    if (modifier != null) attributeInstance.removeModifier(modifier);
-    modifier =
-        new AttributeModifier(modifierId, "Auto Leveling Bonus", bonus, Operation.MULTIPLY_TOTAL);
-    attributeInstance.addPermanentModifier(modifier);
+    if (attributeInstance == null) {
+      return;
+    }
+    AttributeModifier oldModifier = attributeInstance.getModifier(modifier.getId());
+    if (oldModifier != null && oldModifier.getAmount() == modifier.getAmount()) {
+      return;
+    }
+    if (oldModifier != null) attributeInstance.removeModifier(oldModifier);
+    int level = getLevel(entity);
+    double amount = modifier.getAmount() * level;
+    oldModifier =
+        new AttributeModifier(modifier.getId(), "AutoLeveling", amount, modifier.getOperation());
+    attributeInstance.addPermanentModifier(oldModifier);
     if (attribute == Attributes.MAX_HEALTH) entity.heal(entity.getMaxHealth());
   }
 

@@ -2,7 +2,9 @@ package daripher.autoleveling.saveddata;
 
 import daripher.autoleveling.AutoLevelingMod;
 import daripher.autoleveling.data.DimensionsLevelingSettingsReloader;
+import daripher.autoleveling.settings.LevelingSettings;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
@@ -45,9 +47,10 @@ public class WorldLevelingData extends SavedData {
     tickCount++;
     // 24_000 ticks is one Minecraft day
     if (tickCount >= 24_000) {
-      levelBonus +=
-          DimensionsLevelingSettingsReloader.getSettingsForDimension(world.dimension())
-              .levelsPerDay();
+      ResourceKey<Level> dimension = world.dimension();
+      LevelingSettings settings =
+          DimensionsLevelingSettingsReloader.get(dimension);
+      levelBonus += settings.levelsPerDay();
       tickCount -= 24_000;
     }
     setDirty();

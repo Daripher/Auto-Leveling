@@ -1,8 +1,9 @@
 package daripher.autoleveling.settings;
 
 import com.google.gson.JsonObject;
-import daripher.autoleveling.config.Config;
-import java.util.Optional;
+import java.util.Map;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 
 public record EntityLevelingSettings(
     int startingLevel,
@@ -11,7 +12,8 @@ public record EntityLevelingSettings(
     float levelsPerDeepness,
     int randomLevelBonus,
     float levelPowerPerDistance,
-    float levelPowerPerDeepness)
+    float levelPowerPerDeepness,
+    Map<Attribute, AttributeModifier> attributeModifiers)
     implements LevelingSettings {
 
   @Override
@@ -26,17 +28,8 @@ public record EntityLevelingSettings(
         jsonObject.get("levels_per_distance").getAsFloat(),
         jsonObject.get("levels_per_deepness").getAsFloat(),
         jsonObject.get("random_level_bonus").getAsInt(),
-        readOptionalFloat(jsonObject, "level_power_per_distance")
-            .orElse(Config.COMMON.defaultLevelPowerPerDistance.get().floatValue()),
-        readOptionalFloat(jsonObject, "level_power_per_deepness")
-            .orElse(Config.COMMON.defaultLevelPowerPerDeepness.get().floatValue()));
-  }
-
-  private static Optional<Float> readOptionalFloat(JsonObject jsonObject, String name) {
-    if (!jsonObject.has(name)) {
-      return Optional.empty();
-    } else {
-      return Optional.of(jsonObject.get(name).getAsFloat());
-    }
+        LevelingSettings.readLevelPowerPerDistance(jsonObject),
+        LevelingSettings.readLevelPowerPerDeepness(jsonObject),
+        LevelingSettings.readAttributeModifiers(jsonObject));
   }
 }

@@ -1,10 +1,11 @@
 package daripher.autoleveling.settings;
 
 import com.google.gson.JsonObject;
-import daripher.autoleveling.config.Config;
-import java.util.Optional;
+import java.util.Map;
 import net.minecraft.core.BlockPos;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import org.jetbrains.annotations.Nullable;
 
 public record DimensionLevelingSettings(
     int startingLevel,
@@ -12,10 +13,11 @@ public record DimensionLevelingSettings(
     float levelsPerDistance,
     float levelsPerDeepness,
     int randomLevelBonus,
-    Optional<BlockPos> spawnPosOverride,
+    @Nullable BlockPos spawnPosOverride,
     float levelsPerDay,
     float levelPowerPerDistance,
-    float levelPowerPerDeepness)
+    float levelPowerPerDeepness,
+    @Nullable Map<Attribute, AttributeModifier> attributeModifiers)
     implements LevelingSettings {
   public static DimensionLevelingSettings load(JsonObject jsonObject) {
     return new DimensionLevelingSettings(
@@ -24,33 +26,10 @@ public record DimensionLevelingSettings(
         jsonObject.get("levels_per_distance").getAsFloat(),
         jsonObject.get("levels_per_deepness").getAsFloat(),
         jsonObject.get("random_level_bonus").getAsInt(),
-        loadOptionalBlockPos(jsonObject, "spawn_pos_override"),
-        readOptionalFloat(jsonObject, "levels_per_day")
-            .orElse(Config.COMMON.defaultLevelsPerDay.get().floatValue()),
-        readOptionalFloat(jsonObject, "level_power_per_distance")
-            .orElse(Config.COMMON.defaultLevelPowerPerDistance.get().floatValue()),
-        readOptionalFloat(jsonObject, "level_power_per_deepness")
-            .orElse(Config.COMMON.defaultLevelPowerPerDeepness.get().floatValue()));
-  }
-
-  private static Optional<Float> readOptionalFloat(JsonObject jsonObject, String name) {
-    if (!jsonObject.has(name)) {
-      return Optional.empty();
-    } else {
-      return Optional.of(jsonObject.get(name).getAsFloat());
-    }
-  }
-
-  @NotNull
-  private static Optional<BlockPos> loadOptionalBlockPos(JsonObject jsonObject, String name) {
-    if (!jsonObject.has(name)) {
-      return Optional.empty();
-    } else {
-      JsonObject posJson = jsonObject.get(name).getAsJsonObject();
-      int x = posJson.get("x").getAsInt();
-      int y = posJson.get("y").getAsInt();
-      int z = posJson.get("z").getAsInt();
-      return Optional.of(new BlockPos(x, y, z));
-    }
+        LevelingSettings.readSpawnPosOverride(jsonObject),
+        LevelingSettings.readLevelsPerDay(jsonObject),
+        LevelingSettings.readLevelPowerPerDistance(jsonObject),
+        LevelingSettings.readLevelPowerPerDeepness(jsonObject),
+        LevelingSettings.readAttributeModifiers(jsonObject));
   }
 }

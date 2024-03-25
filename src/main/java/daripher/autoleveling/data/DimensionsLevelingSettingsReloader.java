@@ -2,12 +2,12 @@ package daripher.autoleveling.data;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.mojang.logging.LogUtils;
 import daripher.autoleveling.config.Config;
 import daripher.autoleveling.settings.DimensionLevelingSettings;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import javax.annotation.Nonnull;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -29,21 +29,22 @@ public class DimensionsLevelingSettingsReloader extends SimpleJsonResourceReload
   }
 
   @Nonnull
-  public static DimensionLevelingSettings getSettingsForDimension(ResourceKey<Level> dimension) {
+  public static DimensionLevelingSettings get(ResourceKey<Level> dimension) {
     return SETTINGS.getOrDefault(dimension.location(), createDefaultSettings());
   }
 
   private static DimensionLevelingSettings createDefaultSettings() {
     return new DimensionLevelingSettings(
-        Config.COMMON.defaultStartingLevel.get(),
-        Config.COMMON.defaultMaxLevel.get(),
-        Config.COMMON.defaultLevelsPerDistance.get().floatValue(),
-        Config.COMMON.defaultLevelsPerDeepness.get().floatValue(),
-        Config.COMMON.defaultRandomLevelBonus.get(),
-        Optional.empty(),
-        Config.COMMON.defaultLevelsPerDay.get().floatValue(),
-        Config.COMMON.defaultLevelPowerPerDistance.get().floatValue(),
-        Config.COMMON.defaultLevelPowerPerDeepness.get().floatValue());
+        Config.COMMON.startingLevel.get(),
+        Config.COMMON.maxLevel.get(),
+        Config.COMMON.levelsPerDistance.get().floatValue(),
+        Config.COMMON.levelsPerDeepness.get().floatValue(),
+        Config.COMMON.randomLevelBonus.get(),
+        null,
+        Config.COMMON.levelsPerDay.get().floatValue(),
+        Config.COMMON.levelPowerPerDistance.get().floatValue(),
+        Config.COMMON.levelPowerPerDeepness.get().floatValue(),
+        null);
   }
 
   @Override
@@ -57,12 +58,13 @@ public class DimensionsLevelingSettingsReloader extends SimpleJsonResourceReload
 
   private void loadSettings(ResourceLocation fileId, JsonElement jsonElement) {
     try {
-      LOGGER.info("Loading leveling settings {}", fileId);
-      DimensionLevelingSettings settings =
-          DimensionLevelingSettings.load(jsonElement.getAsJsonObject());
+      JsonObject jsonObject = jsonElement.getAsJsonObject();
+      DimensionLevelingSettings settings = DimensionLevelingSettings.load(jsonObject);
       SETTINGS.put(fileId, settings);
+      LOGGER.info("Loaded leveling settings {}", fileId);
     } catch (Exception exception) {
-      LOGGER.error("Couldn't parse leveling settings {}", fileId, exception);
+      LOGGER.error("Couldn't load leveling settings {}", fileId);
+      exception.printStackTrace();
     }
   }
 }

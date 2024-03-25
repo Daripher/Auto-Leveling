@@ -2,6 +2,7 @@ package daripher.autoleveling.data;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.mojang.logging.LogUtils;
 import daripher.autoleveling.settings.EntityLevelingSettings;
 import java.util.HashMap;
@@ -27,7 +28,7 @@ public class EntitiesLevelingSettingsReloader extends SimpleJsonResourceReloadLi
   }
 
   @Nullable
-  public static EntityLevelingSettings getSettingsForEntity(EntityType<?> entityType) {
+  public static EntityLevelingSettings get(EntityType<?> entityType) {
     return SETTINGS.get(ForgeRegistries.ENTITY_TYPES.getKey(entityType));
   }
 
@@ -42,11 +43,13 @@ public class EntitiesLevelingSettingsReloader extends SimpleJsonResourceReloadLi
 
   private void loadSettings(ResourceLocation fileId, JsonElement jsonElement) {
     try {
-      LOGGER.info("Loading leveling settings {}", fileId);
-      EntityLevelingSettings settings = EntityLevelingSettings.load(jsonElement.getAsJsonObject());
+      JsonObject jsonObject = jsonElement.getAsJsonObject();
+      EntityLevelingSettings settings = EntityLevelingSettings.load(jsonObject);
       SETTINGS.put(fileId, settings);
+      LOGGER.info("Loaded leveling settings {}", fileId);
     } catch (Exception exception) {
-      LOGGER.error("Couldn't parse leveling settings {}", fileId, exception);
+      LOGGER.error("Couldn't load leveling settings {}", fileId);
+      exception.printStackTrace();
     }
   }
 }
