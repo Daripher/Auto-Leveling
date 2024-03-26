@@ -27,7 +27,7 @@ public class AutoLevelingMod {
     AutoLevelingItems.REGISTRY.register(modEventBus);
     AutoLevelingAttributes.REGISTRY.register(modEventBus);
     AutoLevelingTabs.REGISTRY.register(modEventBus);
-    Config.registerCommonConfig();
+    Config.register();
   }
 
   @SubscribeEvent

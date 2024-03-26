@@ -1,12 +1,14 @@
 package daripher.autoleveling.client;
 
 import daripher.autoleveling.AutoLevelingMod;
+import daripher.autoleveling.config.Config;
 import daripher.autoleveling.event.MobsLevelingEvents;
-import net.minecraft.ChatFormatting;
+import javax.annotation.Nonnull;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.ForgeHooksClient;
@@ -21,54 +23,64 @@ import org.joml.Matrix4f;
 public class LevelPlateRenderer {
   @SubscribeEvent
   public static void renderEntityLevel(RenderNameTagEvent event) {
-    if (ModList.get().isLoaded("neat")) return;
-    if (!(event.getEntity() instanceof LivingEntity entity)) return;
-    boolean showLevel =
-        MobsLevelingEvents.hasLevel(entity) && MobsLevelingEvents.shouldShowName(entity);
-    if (!showLevel) return;
+    if (!shouldRender(event)) return;
+    LivingEntity entity = (LivingEntity) event.getEntity();
     Minecraft minecraft = Minecraft.getInstance();
-    double distance = minecraft.getEntityRenderDispatcher().distanceToSqr(entity);
-    boolean isInRenderDistance = ForgeHooksClient.isNameplateInRenderDistance(entity, distance);
-    if (!isInRenderDistance) return;
-    int entityLevel = MobsLevelingEvents.getLevel(entity) + 1;
-    Component entityName = event.getContent();
-    MutableComponent entityLevelComponent =
-        Component.translatable("autoleveling.level", entityLevel).withStyle(ChatFormatting.GREEN);
     event.getPoseStack().pushPose();
-    event.getPoseStack().translate(0.0D, entity.getBbHeight() + 0.5F, 0.0D);
+    event.getPoseStack().translate(0d, entity.getBbHeight() + 0.5f, 0d);
     event.getPoseStack().mulPose(minecraft.getEntityRenderDispatcher().cameraOrientation());
-    event.getPoseStack().scale(-0.025F, -0.025F, 0.025F);
-    Matrix4f renderPose = event.getPoseStack().last().pose();
-    float backgroundOpacity = minecraft.options.getBackgroundOpacity(0.25F);
-    int textAlpha = (int) (backgroundOpacity * 255.0F) << 24;
-    Font font = minecraft.font;
-    Font.DisplayMode displayMode =
-        !entity.isDiscrete() ? Font.DisplayMode.SEE_THROUGH : Font.DisplayMode.NORMAL;
-    int textX = -font.width(entityName) / 2 - 5 - font.width(entityLevelComponent);
-    int textY = "deadmau5".equals(entityName.getString()) ? -10 : 0;
-    font.drawInBatch(
-        entityLevelComponent,
-        textX,
-        textY,
-        553648127,
-        false,
-        renderPose,
-        event.getMultiBufferSource(),
-        displayMode,
-        textAlpha,
-        event.getPackedLight());
-    font.drawInBatch(
-        entityLevelComponent,
-        textX,
-        textY,
-        -1,
-        false,
-        renderPose,
-        event.getMultiBufferSource(),
-        Font.DisplayMode.NORMAL,
-        0,
-        event.getPackedLight());
+    event.getPoseStack().scale(-0.025f, -0.025f, 0.025f);
+    Matrix4f pose = event.getPoseStack().last().pose();
+    Font.DisplayMode mode = getDisplayMode(entity);
+    Component level = getLevelComponent(entity);
+    Component name = event.getContent();
+    int textX = -minecraft.font.width(name) / 2 - 5 - minecraft.font.width(level);
+    int textY = 0;
+    if (name.getString().equals("deadmau5")) {
+      textY -= 10;
+    }
+    MultiBufferSource buffer = event.getMultiBufferSource();
+    int light = event.getPackedLight();
+    renderLevel(minecraft, level, textX, textY, pose, buffer, mode, light);
     event.setResult(Event.Result.ALLOW);
     event.getPoseStack().popPose();
+  }
+
+  @Nonnull
+  private static Font.DisplayMode getDisplayMode(LivingEntity entity) {
+    return !entity.isDiscrete() ? Font.DisplayMode.SEE_THROUGH : Font.DisplayMode.NORMAL;
+  }
+
+  private static boolean shouldRender(RenderNameTagEvent event) {
+    if (ModList.get().isLoaded("neat")) return false;
+    if (!(event.getEntity() instanceof LivingEntity entity)) return false;
+    if (!MobsLevelingEvents.shouldShowName(entity)) return false;
+    Minecraft minecraft = Minecraft.getInstance();
+    double distance = minecraft.getEntityRenderDispatcher().distanceToSqr(entity);
+    return ForgeHooksClient.isNameplateInRenderDistance(entity, distance);
+  }
+
+  public static void renderLevel(
+      Minecraft minecraft,
+      Component component,
+      int x,
+      int y,
+      Matrix4f pose,
+      MultiBufferSource buffer,
+      Font.DisplayMode mode,
+      int light) {
+    float backgroundOpacity = minecraft.options.getBackgroundOpacity(0.25f);
+    int alpha = (int) (backgroundOpacity * 255f) << 24;
+    Font font = minecraft.font;
+    font.drawInBatch(component, x, y, 0xffffff, false, pose, buffer, mode, alpha, light);
+    font.drawInBatch(component, x, y, -1, false, pose, buffer, Font.DisplayMode.NORMAL, 0, light);
+  }
+
+  @Nonnull
+  public static Component getLevelComponent(LivingEntity entity) {
+    int entityLevel = MobsLevelingEvents.getLevel(entity) + 1;
+    int color = Config.Client.getLevelTextColor();
+    Style style = Style.EMPTY.withColor(color);
+    return Component.translatable("autoleveling.level", entityLevel).withStyle(style);
   }
 }

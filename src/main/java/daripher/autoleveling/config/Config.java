@@ -13,14 +13,21 @@ import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.commons.lang3.tuple.Pair;
 
 public class Config {
-  public static final Common COMMON;
+  public static final Config.Common COMMON;
   public static final ForgeConfigSpec COMMON_SPEC;
+  public static final Config.Client CLIENT;
+  public static final ForgeConfigSpec CLIENT_SPEC;
   private static final Map<Attribute, AttributeModifier> ATTRIBUTE_BONUSES = new HashMap<>();
 
   static {
-    Pair<Common, ForgeConfigSpec> specPair = new ForgeConfigSpec.Builder().configure(Common::new);
-    COMMON_SPEC = specPair.getRight();
-    COMMON = specPair.getLeft();
+    Pair<Config.Common, ForgeConfigSpec> commonSpec =
+        new ForgeConfigSpec.Builder().configure(Config.Common::new);
+    COMMON_SPEC = commonSpec.getRight();
+    COMMON = commonSpec.getLeft();
+    Pair<Config.Client, ForgeConfigSpec> clientSpec =
+        new ForgeConfigSpec.Builder().configure(Config.Client::new);
+    CLIENT_SPEC = clientSpec.getRight();
+    CLIENT = clientSpec.getLeft();
   }
 
   private static List<List<Object>> getDefaultAttributeBonuses() {
@@ -66,8 +73,9 @@ public class Config {
     ATTRIBUTE_BONUSES.put(attribute, modifier);
   }
 
-  public static void registerCommonConfig() {
+  public static void register() {
     ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.COMMON_SPEC);
+    ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.CLIENT_SPEC);
   }
 
   public static class Common {
@@ -129,6 +137,37 @@ public class Config {
       builder.comment("Exponential level increase with deepness");
       levelPowerPerDeepness = builder.define("level_power_per_deepness", 0d);
       builder.pop();
+    }
+  }
+
+  public static class Client {
+    private static int level_text_color = -1;
+    public final ConfigValue<String> levelTextColor;
+
+    public Client(ForgeConfigSpec.Builder builder) {
+      builder.push("Visuals");
+      levelTextColor = builder.define("Level text color", "#1cff27", Config.Client::isColorString);
+      builder.pop();
+    }
+
+    private static boolean isColorString(Object object) {
+      if (!(object instanceof String string)) return false;
+      if (!string.startsWith("#")) return false;
+      string = string.substring(1);
+      try {
+        Integer.parseInt(string, 16);
+        return true;
+      } catch (NumberFormatException exception) {
+        return false;
+      }
+    }
+
+    public static int getLevelTextColor() {
+      if (level_text_color == -1) {
+        String color = CLIENT.levelTextColor.get().substring(1);
+        level_text_color = Integer.parseInt(color, 16);
+      }
+      return level_text_color;
     }
   }
 }
