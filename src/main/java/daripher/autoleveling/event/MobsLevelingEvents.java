@@ -48,6 +48,7 @@ import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.living.LivingExperienceDropEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.network.PacketDistributor;
@@ -56,7 +57,7 @@ import net.minecraftforge.network.PacketDistributor;
 public class MobsLevelingEvents {
   private static final String LEVEL_TAG = "LEVEL";
 
-  @SubscribeEvent
+  @SubscribeEvent(priority = EventPriority.LOWEST)
   public static void applyLevelBonuses(EntityJoinLevelEvent event) {
     if (!shouldSetLevel(event.getEntity())) return;
     LivingEntity entity = (LivingEntity) event.getEntity();
@@ -238,13 +239,17 @@ public class MobsLevelingEvents {
   }
 
   private static LootTable getEquipmentLootTableForSlot(
-      MinecraftServer server, LivingEntity entity, EquipmentSlot equipmentSlot) {
+      MinecraftServer server, LivingEntity entity, EquipmentSlot slot) {
     ResourceLocation entityId = EntityType.getKey(entity.getType());
-    ResourceLocation lootTableId =
-        new ResourceLocation(
-            entityId.getNamespace(),
-            "equipment/" + entityId.getPath() + "_" + equipmentSlot.getName());
+    ResourceLocation lootTableId = getEquipmentTableId(slot, entityId);
     return server.getLootData().getLootTable(lootTableId);
+  }
+
+  @Nonnull
+  private static ResourceLocation getEquipmentTableId(
+      EquipmentSlot slot, ResourceLocation entityId) {
+    String path = "equipment/" + entityId.getPath() + "_" + slot.getName();
+    return new ResourceLocation(entityId.getNamespace(), path);
   }
 
   private static LootParams createLootParams(LivingEntity entity, DamageSource damageSource) {
