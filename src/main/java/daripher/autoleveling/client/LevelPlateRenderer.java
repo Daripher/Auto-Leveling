@@ -34,14 +34,17 @@ public class LevelPlateRenderer {
     Font.DisplayMode mode = getDisplayMode(entity);
     Component level = getLevelComponent(entity);
     Component name = event.getContent();
-    int textX = -minecraft.font.width(name) / 2 - 5 - minecraft.font.width(level);
-    int textY = 0;
+    int nameplateWidth = minecraft.font.width(name);
+    int levelWidth = minecraft.font.width(level);
+    MultiBufferSource buffer = event.getMultiBufferSource();
+    int light = event.getPackedLight();
+    LevelPlatePos pos = Config.CLIENT.levelTextPosition.get();
+    float textX = getTextX(levelWidth, nameplateWidth, pos);
+    float textY = getTextY(minecraft.font.lineHeight, pos);
     if (name.getString().equals("deadmau5")) {
       textY -= 10;
     }
-    MultiBufferSource buffer = event.getMultiBufferSource();
-    int light = event.getPackedLight();
-    renderLevel(minecraft, level, textX, textY, pose, buffer, mode, light);
+    renderLevel(level, textX, textY, pose, buffer, mode, light);
     event.setResult(Event.Result.ALLOW);
     event.getPoseStack().popPose();
   }
@@ -61,14 +64,14 @@ public class LevelPlateRenderer {
   }
 
   public static void renderLevel(
-      Minecraft minecraft,
       Component component,
-      int x,
-      int y,
+      float x,
+      float y,
       Matrix4f pose,
       MultiBufferSource buffer,
       Font.DisplayMode mode,
       int light) {
+    Minecraft minecraft = Minecraft.getInstance();
     float backgroundOpacity = minecraft.options.getBackgroundOpacity(0.25f);
     int alpha = (int) (backgroundOpacity * 255f) << 24;
     Font font = minecraft.font;
@@ -82,5 +85,27 @@ public class LevelPlateRenderer {
     int color = Config.Client.getLevelTextColor();
     Style style = Style.EMPTY.withColor(color);
     return Component.translatable("autoleveling.level", entityLevel).withStyle(style);
+  }
+
+  public static float getTextX(float levelWidth, float nameplateWidth, LevelPlatePos pos) {
+    float posX =
+        switch (pos) {
+          case LEFT -> -nameplateWidth / 2 - 3 - levelWidth;
+          case RIGHT -> nameplateWidth / 2 + 3;
+          case TOP, BOTTOM -> -levelWidth / 2;
+          case TOP_LEFT, BOTTOM_LEFT -> -nameplateWidth / 2;
+          case TOP_RIGHT, BOTTOM_RIGHT -> nameplateWidth / 2 - levelWidth;
+        };
+    return posX + Config.CLIENT.levelTextShiftX.get();
+  }
+
+  public static float getTextY(float nameplateHeight, LevelPlatePos pos) {
+    float posY =
+        switch (pos) {
+          case LEFT, RIGHT -> 0f;
+          case TOP, TOP_RIGHT, TOP_LEFT -> -nameplateHeight - 3;
+          case BOTTOM, BOTTOM_RIGHT, BOTTOM_LEFT -> nameplateHeight + 3;
+        };
+    return posY + Config.CLIENT.levelTextShiftY.get();
   }
 }

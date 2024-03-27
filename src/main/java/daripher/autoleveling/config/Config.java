@@ -1,6 +1,7 @@
 package daripher.autoleveling.config;
 
 import daripher.autoleveling.AutoLevelingMod;
+import daripher.autoleveling.client.LevelPlatePos;
 import java.util.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -143,10 +144,16 @@ public class Config {
   public static class Client {
     private static int level_text_color = -1;
     public final ConfigValue<String> levelTextColor;
+    public final ConfigValue<LevelPlatePos> levelTextPosition;
+    public final ConfigValue<Integer> levelTextShiftX;
+    public final ConfigValue<Integer> levelTextShiftY;
 
     public Client(ForgeConfigSpec.Builder builder) {
       builder.push("Visuals");
       levelTextColor = builder.define("Level text color", "#1cff27", Config.Client::isColorString);
+      levelTextPosition = builder.defineEnum("Level text position", LevelPlatePos.LEFT);
+      levelTextShiftX = builder.define("Level text shift x", 0);
+      levelTextShiftY = builder.define("Level text shift y", 0);
       builder.pop();
     }
 
